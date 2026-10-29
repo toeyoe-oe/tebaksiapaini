@@ -16,10 +16,10 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            500: '#22c55e',
-                            600: '#16a34a',
-                        }
+                        kahootRed: '#e21b3c',
+                        kahootBlue: '#1368ce',
+                        kahootYellow: '#ffa602',
+                        kahootGreen: '#26890c',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -40,12 +40,12 @@
             transform-origin: center center;
         }
         .glass-panel {
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.88);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .glass-card {
-            background: rgba(30, 41, 59, 0.75);
+            background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
@@ -55,11 +55,11 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500">
 
     <!-- Header Navigation -->
-    <header class="w-full border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+    <header class="w-full border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="app.showScreen('welcome')">
                 <div class="bg-gradient-to-tr from-indigo-500 to-emerald-400 p-2.5 rounded-2xl shadow-lg">
                     <i data-lucide="zoom-in" class="w-6 h-6 text-white">🔍</i>
@@ -70,116 +70,251 @@
                 </div>
             </div>
 
-            <div id="nav-stats" class="hidden flex items-center gap-4 bg-slate-800/80 border border-slate-700 rounded-full px-4 py-1.5 text-sm">
-                <div class="flex items-center gap-1.5 text-amber-400 font-bold">
-                    <i data-lucide="trophy" class="w-4 h-4">🏆</i>
-                    <span id="nav-score">0</span>
-                </div>
-                <div class="h-4 w-[1px] bg-slate-700"></div>
-                <div class="flex items-center gap-1.5 text-orange-400 font-bold">
-                    <i data-lucide="zap" class="w-4 h-4">⚡</i>
-                    <span id="nav-streak">0x</span>
-                </div>
-            </div>
-
             <div class="flex items-center gap-2">
+                <span id="role-badge" class="px-3 py-1 bg-slate-800 text-xs font-bold rounded-full border border-slate-700 text-indigo-400">Pemain</span>
                 <button onclick="app.toggleSound()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
                     <i id="sound-icon" data-lucide="volume-2" class="w-5 h-5 text-slate-300">🔊</i>
-                </button>
-                <button onclick="app.showScreen('welcome')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
-                    <i data-lucide="home" class="w-5 h-5 text-slate-300">🏠</i>
                 </button>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-4xl w-full mx-auto p-4 md:p-6 flex-1 flex flex-col justify-center items-center">
+    <main class="max-w-5xl w-full mx-auto p-4 md:p-6 flex-1 flex flex-col justify-center items-center">
 
-        <!-- ==================== SCREEN 1: LANDING & PIN ENTRY ==================== -->
-        <section id="screen-welcome" class="w-full max-w-2xl space-y-8">
-            <!-- Kata Pengantar / Hero Banner -->
-            <div class="text-center space-y-4 max-w-xl mx-auto pt-2">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Game Seru After Ibadah GP
+        <!-- ==================== SCREEN 1: WELCOME / ENTRY ==================== -->
+        <section id="screen-welcome" class="w-full max-w-xl space-y-8 animate-fadeIn">
+            <!-- Hero Banner -->
+            <div class="text-center space-y-3 max-w-lg mx-auto">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Mode Kahoot! Multi-Pemain
                 </div>
                 <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
-                    Seberapa Tajam <span class="text-emerald-400">Mata Kamu?</span>
+                    Seberapa Tajam <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Mata Kamu?</span>
                 </h2>
-                <p class="text-slate-300 text-sm md:text-base leading-relaxed">
-                    Tebak siapa dia dengan mengenali subjek berdasarkan pose foto, pola anggota tubuh, warna kulit/rambut, aksesoris yang sering digunakan, dan lain sebagainya yang di-zoom secara ekstrim. Semakin cepat & makin sedikit kamu melakukan unzoom, makin tinggi skornya!
+                <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                    Host mengendalikan layar utama/proyektor, sedangkan pemain cukup menjawab langsung dari HP masing-masing!
                 </p>
             </div>
 
-            <!-- Card PIN Game -->
-            <div class="bg-white text-slate-900 p-8 rounded-3xl shadow-2xl space-y-6 text-center max-w-md mx-auto">
-                <h3 class="text-xl font-extrabold tracking-tight text-slate-800 uppercase">PIN GAME</h3>
+            <!-- Player Join Card -->
+            <div class="bg-white text-slate-900 p-8 rounded-3xl shadow-2xl space-y-5 text-center">
+                <h3 class="text-lg font-extrabold tracking-tight text-slate-800 uppercase">MASUK GAME (PLAYER)</h3>
                 
-                <div class="space-y-4">
-                    <input type="text" id="pin-input" maxlength="6" placeholder="Enter PIN" autocomplete="off" onkeydown="if(event.key==='Enter') app.joinByPin()" class="w-full text-center text-2xl font-black tracking-widest py-4 border-2 border-slate-300 rounded-2xl focus:outline-none focus:border-indigo-600 uppercase text-slate-800 placeholder:text-slate-400 placeholder:font-normal">
+                <div class="space-y-3">
+                    <input type="text" id="player-pin-input" maxlength="6" placeholder="PIN Sesi (Contoh: 123456)" autocomplete="off" class="w-full text-center text-xl font-black tracking-widest py-3.5 border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-indigo-600 uppercase text-slate-800">
+                    <input type="text" id="player-name-input" maxlength="15" placeholder="Nama / Nickname Kamu" autocomplete="off" class="w-full text-center text-base font-bold py-3.5 border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-indigo-600 text-slate-800">
                     
-                    <button onclick="app.joinByPin()" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-lg rounded-2xl shadow-lg transition active:scale-95">
-                        Join
+                    <button onclick="app.joinAsPlayer()" class="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-lg rounded-2xl shadow-lg transition active:scale-95">
+                        JOIN SEKARANG
                     </button>
                 </div>
 
-                <div class="pt-2 border-t border-slate-200">
-                    <button onclick="app.createNewGameSession()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shadow">
-                        <i data-lucide="plus-circle" class="w-4 h-4">➕</i>
-                        <span>+ New Game (Host / Admin)</span>
+                <div class="pt-4 border-t border-slate-200 flex flex-col gap-2">
+                    <span class="text-xs font-semibold text-slate-400">Atau Kamu Adalah Host / Pengurus?</span>
+                    <button onclick="app.openHostLobby()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-sm rounded-xl transition shadow flex items-center justify-center gap-2">
+                        <i data-lucide="tv" class="w-4 h-4">📺</i>
+                        <span>Buka Layar Host / Proyektor</span>
                     </button>
                 </div>
             </div>
 
             <p class="text-center text-xs text-slate-400">
-                Gunakan PIN demo <span class="font-mono font-bold text-emerald-400">123456</span> atau minta PIN dari Admin.
+                Gunakan PIN demo <span class="font-mono font-bold text-emerald-400">123456</span> untuk uji coba cepat.
             </p>
         </section>
 
-        <!-- ==================== SCREEN 2: ADMIN LOBBY ==================== -->
-        <section id="screen-admin-lobby" class="hidden w-full max-w-xl space-y-6">
+        <!-- ==================== SCREEN 2: HOST LOBBY (PROYEKTOR) ==================== -->
+        <section id="screen-host-lobby" class="hidden w-full max-w-3xl space-y-6">
             <div class="glass-panel p-6 md:p-8 rounded-3xl space-y-6 border border-slate-800">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-5">
                     <div>
-                        <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Sesi Game Admin</span>
-                        <h2 class="text-2xl font-black text-white">Kelola Sesi Soal</h2>
+                        <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Layar Host Proyektor</span>
+                        <h2 class="text-3xl font-black text-white">Lobby Permainan</h2>
                     </div>
-                    <div class="bg-indigo-500/20 border border-indigo-500/40 px-4 py-2 rounded-2xl text-center">
-                        <span class="text-[10px] text-indigo-300 block font-semibold uppercase">PIN Sesi</span>
-                        <span id="admin-pin-display" class="text-2xl font-black text-white font-mono">------</span>
+                    <div class="bg-indigo-600 border border-indigo-400 px-6 py-3 rounded-2xl text-center shadow-lg animate-pulse">
+                        <span class="text-[10px] text-indigo-100 block font-bold uppercase tracking-wider">PIN GAME</span>
+                        <span id="host-pin-display" class="text-3xl font-black text-white font-mono">123456</span>
                     </div>
                 </div>
 
+                <!-- Joined Players List -->
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-400 uppercase">Daftar Soal Subjek (<span id="admin-question-count">0</span>)</span>
-                        <button onclick="app.showScreen('custom-creator')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition">
-                            <i data-lucide="plus" class="w-3.5 h-3.5">➕</i> Tambah Soal
-                        </button>
+                        <span class="text-sm font-bold text-slate-300 uppercase">Pemain Bergabung (<span id="host-player-count">0</span>)</span>
+                        <div class="flex gap-2">
+                            <button onclick="app.showScreen('custom-creator')" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 flex items-center gap-1.5 transition">
+                                <i data-lucide="settings" class="w-4 h-4 text-emerald-400">⚙️</i> Kelola Soal
+                            </button>
+                            <button onclick="app.generateNewPin()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition">
+                                PIN Baru
+                            </button>
+                        </div>
                     </div>
 
-                    <div id="admin-question-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                    <div id="host-player-list" class="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-52 overflow-y-auto p-2 bg-slate-900/60 rounded-2xl border border-slate-800">
+                        <div class="text-center col-span-full py-8 text-xs text-slate-500">
+                            Menunggu pemain memasukkan PIN di HP masing-masing...
+                        </div>
+                    </div>
                 </div>
 
                 <div class="pt-4 border-t border-slate-800 flex gap-3">
-                    <button onclick="app.showScreen('welcome')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-xl">
-                        Kembali
+                    <button onclick="app.showScreen('welcome')" class="py-4 px-6 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-2xl">
+                        Keluar
                     </button>
-                    <button id="btn-start-session" onclick="app.startAdminSession()" class="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold text-sm rounded-xl shadow-lg disabled:opacity-50">
-                        Mulai Game Sekarang
+                    <button id="btn-start-game" onclick="app.hostStartGame()" class="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-black text-lg rounded-2xl shadow-xl shadow-emerald-600/20 active:scale-95 transition">
+                        🚀 MULAI GAME SEKARANG
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- ==================== SCREEN 3: SOAL CREATOR ==================== -->
+        <!-- ==================== SCREEN 3: HOST GAMEPLAY (PROYEKTOR) ==================== -->
+        <section id="screen-host-game" class="hidden w-full space-y-5">
+            <!-- Top Status HUD -->
+            <div class="glass-card p-4 rounded-2xl flex items-center justify-between gap-3">
+                <span id="host-progress-text" class="px-4 py-1.5 bg-indigo-500/20 text-indigo-300 text-sm font-extrabold rounded-xl border border-indigo-500/40">Soal 1 / 5</span>
+                
+                <div class="flex items-center gap-3 flex-1 max-w-md mx-auto">
+                    <i data-lucide="clock" class="w-5 h-5 text-slate-400">⏱</i>
+                    <div class="w-full bg-slate-800 rounded-full h-4 overflow-hidden border border-slate-700">
+                        <div id="host-timer-bar" class="bg-gradient-to-r from-emerald-500 to-indigo-500 h-full w-full transition-all duration-1000"></div>
+                    </div>
+                    <span id="host-timer-text" class="text-sm font-mono font-black text-slate-100 w-10">30s</span>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 px-4 py-1.5 rounded-xl text-center">
+                    <span class="text-[10px] text-slate-400 block font-semibold uppercase">Masuk Jawaban</span>
+                    <span id="host-answers-count" class="text-sm font-black text-emerald-400">0 / 0</span>
+                </div>
+            </div>
+
+            <!-- Large Zoom Image Display -->
+            <div class="relative w-full h-80 md:h-[420px] rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center shadow-2xl">
+                <div class="w-full h-full relative overflow-hidden flex items-center justify-center">
+                    <img id="host-game-image" src="" alt="Subjek" class="zoom-target w-full h-full object-cover" />
+                </div>
+                <div class="absolute inset-0 lens-overlay pointer-events-none"></div>
+
+                <div class="absolute top-4 left-4 glass-card px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2">
+                    <i data-lucide="search" class="w-4 h-4">🔍</i>
+                    <span>Tingkat Zoom: <span id="host-zoom-text">10x</span></span>
+                </div>
+
+                <button onclick="app.hostManualZoomOut()" class="absolute top-4 right-4 glass-card px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-200 hover:text-white flex items-center gap-2 border border-slate-700">
+                    <i data-lucide="zoom-out" class="w-4 h-4 text-emerald-400">🔍-</i> Zoom Out Manual
+                </button>
+
+                <div id="host-hint-box" class="hidden absolute bottom-4 left-4 right-4 glass-card p-3 rounded-2xl border border-amber-500/40 text-amber-200 text-xs md:text-sm flex items-center gap-3">
+                    <i data-lucide="lightbulb" class="w-6 h-6 text-amber-400 shrink-0">💡</i>
+                    <span id="host-hint-text"></span>
+                </div>
+            </div>
+
+            <!-- Option Displays (Color-Coded Kahoot Style) -->
+            <div id="host-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Red, Blue, Yellow, Green Option Cards -->
+            </div>
+
+            <!-- Host Action Controls -->
+            <div class="flex gap-3 pt-2">
+                <button onclick="app.hostShowHint()" class="py-3 px-5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 rounded-2xl font-bold text-xs md:text-sm flex items-center gap-2">
+                    <i data-lucide="help-circle" class="w-4 h-4">❓</i> Buka Petunjuk
+                </button>
+                <button onclick="app.hostEndQuestion()" class="flex-1 py-3 px-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2">
+                    <span>Selesaikan Soal Sekarang ➔</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== SCREEN 4: HOST LEADERBOARD ==================== -->
+        <section id="screen-host-leaderboard" class="hidden w-full max-w-2xl space-y-6">
+            <div class="glass-panel p-8 rounded-3xl space-y-6 border border-slate-800 text-center">
+                <div class="inline-flex p-4 rounded-3xl bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-xl">
+                    <i data-lucide="trophy" class="w-10 h-10">🏆</i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-white">KLASEMEN SEMENTARA</h2>
+                    <p class="text-xs text-slate-400 mt-1">Peringkat teratas pemain berdasarkan kecepatan & ketepatan</p>
+                </div>
+
+                <div id="leaderboard-list" class="space-y-3 text-left">
+                    <!-- Top players list rendered dynamically -->
+                </div>
+
+                <button onclick="app.hostNextQuestion()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-black text-lg rounded-2xl shadow-xl transition active:scale-95">
+                    Lanjut ke Soal Berikutnya ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== SCREEN 5: PLAYER VIEW (HP PEMAIN) ==================== -->
+        <section id="screen-player-view" class="hidden w-full max-w-md space-y-6 text-center">
+            <!-- Player Waiting State -->
+            <div id="player-state-waiting" class="glass-panel p-8 rounded-3xl space-y-4 border border-slate-800">
+                <div class="w-16 h-16 mx-auto bg-indigo-500/20 border border-indigo-500/40 rounded-full flex items-center justify-center text-indigo-400 animate-pulse">
+                    <i data-lucide="user" class="w-8 h-8">👤</i>
+                </div>
+                <h3 class="text-2xl font-black text-white" id="player-display-name">Pemain</h3>
+                <p class="text-xs text-slate-400">Kamu sudah terhubung! Perhatikan layar utama Host untuk melihat gambar tebakan.</p>
+            </div>
+
+            <!-- Player Active Input State (4 Big Buttons) -->
+            <div id="player-state-active" class="hidden space-y-4">
+                <div class="glass-card p-3 rounded-2xl flex items-center justify-between text-xs font-bold text-slate-300">
+                    <span>Soal Berlangsung</span>
+                    <span id="player-timer-text" class="text-emerald-400 font-mono">30s</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 h-72 md:h-80">
+                    <button onclick="app.playerSubmitAnswer(0)" class="bg-kahootRed hover:opacity-90 text-white font-black text-2xl rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-2">
+                        <span class="text-4xl">▲</span>
+                        <span class="text-sm font-extrabold uppercase">MERAH</span>
+                    </button>
+                    <button onclick="app.playerSubmitAnswer(1)" class="bg-kahootBlue hover:opacity-90 text-white font-black text-2xl rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-2">
+                        <span class="text-4xl">◆</span>
+                        <span class="text-sm font-extrabold uppercase">BIRU</span>
+                    </button>
+                    <button onclick="app.playerSubmitAnswer(2)" class="bg-kahootYellow hover:opacity-90 text-white font-black text-2xl rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-2">
+                        <span class="text-4xl">●</span>
+                        <span class="text-sm font-extrabold uppercase">KUNING</span>
+                    </button>
+                    <button onclick="app.playerSubmitAnswer(3)" class="bg-kahootGreen hover:opacity-90 text-white font-black text-2xl rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-2">
+                        <span class="text-4xl">■</span>
+                        <span class="text-sm font-extrabold uppercase">HIJAU</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Player Answer Submitted State -->
+            <div id="player-state-submitted" class="hidden glass-panel p-8 rounded-3xl space-y-4 border border-slate-800">
+                <div class="w-16 h-16 mx-auto bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center text-emerald-400">
+                    <i data-lucide="check-circle-2" class="w-8 h-8">✔</i>
+                </div>
+                <h3 class="text-2xl font-black text-white">Jawaban Terkirim!</h3>
+                <p class="text-xs text-slate-400">Menunggu waktu habis / Host menyelesaikan soal...</p>
+            </div>
+
+            <!-- Player Result State -->
+            <div id="player-state-result" class="hidden glass-panel p-8 rounded-3xl space-y-4 border border-slate-800">
+                <div id="player-result-icon" class="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl"></div>
+                <h3 id="player-result-title" class="text-3xl font-black"></h3>
+                <div class="glass-card p-4 rounded-2xl">
+                    <span class="text-xs text-slate-400 block font-semibold">Total Poin Kamu</span>
+                    <span id="player-total-score" class="text-3xl font-black text-emerald-400">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SCREEN 6: SOAL CREATOR (MANAGEMENT) ==================== -->
         <section id="screen-custom-creator" class="hidden w-full max-w-2xl space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-2xl font-black text-white">Tambah Soal Subjek Baru</h2>
-                    <p class="text-xs text-slate-400">Unggah foto dari perangkat atau ambil foto kamera langsung</p>
+                    <h2 class="text-2xl font-black text-white">Kelola Soal Subjek Game</h2>
+                    <p class="text-xs text-slate-400">Tambah foto subjek dari galeri atau foto kamera langsung</p>
                 </div>
-                <button onclick="app.showScreen('admin-lobby')" class="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
+                <button onclick="app.showScreen('host-lobby')" class="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
                     <i data-lucide="x" class="w-5 h-5">✖</i>
                 </button>
             </div>
@@ -213,16 +348,16 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">3. Nama Subjek / Jawaban Benar</label>
-                    <input type="text" id="custom-answer" required placeholder="Contoh: Budi Santoso" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">3. Nama Subjek / Jawaban Benar (Opsi MERAH)</label>
+                    <input type="text" id="custom-answer" required placeholder="Contoh: Budi Santoso (Jawaban Benar)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">4. 3 Pilihan Jawaban Salah</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">4. 3 Pilihan Jawaban Salah (BIRU, KUNING, HIJAU)</label>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <input type="text" id="custom-opt-1" required placeholder="Pilihan Salah 1" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <input type="text" id="custom-opt-2" required placeholder="Pilihan Salah 2" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <input type="text" id="custom-opt-3" required placeholder="Pilihan Salah 3" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" id="custom-opt-1" required placeholder="Opsi Biru (Salah)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" id="custom-opt-2" required placeholder="Opsi Kuning (Salah)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" id="custom-opt-3" required placeholder="Opsi Hijau (Salah)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                     </div>
                 </div>
 
@@ -232,7 +367,7 @@
                 </div>
 
                 <div class="pt-2 flex gap-3">
-                    <button type="button" onclick="app.showScreen('admin-lobby')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl">Batal</button>
+                    <button type="button" onclick="app.showScreen('host-lobby')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl">Kembali</button>
                     <button type="submit" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl shadow-lg">Simpan Soal</button>
                 </div>
             </form>
@@ -251,82 +386,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- ==================== SCREEN 4: GAMEPLAY ==================== -->
-        <section id="screen-game" class="hidden w-full space-y-5">
-            <div class="glass-card p-4 rounded-2xl flex items-center justify-between gap-3">
-                <span id="game-progress" class="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-bold rounded-lg border border-indigo-500/40">Soal 1</span>
-                
-                <div class="flex items-center gap-3 flex-1 max-w-xs mx-auto">
-                    <i data-lucide="clock" class="w-4 h-4 text-slate-400">⏱</i>
-                    <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700">
-                        <div id="game-timer-bar" class="bg-gradient-to-r from-emerald-500 to-indigo-500 h-full w-full transition-all duration-1000"></div>
-                    </div>
-                    <span id="game-timer-text" class="text-xs font-mono font-bold text-slate-200">30s</span>
-                </div>
-
-                <div class="text-right">
-                    <span class="text-[10px] text-slate-400 block">Poin</span>
-                    <span id="potential-points" class="text-sm font-black text-emerald-400">+250</span>
-                </div>
-            </div>
-
-            <div class="relative w-full h-72 md:h-96 rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center">
-                <div id="zoom-viewport" class="w-full h-full relative overflow-hidden flex items-center justify-center">
-                    <img id="game-image" src="" alt="Subjek" class="zoom-target w-full h-full object-cover" />
-                </div>
-                <div class="absolute inset-0 lens-overlay pointer-events-none"></div>
-
-                <div class="absolute top-4 left-4 glass-card px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2">
-                    <i data-lucide="search" class="w-3.5 h-3.5">🔍</i>
-                    <span>Zoom: <span id="zoom-level-text">10x</span></span>
-                </div>
-
-                <div id="hint-display-box" class="hidden absolute bottom-4 left-4 right-4 glass-card p-3 rounded-2xl border border-amber-500/40 text-amber-200 text-xs flex items-center gap-3">
-                    <i data-lucide="lightbulb" class="w-5 h-5 text-amber-400 shrink-0">💡</i>
-                    <span id="hint-text"></span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="app.manualZoomOut()" class="p-3 rounded-2xl glass-card hover:bg-slate-800 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2">
-                    <i data-lucide="zoom-out" class="w-4 h-4 text-emerald-400">🔍-</i> Zoom Out (-15)
-                </button>
-                <button id="btn-hint" onclick="app.useHint()" class="p-3 rounded-2xl glass-card hover:bg-slate-800 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2">
-                    <i data-lucide="help-circle" class="w-4 h-4 text-amber-400">❓</i> Petunjuk (-30)
-                </button>
-            </div>
-
-            <div id="answer-section" class="glass-panel p-4 rounded-3xl border border-slate-800">
-                <div id="container-mc" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-            </div>
-        </section>
-
-        <!-- ==================== SCREEN 5: GAME OVER ==================== -->
-        <section id="screen-game-over" class="hidden w-full max-w-md text-center space-y-6">
-            <div class="glass-panel p-8 rounded-3xl space-y-6 border border-slate-700">
-                <div class="inline-flex p-4 rounded-3xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                    <i data-lucide="trophy" class="w-12 h-12">🏆</i>
-                </div>
-                <div>
-                    <h2 class="text-3xl font-black text-white">Sesi Selesai!</h2>
-                    <p class="text-xs text-slate-400">Hasil tebakan subjek kamu:</p>
-                </div>
-                <div class="glass-card p-5 rounded-2xl grid grid-cols-2 gap-4">
-                    <div>
-                        <div class="text-xs text-slate-400 font-semibold uppercase">Total Poin</div>
-                        <div id="final-score" class="text-3xl font-black text-emerald-400">0</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-slate-400 font-semibold uppercase">Akurasi</div>
-                        <div id="final-accuracy" class="text-3xl font-black text-indigo-400">0%</div>
-                    </div>
-                </div>
-                <button onclick="app.showScreen('welcome')" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition">
-                    Kembali ke Menu Utama
-                </button>
-            </div>
-        </section>
 
     </main>
 
@@ -355,56 +414,117 @@
             click() { this.playTone(800, 'sine', 0.05); }
         }
 
-        class ZoomGameApp {
+        class KahootZoomGame {
             constructor() {
                 this.sound = new SoundEngine();
-                this.currentPin = '';
+                this.pin = '123456';
+                this.role = 'player'; // 'host' or 'player'
+                this.playerName = '';
+                
+                // Realtime Channel Sync
+                this.channel = new BroadcastChannel('kahoot_zoom_channel');
+                this.channel.onmessage = (e) => this.handleChannelMessage(e.data);
+
+                // Game State
+                this.players = []; // [{ name, score, answerSubmitted }]
                 this.questions = [];
                 this.currentIndex = 0;
-                this.score = 0;
-                this.streak = 0;
-                this.correctCount = 0;
                 this.currentZoomStep = 5;
                 this.timer = null;
                 this.timeLeft = 30;
+                this.correctOptionIndex = 0;
+
+                // Creator
                 this.creatorFocalX = 50;
                 this.creatorFocalY = 50;
                 this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
-                this.videoStream = null;
 
                 this.setupDemoSession();
             }
 
             init() {
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
                 document.body.addEventListener('click', () => this.sound.init(), { once: true });
             }
 
             setupDemoSession() {
-                const demoQuestions = [{
-                    id: 'q_demo',
-                    name: 'Panitia GP',
-                    hint: 'Subjek contoh awal game',
-                    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
-                    focalX: 50,
-                    focalY: 30,
-                    options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
-                }];
-                localStorage.setItem('session_123456', JSON.stringify(demoQuestions));
+                const demo = [
+                    {
+                        id: 'q1',
+                        name: 'Ketua GP',
+                        hint: 'Pengurus Harian GP Mangngamaseang',
+                        imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
+                        focalX: 50,
+                        focalY: 30,
+                        options: ['Ketua GP', 'Sekretaris GP', 'Bendahara GP', 'Anggota GP']
+                    }
+                ];
+                localStorage.setItem('session_123456', JSON.stringify(demo));
+            }
+
+            broadcast(action, payload = {}) {
+                this.channel.postMessage({ action, payload, pin: this.pin });
+            }
+
+            handleChannelMessage(data) {
+                if (data.pin !== this.pin) return;
+
+                switch (data.action) {
+                    case 'PLAYER_JOINED':
+                        if (this.role === 'host') {
+                            if (!this.players.find(p => p.name === data.payload.name)) {
+                                this.players.push({ name: data.payload.name, score: 0, currentAnswer: -1 });
+                                this.renderHostPlayerList();
+                            }
+                        }
+                        break;
+                    
+                    case 'GAME_STARTED':
+                        if (this.role === 'player') {
+                            this.showScreen('player-view');
+                            this.setPlayerState('waiting');
+                            this.showToast('Game telah dimulai!');
+                        }
+                        break;
+
+                    case 'QUESTION_START':
+                        if (this.role === 'player') {
+                            this.showScreen('player-view');
+                            this.setPlayerState('active');
+                        }
+                        break;
+
+                    case 'ANSWER_SUBMITTED':
+                        if (this.role === 'host') {
+                            const p = this.players.find(item => item.name === data.payload.name);
+                            if (p) {
+                                p.currentAnswer = data.payload.optionIndex;
+                                // Add score if correct
+                                if (data.payload.optionIndex === this.correctOptionIndex) {
+                                    const pts = 100 + data.payload.zoomStep * 30 + data.payload.timeLeft * 2;
+                                    p.score += pts;
+                                }
+                            }
+                            this.updateHostAnswersCount();
+                        }
+                        break;
+
+                    case 'QUESTION_ENDED':
+                        if (this.role === 'player') {
+                            const myData = data.payload.players.find(p => p.name === this.playerName);
+                            const isCorrect = myData && myData.currentAnswer === data.payload.correctIndex;
+                            this.showPlayerResult(isCorrect, myData ? myData.score : 0);
+                        }
+                        break;
+                }
             }
 
             showScreen(id) {
                 this.sound.click();
-                ['welcome', 'admin-lobby', 'custom-creator', 'game', 'game-over'].forEach(s => {
+                ['welcome', 'host-lobby', 'host-game', 'host-leaderboard', 'player-view', 'custom-creator'].forEach(s => {
                     document.getElementById(`screen-${s}`).classList.add('hidden');
                 });
                 document.getElementById(`screen-${id}`).classList.remove('hidden');
-
-                const navStats = document.getElementById('nav-stats');
-                if (id === 'game') navStats.classList.remove('hidden');
-                else { navStats.classList.add('hidden'); this.stopTimer(); }
             }
 
             showToast(msg) {
@@ -417,76 +537,259 @@
             toggleSound() {
                 this.sound.muted = !this.sound.muted;
                 const icon = document.getElementById('sound-icon');
-                if (icon) {
-                    icon.setAttribute('data-lucide', this.sound.muted ? 'volume-x' : 'volume-2');
-                }
+                if (icon) icon.setAttribute('data-lucide', this.sound.muted ? 'volume-x' : 'volume-2');
                 if (typeof lucide !== 'undefined') lucide.createIcons();
             }
 
-            joinByPin() {
-                const pin = document.getElementById('pin-input').value.trim();
-                if (!pin) { this.showToast('Masukkan PIN terlebih dahulu!'); return; }
+            /* ================= PLAYER LOGIC ================= */
 
-                const data = localStorage.getItem(`session_${pin}`);
-                if (!data) { this.showToast('PIN Sesi tidak ditemukan!'); return; }
+            joinAsPlayer() {
+                const pin = document.getElementById('player-pin-input').value.trim();
+                const name = document.getElementById('player-name-input').value.trim();
 
-                this.questions = JSON.parse(data);
-                if (this.questions.length === 0) { this.showToast('Sesi ini belum memiliki soal!'); return; }
+                if (!pin || !name) { this.showToast('Masukkan PIN dan Nama terlebih dahulu!'); return; }
 
-                this.currentPin = pin;
-                this.resetGameStats();
-                this.showScreen('game');
-                this.loadQuestion();
+                this.pin = pin;
+                this.playerName = name;
+                this.role = 'player';
+                document.getElementById('role-badge').innerText = 'Pemain: ' + name;
+                document.getElementById('player-display-name').innerText = name;
+
+                this.broadcast('PLAYER_JOINED', { name });
+                this.showScreen('player-view');
+                this.setPlayerState('waiting');
             }
 
-            createNewGameSession() {
-                this.currentPin = Math.floor(100000 + Math.random() * 900000).toString();
-                this.questions = [];
-                localStorage.setItem(`session_${this.currentPin}`, JSON.stringify(this.questions));
-                this.renderAdminLobby();
-                this.showScreen('admin-lobby');
+            setPlayerState(state) {
+                ['waiting', 'active', 'submitted', 'result'].forEach(s => {
+                    document.getElementById(`player-state-${s}`).classList.add('hidden');
+                });
+                document.getElementById(`player-state-${state}`).classList.remove('hidden');
             }
 
-            renderAdminLobby() {
-                document.getElementById('admin-pin-display').innerText = this.currentPin;
-                document.getElementById('admin-question-count').innerText = this.questions.length;
+            playerSubmitAnswer(optionIdx) {
+                this.sound.click();
+                this.setPlayerState('submitted');
+                this.broadcast('ANSWER_SUBMITTED', {
+                    name: this.playerName,
+                    optionIndex: optionIdx,
+                    zoomStep: this.currentZoomStep,
+                    timeLeft: this.timeLeft
+                });
+            }
 
-                const list = document.getElementById('admin-question-list');
+            showPlayerResult(isCorrect, totalScore) {
+                this.setPlayerState('result');
+                const icon = document.getElementById('player-result-icon');
+                const title = document.getElementById('player-result-title');
+
+                if (isCorrect) {
+                    this.sound.correct();
+                    icon.className = "w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-3xl";
+                    icon.innerText = '🎉';
+                    title.innerText = 'JAWABAN BENAR!';
+                    title.className = 'text-3xl font-black text-emerald-400';
+                } else {
+                    this.sound.wrong();
+                    icon.className = "w-16 h-16 mx-auto rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center text-3xl";
+                    icon.innerText = '❌';
+                    title.innerText = 'SALAH!';
+                    title.className = 'text-3xl font-black text-rose-400';
+                }
+
+                document.getElementById('player-total-score').innerText = totalScore;
+            }
+
+            /* ================= HOST LOGIC ================= */
+
+            openHostLobby() {
+                this.role = 'host';
+                document.getElementById('role-badge').innerText = 'HOST / ADMIN';
+                document.getElementById('host-pin-display').innerText = this.pin;
+
+                const data = localStorage.getItem(`session_${this.pin}`);
+                this.questions = data ? JSON.parse(data) : [];
+
+                this.renderHostPlayerList();
+                this.showScreen('host-lobby');
+            }
+
+            generateNewPin() {
+                this.pin = Math.floor(100000 + Math.random() * 900000).toString();
+                document.getElementById('host-pin-display').innerText = this.pin;
+                this.players = [];
+                this.renderHostPlayerList();
+            }
+
+            renderHostPlayerList() {
+                document.getElementById('host-player-count').innerText = this.players.length;
+                const list = document.getElementById('host-player-list');
                 list.innerHTML = '';
 
-                if (this.questions.length === 0) {
-                    list.innerHTML = `<div class="text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-2xl">Belum ada soal subjek ditambahkan</div>`;
-                    document.getElementById('btn-start-session').disabled = true;
+                if (this.players.length === 0) {
+                    list.innerHTML = `<div class="text-center col-span-full py-8 text-xs text-slate-500">Menunggu pemain memasukkan PIN di HP masing-masing...</div>`;
                 } else {
-                    document.getElementById('btn-start-session').disabled = false;
-                    this.questions.forEach((q, idx) => {
+                    this.players.forEach(p => {
                         const item = document.createElement('div');
-                        item.className = "p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs";
-                        item.innerHTML = `
-                            <div class="flex items-center gap-3">
-                                <img src="${q.imageUrl}" class="w-8 h-8 rounded-lg object-cover">
-                                <span class="font-bold text-white">${idx + 1}. ${q.name}</span>
-                            </div>
-                            <button onclick="app.removeQuestion(${idx})" class="text-rose-400 p-1"><i data-lucide="trash-2" class="w-4 h-4">🗑</i></button>
-                        `;
+                        item.className = "p-3 bg-indigo-600/20 border border-indigo-500/40 rounded-xl text-center text-xs font-bold text-white";
+                        item.innerText = p.name;
                         list.appendChild(item);
                     });
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             }
 
-            removeQuestion(idx) {
-                this.questions.splice(idx, 1);
-                localStorage.setItem(`session_${this.currentPin}`, JSON.stringify(this.questions));
-                this.renderAdminLobby();
+            hostStartGame() {
+                if (this.questions.length === 0) { this.showToast('Tambahkan soal terlebih dahulu!'); return; }
+                this.currentIndex = 0;
+                this.broadcast('GAME_STARTED');
+                this.hostLoadQuestion();
             }
 
-            startAdminSession() {
-                if (this.questions.length === 0) return;
-                this.resetGameStats();
-                this.showScreen('game');
-                this.loadQuestion();
+            hostLoadQuestion() {
+                if (this.currentIndex >= this.questions.length) {
+                    this.showScreen('host-leaderboard');
+                    return;
+                }
+
+                const q = this.questions[this.currentIndex];
+                document.getElementById('host-progress-text').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}`;
+
+                // Reset answer inputs for players
+                this.players.forEach(p => p.currentAnswer = -1);
+                this.updateHostAnswersCount();
+
+                // Setup Zoom Visualizer
+                this.currentZoomStep = 5;
+                document.getElementById('host-hint-box').classList.add('hidden');
+                
+                const img = document.getElementById('host-game-image');
+                img.src = q.imageUrl;
+                img.style.transformOrigin = `${q.focalX}% ${q.focalY}%`;
+                this.applyHostZoom();
+
+                // Render Options Cards
+                this.renderHostOptions(q);
+
+                this.showScreen('host-game');
+                this.broadcast('QUESTION_START', { qIndex: this.currentIndex });
+                this.startHostTimer();
             }
+
+            applyHostZoom() {
+                const map = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
+                const scale = map[this.currentZoomStep] || 1;
+                document.getElementById('host-game-image').style.transform = `scale(${scale})`;
+                document.getElementById('host-zoom-text').innerText = `${scale}x`;
+            }
+
+            hostManualZoomOut() {
+                if (this.currentZoomStep > 1) {
+                    this.currentZoomStep--;
+                    this.applyHostZoom();
+                }
+            }
+
+            hostShowHint() {
+                const q = this.questions[this.currentIndex];
+                document.getElementById('host-hint-text').innerText = q.hint;
+                document.getElementById('host-hint-box').classList.remove('hidden');
+            }
+
+            renderHostOptions(q) {
+                const container = document.getElementById('host-options-grid');
+                container.innerHTML = '';
+
+                // Option index 0 is correct answer
+                this.correctOptionIndex = 0;
+                const colors = [
+                    { bg: 'bg-kahootRed', shape: '▲', label: 'MERAH' },
+                    { bg: 'bg-kahootBlue', shape: '◆', label: 'BIRU' },
+                    { bg: 'bg-kahootYellow', shape: '●', label: 'KUNING' },
+                    { bg: 'bg-kahootGreen', shape: '■', label: 'HIJAU' }
+                ];
+
+                q.options.forEach((optText, idx) => {
+                    const style = colors[idx] || colors[0];
+                    const card = document.createElement('div');
+                    card.className = `${style.bg} p-4 rounded-2xl text-white flex items-center gap-4 shadow-lg`;
+                    card.innerHTML = `
+                        <span class="text-2xl font-black">${style.shape}</span>
+                        <span class="text-base font-extrabold flex-1">${optText}</span>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            updateHostAnswersCount() {
+                const count = this.players.filter(p => p.currentAnswer !== -1).length;
+                document.getElementById('host-answers-count').innerText = `${count} / ${this.players.length}`;
+            }
+
+            startHostTimer() {
+                this.stopHostTimer();
+                this.timeLeft = 30;
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    document.getElementById('host-timer-bar').style.width = `${(this.timeLeft / 30) * 100}%`;
+                    document.getElementById('host-timer-text').innerText = `${this.timeLeft}s`;
+
+                    if (this.timeLeft <= 0) {
+                        this.hostEndQuestion();
+                    }
+                }, 1000);
+            }
+
+            stopHostTimer() {
+                if (this.timer) { clearInterval(this.timer); this.timer = null; }
+            }
+
+            hostEndQuestion() {
+                this.stopHostTimer();
+                // Reveal full image
+                document.getElementById('host-game-image').style.transform = 'scale(1)';
+
+                // Send Result to players
+                this.broadcast('QUESTION_ENDED', {
+                    correctIndex: this.correctOptionIndex,
+                    players: this.players
+                });
+
+                setTimeout(() => {
+                    this.renderLeaderboard();
+                    this.showScreen('host-leaderboard');
+                }, 2000);
+            }
+
+            renderLeaderboard() {
+                const sorted = [...this.players].sort((a, b) => b.score - a.score);
+                const container = document.getElementById('leaderboard-list');
+                container.innerHTML = '';
+
+                sorted.slice(0, 5).forEach((p, idx) => {
+                    const item = document.createElement('div');
+                    item.className = "p-4 glass-card rounded-2xl flex items-center justify-between border border-slate-700";
+                    item.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center text-sm">${idx + 1}</span>
+                            <span class="font-extrabold text-white text-base">${p.name}</span>
+                        </div>
+                        <span class="font-black text-emerald-400 text-lg">${p.score} Pts</span>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+
+            hostNextQuestion() {
+                this.currentIndex++;
+                if (this.currentIndex < this.questions.length) {
+                    this.hostLoadQuestion();
+                } else {
+                    this.showToast('Sesi Permainan Selesai!');
+                    if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 70 });
+                }
+            }
+
+            /* ================= CREATOR LOGIC ================= */
 
             handleFileUpload(e) {
                 const file = e.target.files[0];
@@ -557,114 +860,14 @@
                     options: [ans, opt1, opt2, opt3]
                 });
 
-                localStorage.setItem(`session_${this.currentPin}`, JSON.stringify(this.questions));
-                this.renderAdminLobby();
-                this.showScreen('admin-lobby');
-            }
-
-            resetGameStats() {
-                this.currentIndex = 0; this.score = 0; this.streak = 0; this.correctCount = 0;
-                document.getElementById('nav-score').innerText = '0';
-                document.getElementById('nav-streak').innerText = '0x';
-            }
-
-            loadQuestion() {
-                if (this.currentIndex >= this.questions.length) { this.endGame(); return; }
-                const q = this.questions[this.currentIndex];
-                document.getElementById('game-progress').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}`;
-
-                this.currentZoomStep = 5;
-                document.getElementById('hint-display-box').classList.add('hidden');
-                document.getElementById('btn-hint').disabled = false;
-
-                const img = document.getElementById('game-image');
-                img.src = q.imageUrl;
-                img.style.transformOrigin = `${q.focalX}% ${q.focalY}%`;
-
-                this.applyZoom();
-                this.renderChoices(q);
-                this.startTimer();
-            }
-
-            applyZoom() {
-                const map = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
-                const scale = map[this.currentZoomStep] || 1;
-                document.getElementById('game-image').style.transform = `scale(${scale})`;
-                document.getElementById('zoom-level-text').innerText = `${scale}x`;
-                document.getElementById('potential-points').innerText = `+${100 + this.currentZoomStep * 30}`;
-            }
-
-            startTimer() {
-                this.stopTimer();
-                this.timeLeft = 30;
-                this.timer = setInterval(() => {
-                    this.timeLeft--;
-                    document.getElementById('game-timer-bar').style.width = `${(this.timeLeft / 30) * 100}%`;
-                    document.getElementById('game-timer-text').innerText = `${this.timeLeft}s`;
-                    if (this.timeLeft <= 0) { this.stopTimer(); this.checkAnswer(''); }
-                }, 1000);
-            }
-
-            stopTimer() { if (this.timer) { clearInterval(this.timer); this.timer = null; } }
-
-            manualZoomOut() {
-                if (this.currentZoomStep > 1) { this.currentZoomStep--; this.applyZoom(); }
-            }
-
-            useHint() {
-                const q = this.questions[this.currentIndex];
-                document.getElementById('hint-text').innerText = q.hint;
-                document.getElementById('hint-display-box').classList.remove('hidden');
-                document.getElementById('btn-hint').disabled = true;
-            }
-
-            renderChoices(q) {
-                const c = document.getElementById('container-mc');
-                c.innerHTML = '';
-                [...q.options].sort(() => Math.random() - 0.5).forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = "w-full py-3.5 px-4 rounded-2xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-sm text-left transition";
-                    btn.innerText = opt;
-                    btn.onclick = () => this.checkAnswer(opt);
-                    c.appendChild(btn);
-                });
-            }
-
-            checkAnswer(selected) {
-                this.stopTimer();
-                const q = this.questions[this.currentIndex];
-                document.getElementById('game-image').style.transform = 'scale(1)';
-
-                if (selected.toLowerCase().trim() === q.name.toLowerCase().trim()) {
-                    this.sound.correct();
-                    this.correctCount++;
-                    this.streak++;
-                    this.score += 100 + this.currentZoomStep * 30;
-                    document.getElementById('nav-score').innerText = this.score;
-                    document.getElementById('nav-streak').innerText = `${this.streak}x`;
-                    this.showToast('✨ Jawaban Benar!');
-                } else {
-                    this.sound.wrong();
-                    this.streak = 0;
-                    document.getElementById('nav-streak').innerText = '0x';
-                    this.showToast(`❌ Salah! Jawaban: ${q.name}`);
-                }
-
-                setTimeout(() => { this.currentIndex++; this.loadQuestion(); }, 2000);
-            }
-
-            endGame() {
-                this.stopTimer();
-                const acc = Math.round((this.correctCount / this.questions.length) * 100) || 0;
-                document.getElementById('final-score').innerText = this.score;
-                document.getElementById('final-accuracy').innerText = `${acc}%`;
-                this.showScreen('game-over');
-                if (typeof confetti === 'function') confetti({ particleCount: 80, spread: 60 });
+                localStorage.setItem(`session_${this.pin}`, JSON.stringify(this.questions));
+                this.showToast('Soal Berhasil Disimpan!');
+                this.showScreen('host-lobby');
             }
         }
 
         let app;
-        window.onload = () => { app = new ZoomGameApp(); app.init(); };
+        window.onload = () => { app = new KahootZoomGame(); app.init(); };
     </script>
 </body>
 </html>
