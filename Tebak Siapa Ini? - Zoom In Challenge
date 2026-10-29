@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tebak Siapa Ini? - Zoom In Challenge</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        },
+                        accent: {
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-short': 'bounce 0.5s ease-in-out 2',
+                        'zoom-pulse': 'zoomPulse 2s infinite ease-in-out',
+                    },
+                    keyframes: {
+                        zoomPulse: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.03)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Smooth viewport zoom transition */
+        .zoom-target {
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transform-origin: center center;
+        }
+
+        /* Glassmorphism card effects */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Grid lines overlay for scanner/lens effect */
+        .lens-overlay {
+            background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-brand-500 selection:text-white">
+
+    <!-- Header & Navigation -->
+    <header class="w-full border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="app.showScreen('welcome')">
+                <div class="bg-gradient-to-tr from-indigo-500 to-emerald-400 p-2.5 rounded-2xl shadow-lg shadow-indigo-500/20">
+                    <i data-lucide="zoom-in" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-indigo-300">
+                        TEBAK SIAPA?
+                    </h1>
+                    <p class="text-xs text-emerald-400 font-semibold tracking-widest uppercase">Zoom In Challenge</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar (Visible during play) -->
+            <div id="nav-stats" class="hidden flex items-center gap-4 bg-slate-800/80 border border-slate-700/60 rounded-full px-4 py-1.5 text-sm">
+                <div class="flex items-center gap-1.5 text-amber-400 font-bold" title="Total Poin">
+                    <i data-lucide="trophy" class="w-4 h-4"></i>
+                    <span id="nav-score">0</span>
+                </div>
+                <div class="h-4 w-[1px] bg-slate-700"></div>
+                <div class="flex items-center gap-1.5 text-orange-400 font-bold" title="Rentetan Benar (Streak)">
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                    <span id="nav-streak">0x</span>
+                </div>
+            </div>
+
+            <!-- Header Action Controls -->
+            <div class="flex items-center gap-2">
+                <button id="sound-toggle-btn" onclick="app.toggleSound()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition" title="Efek Suara On/Off">
+                    <i id="sound-icon" data-lucide="volume-2" class="w-5 h-5"></i>
+                </button>
+                <button onclick="app.showScreen('welcome')" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition" title="Menu Utama">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content Container -->
+    <main id="app-container" class="max-w-5xl w-full mx-auto p-4 md:p-6 flex-1 flex flex-col justify-center">
+
+        <!-- ==================== SCREEN 1: WELCOME / MENU ==================== -->
+        <section id="screen-welcome" class="space-y-8 animate-fadeIn">
+            <!-- Hero Banner -->
+            <div class="text-center space-y-4 max-w-2xl mx-auto pt-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Game Asah Otak & Detail Visual
+                </div>
+                <h2 class="text-4xl md:text-6xl font-black tracking-tight text-white">
+                    Seberapa Tajam <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Mata Kamu?</span>
+                </h2>
+                <p class="text-slate-400 text-base md:text-lg leading-relaxed">
+                    Tebak tokoh dunia, legenda olahraga, ikon pop, hingga cagar budaya yang di-zoom secara ekstrim. Semakin cepat & makin sedikit kamu melakukan unzoom, makin tinggi skornya!
+                </p>
+            </div>
+
+            <!-- Game Mode Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto pt-2">
+                <!-- Preset Mode Card -->
+                <div class="glass-panel p-6 rounded-3xl hover:border-emerald-500/50 transition duration-300 group relative overflow-hidden flex flex-col justify-between space-y-6">
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition"></div>
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                            <i data-lucide="play-circle" class="w-7 h-7"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white group-hover:text-emerald-400 transition">Mode Utama (Preset)</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            Mainkan koleksi tebakan resmi berisi berbagai tokoh terkenal dunia, atlet legendaris, hingga ikon populer dengan gambar HD.
+                        </p>
+                    </div>
+
+                    <div class="space-y-3 pt-2">
+                        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Pilih Kategori:</label>
+                        <select id="preset-category-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                            <option value="all">🌟 Semua Kategori (Campuran)</option>
+                            <option value="tokoh">👤 Tokoh Dunia & Sejarah</option>
+                            <option value="atlet">⚽ Atlet & Olahragawan Dunia</option>
+                            <option value="pop">🎤 Artis & Pop Culture</option>
+                            <option value="landmark">🏛️ Candi & Landmark</option>
+                        </select>
+                        <button onclick="app.startPresetGame()" class="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold text-lg shadow-lg shadow-emerald-600/30 active:scale-[0.98] transition flex items-center justify-center gap-2">
+                            <span>Mulai Permainan</span>
+                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Mode Card -->
+                <div class="glass-panel p-6 rounded-3xl hover:border-indigo-500/50 transition duration-300 group relative overflow-hidden flex flex-col justify-between space-y-6">
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition"></div>
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                            <i data-lucide="plus-circle" class="w-7 h-7"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white group-hover:text-indigo-400 transition">Mode Kustom (Custom)</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            Buat soal tebakan sendiri dengan mengunggah foto atau memasukkan URL gambar untuk dimainkan bersama teman-temanmu!
+                        </p>
+                    </div>
+
+                    <div class="space-y-3 pt-2">
+                        <div id="custom-count-tag" class="text-xs text-indigo-300 font-medium">Tersedia 0 soal kustom buatanmu</div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="app.showScreen('custom-creator')" class="py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-sm transition flex items-center justify-center gap-2">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i> Buat Soal
+                            </button>
+                            <button id="btn-play-custom" onclick="app.startCustomGame()" class="py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i data-lucide="play" class="w-4 h-4"></i> Mainkan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- High Score & Instructions Footer Bar -->
+            <div class="max-w-4xl mx-auto glass-card p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+                        <i data-lucide="award" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Rekor Skor Tertinggi</div>
+                        <div id="high-score-display" class="text-xl font-black text-amber-300">0 Poin</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-slate-400">
+                    <span class="flex items-center gap-1"><i data-lucide="eye" class="w-3.5 h-3.5 text-emerald-400"></i> Auto Zoom Out</span>
+                    <span>•</span>
+                    <span class="flex items-center gap-1"><i data-lucide="help-circle" class="w-3.5 h-3.5 text-indigo-400"></i> Petunjuk</span>
+                    <span>•</span>
+                    <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i> Bonus Combo</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SCREEN 2: GAMEPLAY ==================== -->
+        <section id="screen-game" class="hidden space-y-5 animate-fadeIn">
+            <!-- Top HUD Bar -->
+            <div class="glass-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span id="game-progress" class="px-3 py-1 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-xs font-bold rounded-lg">
+                        Soal 1 / 10
+                    </span>
+                    <span id="game-category" class="text-xs text-slate-400 font-medium">
+                        Kategori: Tokoh
+                    </span>
+                </div>
+
+                <!-- Timer Bar -->
+                <div class="flex items-center gap-3 flex-1 max-w-xs mx-auto">
+                    <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                    <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700">
+                        <div id="game-timer-bar" class="bg-gradient-to-r from-emerald-500 to-indigo-500 h-full w-full transition-all duration-1000"></div>
+                    </div>
+                    <span id="game-timer-text" class="text-xs font-mono font-bold text-slate-200 w-8">30s</span>
+                </div>
+
+                <!-- Current Score Level -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400">Estimasi Poin:</span>
+                    <span id="potential-points" class="text-base font-black text-emerald-400">+250</span>
+                </div>
+            </div>
+
+            <!-- Main Zoom Visualizer & Display Area -->
+            <div class="relative w-full h-72 md:h-96 rounded-3xl overflow-hidden glass-panel border border-slate-700/80 shadow-2xl flex items-center justify-center">
+                
+                <!-- Zoom Container Image -->
+                <div id="zoom-viewport" class="w-full h-full relative overflow-hidden flex items-center justify-center">
+                    <img id="game-image" src="" alt="Tebak Gambar" class="zoom-target w-full h-full object-cover select-none pointer-events-none" onerror="this.src='https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop&q=80'" />
+                </div>
+
+                <!-- Lens Grid Overlay Effect -->
+                <div class="absolute inset-0 lens-overlay pointer-events-none"></div>
+
+                <!-- Vignette and HUD Border -->
+                <div class="absolute inset-0 border-2 border-indigo-500/20 rounded-3xl pointer-events-none shadow-[inset_0_0_60px_rgba(0,0,0,0.8)]"></div>
+
+                <!-- Zoom Level Indicator Badge (Top Left) -->
+                <div class="absolute top-4 left-4 glass-card px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2 border border-emerald-500/30">
+                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                    <span>Tingkat Zoom: <span id="zoom-level-text">8x</span></span>
+                </div>
+
+                <!-- Auto-Unzoom Indicator (Top Right) -->
+                <button id="toggle-autounzoom-btn" onclick="app.toggleAutoUnzoom()" class="absolute top-4 right-4 glass-card px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-2 border border-slate-700 transition">
+                    <div id="autounzoom-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
+                    <span id="autounzoom-text">Auto Zoom-Out: ON</span>
+                </button>
+
+                <!-- Floating Hint Box (Overlaid if triggered) -->
+                <div id="hint-display-box" class="hidden absolute bottom-4 left-4 right-4 glass-card p-3 rounded-2xl border border-amber-500/40 text-amber-200 text-xs md:text-sm flex items-center gap-3 animate-bounce-short">
+                    <div class="p-2 bg-amber-500/20 rounded-xl text-amber-400 shrink-0">
+                        <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold block text-amber-400 uppercase text-[10px] tracking-wider">Petunjuk:</span>
+                        <span id="hint-text">Pemain sepak bola dunia</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gameplay Action Bar Controls -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button onclick="app.manualZoomOut()" class="p-3 rounded-2xl glass-card hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-semibold text-xs md:text-sm transition flex items-center justify-center gap-2 active:scale-95">
+                    <i data-lucide="zoom-out" class="w-4 h-4 text-emerald-400"></i>
+                    <span>Zoom Out (-15 Poin)</span>
+                </button>
+
+                <button id="btn-hint" onclick="app.useHint()" class="p-3 rounded-2xl glass-card hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-semibold text-xs md:text-sm transition flex items-center justify-center gap-2 active:scale-95">
+                    <i data-lucide="help-circle" class="w-4 h-4 text-amber-400"></i>
+                    <span>Petunjuk (-30 Poin)</span>
+                </button>
+
+                <!-- Input Mode Toggle -->
+                <div class="col-span-2 flex bg-slate-900 p-1 rounded-2xl border border-slate-800">
+                    <button id="mode-btn-mc" onclick="app.setInputMode('mc')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow">
+                        <i data-lucide="list" class="w-3.5 h-3.5"></i> Pilihan Ganda
+                    </button>
+                    <button id="mode-btn-text" onclick="app.setInputMode('text')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+                        <i data-lucide="type" class="w-3.5 h-3.5"></i> Ketik Jawaban
+                    </button>
+                </div>
+            </div>
+
+            <!-- Answer Section (Multiple Choice or Typing Input) -->
+            <div id="answer-section" class="glass-panel p-4 md:p-5 rounded-3xl border border-slate-800">
+                <!-- Multiple Choice Container -->
+                <div id="container-mc" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Dynamic Choice Buttons rendered here -->
+                </div>
+
+                <!-- Text Typing Container -->
+                <div id="container-text" class="hidden flex gap-2">
+                    <input type="text" id="type-answer-input" placeholder="Ketik nama tokoh atau jawaban di sini..." autocomplete="off" onkeydown="if(event.key === 'Enter') app.submitTypedAnswer()" class="flex-1 bg-slate-900 border border-slate-700 rounded-2xl px-5 py-3.5 text-sm md:text-base text-white focus:outline-none focus:border-indigo-500 transition placeholder:text-slate-500">
+                    <button onclick="app.submitTypedAnswer()" class="px-6 py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold rounded-2xl text-sm transition flex items-center gap-2 active:scale-95 shrink-0">
+                        <span>Jawab</span>
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SCREEN 3: CUSTOM CREATOR ==================== -->
+        <section id="screen-custom-creator" class="hidden space-y-6 animate-fadeIn max-w-3xl mx-auto w-full">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Buat Soal Kustom Baru</h2>
+                    <p class="text-xs text-slate-400">Tambahkan gambar milikmu dan tentukan fokus zoom-nya</p>
+                </div>
+                <button onclick="app.showScreen('welcome')" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="creator-form" onsubmit="app.saveCustomQuestion(event)" class="glass-panel p-6 rounded-3xl space-y-5 border border-slate-800">
+                
+                <!-- Image Source Selection -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">1. Sumber Gambar</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="url" id="custom-img-url" placeholder="Paste URL Gambar (https://...)" onchange="app.handleCustomUrlChange()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <div class="relative">
+                            <input type="file" id="custom-img-file" accept="image/*" onchange="app.handleCustomFileUpload(event)" class="hidden">
+                            <label for="custom-img-file" class="w-full h-full bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-300 flex items-center justify-center gap-2 cursor-pointer transition">
+                                <i data-lucide="upload" class="w-4 h-4 text-indigo-400"></i>
+                                <span id="file-upload-label">Unggah File Gambar</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Focal Point Selection -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
+                        2. Pilih Titik Fokus Zoom <span class="text-indigo-400">(Klik pada gambar)</span>
+                    </label>
+                    <div id="focal-picker-container" onclick="app.setCustomFocalPoint(event)" class="relative w-full h-60 bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 flex items-center justify-center cursor-crosshair group">
+                        <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" alt="Preview" class="w-full h-full object-cover">
+                        
+                        <!-- Focal Point Marker Pin -->
+                        <div id="focal-marker" class="absolute w-8 h-8 -ml-4 -mt-4 border-2 border-emerald-400 rounded-full bg-emerald-500/30 flex items-center justify-center shadow-lg pointer-events-none transition-all duration-200" style="left: 50%; top: 50%;">
+                            <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                        </div>
+
+                        <div class="absolute bottom-2 left-2 bg-slate-950/80 px-2.5 py-1 rounded-lg text-[10px] text-slate-300 pointer-events-none">
+                            Fokus: X: <span id="focal-x-val">50</span>%, Y: <span id="focal-y-val">50</span>%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Target Name / Answer -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">3. Nama Tokoh / Jawaban Benar</label>
+                    <input type="text" id="custom-answer" required placeholder="Contoh: BJ Habibie" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <!-- Wrong Choices for Multiple Choice -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">4. Tiga Pilihan Jawaban Salah (Untuk Pilihan Ganda)</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <input type="text" id="custom-opt-1" required placeholder="Pilihan Salah 1" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" id="custom-opt-2" required placeholder="Pilihan Salah 2" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" id="custom-opt-3" required placeholder="Pilihan Salah 3" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                </div>
+
+                <!-- Hint Text -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">5. Teks Petunjuk (Hint)</label>
+                    <input type="text" id="custom-hint" required placeholder="Contoh: Presiden Indonesia ke-3 & Teknokrat penerbangan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="app.showScreen('welcome')" class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold">Batal</button>
+                    <button type="submit" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white text-sm font-bold shadow-lg shadow-emerald-600/20">Simpan Soal Kustom</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ==================== SCREEN 4: GAME OVER / RESULTS ==================== -->
+        <section id="screen-game-over" class="hidden max-w-xl mx-auto w-full text-center space-y-6 animate-fadeIn">
+            <div class="glass-panel p-8 rounded-3xl space-y-6 border border-slate-700/80 relative overflow-hidden">
+                <div class="absolute -top-12 -left-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+
+                <div class="inline-flex p-4 rounded-3xl bg-amber-500/20 border border-amber-500/40 text-amber-400 shadow-xl shadow-amber-500/10">
+                    <i data-lucide="trophy" class="w-12 h-12"></i>
+                </div>
+
+                <div>
+                    <h2 class="text-3xl font-black text-white">Permainan Selesai!</h2>
+                    <p class="text-xs text-slate-400 mt-1" id="game-over-subtitle">Kerja bagus, inilah hasil performa matamu!</p>
+                </div>
+
+                <!-- Final Score Card -->
+                <div class="glass-card p-5 rounded-2xl grid grid-cols-2 gap-4 border border-slate-800">
+                    <div class="border-r border-slate-800 pr-2">
+                        <div class="text-xs text-slate-400 font-semibold uppercase">Skor Akhir</div>
+                        <div id="final-score" class="text-3xl font-black text-emerald-400">0</div>
+                    </div>
+                    <div class="pl-2">
+                        <div class="text-xs text-slate-400 font-semibold uppercase">Akurasi Jawaban</div>
+                        <div id="final-accuracy" class="text-3xl font-black text-indigo-400">0%</div>
+                    </div>
+                </div>
+
+                <!-- Stats Summary Details -->
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400">Total Benar</div>
+                        <div id="final-correct" class="text-base font-bold text-slate-200">0</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400">Streak Tertinggi</div>
+                        <div id="final-max-streak" class="text-base font-bold text-amber-400">0x</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                        <div class="text-slate-400">Rekor Baru?</div>
+                        <div id="final-highscore-status" class="text-base font-bold text-emerald-400">-</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col md:flex-row gap-3 pt-2">
+                    <button onclick="app.showScreen('welcome')" class="flex-1 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition">
+                        Menu Utama
+                    </button>
+                    <button onclick="app.restartGame()" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Main Lagi
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-4 text-center text-xs text-slate-500 border-t border-slate-900">
+        <p>Tebak Siapa Ini? — Zoom In Challenge Game &copy; 2026</p>
+    </footer>
+
+    <!-- Feedback Toast Notification -->
+    <div id="toast-message" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-2xl glass-panel border border-slate-700 text-sm font-bold shadow-2xl flex items-center gap-3 transition-all duration-300 opacity-0 pointer-events-none translate-y-4 z-50">
+        <div id="toast-icon"></div>
+        <span id="toast-text">Pesan toast</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        /**
+         * Web Audio API Synthesizer Sound Engine
+         */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+            }
+
+            playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {
+                    console.warn("Audio Context error", e);
+                }
+            }
+
+            correct() {
+                if (this.muted) return;
+                // Happy ascending chord
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => this.playTone(freq, 'triangle', 0.2, 0.15), idx * 80);
+                });
+            }
+
+            wrong() {
+                if (this.muted) return;
+                // Harsh buzz low tone
+                this.playTone(180, 'sawtooth', 0.25, 0.2);
+                setTimeout(() => this.playTone(130, 'sawtooth', 0.3, 0.2), 120);
+            }
+
+            click() {
+                this.playTone(800, 'sine', 0.05, 0.05);
+            }
+
+            hint() {
+                this.playTone(880, 'sine', 0.15, 0.1);
+                setTimeout(() => this.playTone(1174.66, 'sine', 0.2, 0.1), 100);
+            }
+
+            tick() {
+                this.playTone(1000, 'square', 0.03, 0.02);
+            }
+
+            victory() {
+                if (this.muted) return;
+                const fanfare = [523.25, 659.25, 783.99, 1046.50, 880, 1046.50];
+                fanfare.forEach((freq, idx) => {
+                    setTimeout(() => this.playTone(freq, 'triangle', 0.3, 0.2), idx * 120);
+                });
+            }
+        }
+
+        /**
+         * Preset Questions Data Store
+         */
+        const PRESET_QUESTIONS = [
+            {
+                id: 'p1',
+                name: 'Lionel Messi',
+                category: 'atlet',
+                hint: 'Legenda sepak bola dunia peraih 8 Ballon d\'Or asal Argentina',
+                imageUrl: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?w=800&auto=format&fit=crop&q=80',
+                focalX: 50,
+                focalY: 35,
+                options: ['Lionel Messi', 'Cristiano Ronaldo', 'Neymar Jr', 'Kylian Mbappé']
+            },
+            {
+                id: 'p2',
+                name: 'Mona Lisa',
+                category: 'tokoh',
+                hint: 'Lukisan mahakarya legendaris karya Leonardo da Vinci di Museum Louvre',
+                imageUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80',
+                focalX: 48,
+                focalY: 30,
+                options: ['Mona Lisa', 'Gadis Anting Mutiara', 'Venus de Milo', 'Napoleon Bonaparte']
+            },
+            {
+                id: 'p3',
+                name: 'Taylor Swift',
+                category: 'pop',
+                hint: 'Penyanyi & penulis lagu pop internasional tur Eras Tour',
+                imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
+                focalX: 52,
+                focalY: 40,
+                options: ['Taylor Swift', 'Ariana Grande', 'Beyoncé', 'Billie Eilish']
+            },
+            {
+                id: 'p4',
+                name: 'Candi Borobudur',
+                category: 'landmark',
+                hint: 'Candi Buddha terbesar di dunia yang terletak di Magelang, Indonesia',
+                imageUrl: 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=800&auto=format&fit=crop&q=80',
+                focalX: 50,
+                focalY: 45,
+                options: ['Candi Borobudur', 'Candi Prambanan', 'Angkor Wat', 'Taj Mahal']
+            },
+            {
+                id: 'p5',
+                name: 'Albert Einstein',
+                category: 'tokoh',
+                hint: 'Fisikawan jenius perumus teori relativitas E=mc²',
+                imageUrl: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop&q=80',
+                focalX: 50,
+                focalY: 30,
+                options: ['Albert Einstein', 'Isaac Newton', 'Nikola Tesla', 'Stephen Hawking']
+            },
+            {
+                id: 'p6',
+                name: 'Cristiano Ronaldo',
+                category: 'atlet',
+                hint: 'Bintang sepak bola Portugal dengan rekor gol internasional terbanyak (CR7)',
+                imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80',
+                focalX: 50,
+                focalY: 40,
+                options: ['Cristiano Ronaldo', 'Kaká', 'Karim Benzema', 'Luka Modrić']
+            },
+            {
+                id: 'p7',
+                name: 'Menara Eiffel',
+                category: 'landmark',
+                hint: 'Ikon menara besi terkenal yang menjadi simbol kota Paris, Prancis',
+                imageUrl: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=800&auto=format&fit=crop&q=80',
+                focalX: 50,
+                focalY: 20,
+                options: ['Menara Eiffel', 'Menara Pesa', 'Big Ben', 'Burj Khalifa']
+            },
+            {
+                id: 'p8',
+                name: 'Spider-Man',
+                category: 'pop',
+                hint: 'Pahlawan super Marvel berkostum merah-biru yang biasa memanjat dinding',
+                imageUrl: 'https://images.unsplash.com/photo-1635863138275-d9b33299680b?w=800&auto=format&fit=crop&q=80',
+                focalX: 50,
+                focalY: 35,
+                options: ['Spider-Man', 'Deadpool', 'Iron Man', 'Captain America']
+            }
+        ];
+
+        /**
+         * Main Game Application Controller
+         */
+        class ZoomGameApp {
+            constructor() {
+                this.sound = new SoundEngine();
+                this.questions = [];
+                this.currentIndex = 0;
+                this.score = 0;
+                this.streak = 0;
+                this.maxStreak = 0;
+                this.correctCount = 0;
+                
+                // Zoom Mechanics State
+                this.currentZoomStep = 5; // Start at max zoom level (5 = 10x)
+                this.maxZoomStep = 5;
+                this.autoUnzoomEnabled = true;
+                this.timer = null;
+                this.timeLeft = 30;
+                this.maxTime = 30;
+                
+                this.inputMode = 'mc'; // 'mc' or 'text'
+                this.hintUsed = false;
+                
+                // Custom Questions Focal Point Selector State
+                this.creatorFocalX = 50;
+                this.creatorFocalY = 50;
+                this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
+
+                this.highScore = parseInt(localStorage.getItem('zoom_game_highscore') || '0');
+                this.customQuestions = JSON.parse(localStorage.getItem('zoom_game_custom') || '[]');
+            }
+
+            init() {
+                lucide.createIcons();
+                this.updateHighScoreDisplay();
+                this.updateCustomCountDisplay();
+                
+                // Global click handler to initialize audio context
+                document.body.addEventListener('click', () => this.sound.init(), { once: true });
+            }
+
+            showScreen(screenId) {
+                this.sound.click();
+                ['screen-welcome', 'screen-game', 'screen-custom-creator', 'screen-game-over'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+
+                const navStats = document.getElementById('nav-stats');
+                if (screenId === 'game') {
+                    navStats.classList.remove('hidden');
+                } else {
+                    navStats.classList.add('hidden');
+                    this.stopTimer();
+                }
+            }
+
+            updateHighScoreDisplay() {
+                document.getElementById('high-score-display').innerText = `${this.highScore} Poin`;
+            }
+
+            updateCustomCountDisplay() {
+                const count = this.customQuestions.length;
+                document.getElementById('custom-count-tag').innerText = `Tersedia ${count} soal kustom buatanmu`;
+                const btnPlayCustom = document.getElementById('btn-play-custom');
+                if (count === 0) {
+                    btnPlayCustom.disabled = true;
+                } else {
+                    btnPlayCustom.disabled = false;
+                }
+            }
+
+            toggleSound() {
+                this.sound.muted = !this.sound.muted;
+                const icon = document.getElementById('sound-icon');
+                if (this.sound.muted) {
+                    icon.setAttribute('data-lucide', 'volume-x');
+                    this.showToast('Suara Dimatikan', 'info');
+                } else {
+                    icon.setAttribute('data-lucide', 'volume-2');
+                    this.sound.click();
+                    this.showToast('Suara Diaktifkan', 'success');
+                }
+                lucide.createIcons();
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.getElementById('toast-message');
+                const toastText = document.getElementById('toast-text');
+                const toastIcon = document.getElementById('toast-icon');
+
+                toastText.innerText = message;
+                
+                if (type === 'success') {
+                    toastIcon.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>`;
+                } else if (type === 'error') {
+                    toastIcon.innerHTML = `<i data-lucide="alert-triangle" class="w-5 h-5 text-rose-400"></i>`;
+                } else {
+                    toastIcon.innerHTML = `<i data-lucide="info" class="w-5 h-5 text-indigo-400"></i>`;
+                }
+                lucide.createIcons();
+
+                toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+                toast.classList.add('opacity-100', 'translate-y-0');
+
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100', 'translate-y-0');
+                    toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+                }, 2500);
+            }
+
+            /* ==================== GAMEPLAY LOGIC ==================== */
+
+            startPresetGame() {
+                const cat = document.getElementById('preset-category-select').value;
+                let pool = [...PRESET_QUESTIONS];
+                if (cat !== 'all') {
+                    pool = pool.filter(q => q.category === cat);
+                }
+
+                if (pool.length === 0) {
+                    this.showToast('Tidak ada pertanyaan untuk kategori ini!', 'error');
+                    return;
+                }
+
+                // Shuffle questions
+                this.questions = pool.sort(() => Math.random() - 0.5);
+                this.resetGameStats();
+                this.showScreen('game');
+                this.loadQuestion();
+            }
+
+            startCustomGame() {
+                if (this.customQuestions.length === 0) return;
+                this.questions = [...this.customQuestions].sort(() => Math.random() - 0.5);
+                this.resetGameStats();
+                this.showScreen('game');
+                this.loadQuestion();
+            }
+
+            resetGameStats() {
+                this.currentIndex = 0;
+                this.score = 0;
+                this.streak = 0;
+                this.maxStreak = 0;
+                this.correctCount = 0;
+                this.updateNavHUD();
+            }
+
+            updateNavHUD() {
+                document.getElementById('nav-score').innerText = this.score;
+                document.getElementById('nav-streak').innerText = `${this.streak}x`;
+            }
+
+            loadQuestion() {
+                if (this.currentIndex >= this.questions.length) {
+                    this.endGame();
+                    return;
+                }
+
+                const q = this.questions[this.currentIndex];
+                
+                // Update Progress Header
+                document.getElementById('game-progress').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}`;
+                document.getElementById('game-category').innerText = `Kategori: ${q.category ? q.category.toUpperCase() : 'KUSTOM'}`;
+
+                // Reset Question Specific States
+                this.currentZoomStep = 5; // Max Zoom
+                this.hintUsed = false;
+                document.getElementById('hint-display-box').classList.add('hidden');
+                document.getElementById('btn-hint').disabled = false;
+                document.getElementById('type-answer-input').value = '';
+
+                // Load Image & Focal Point
+                const img = document.getElementById('game-image');
+                img.src = q.imageUrl;
+                img.style.transformOrigin = `${q.focalX}% ${q.focalY}%`;
+                
+                this.applyZoomVisual();
+                this.renderChoices(q);
+
+                // Start Countdown Timer
+                this.startTimer();
+            }
+
+            applyZoomVisual() {
+                // Zoom factors: Step 5 -> 1000% (10x), Step 4 -> 7x, Step 3 -> 4x, Step 2 -> 2x, Step 1 -> 1x (normal)
+                const zoomScaleMap = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
+                const scale = zoomScaleMap[this.currentZoomStep] || 1;
+                
+                const img = document.getElementById('game-image');
+                img.style.transform = `scale(${scale})`;
+
+                document.getElementById('zoom-level-text').innerText = `${scale}x`;
+                this.updatePotentialPoints();
+            }
+
+            updatePotentialPoints() {
+                // Points calculation formula based on zoom level and time left
+                const basePoints = 100;
+                const zoomBonus = this.currentZoomStep * 30; // Max +150
+                const potential = basePoints + zoomBonus + Math.floor(this.timeLeft * 2);
+                document.getElementById('potential-points').innerText = `+${potential}`;
+            }
+
+            startTimer() {
+                this.stopTimer();
+                this.timeLeft = this.maxTime;
+                this.updateTimerUI();
+
+                let tickCounter = 0;
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    tickCounter++;
+
+                    // Auto unzoom every 6 seconds if enabled
+                    if (this.autoUnzoomEnabled && tickCounter % 6 === 0 && this.currentZoomStep > 1) {
+                        this.currentZoomStep--;
+                        this.applyZoomVisual();
+                        this.showToast('Auto Zoom-Out terjadi!', 'info');
+                    }
+
+                    if (this.timeLeft <= 5) {
+                        this.sound.tick();
+                    }
+
+                    this.updateTimerUI();
+                    this.updatePotentialPoints();
+
+                    if (this.timeLeft <= 0) {
+                        this.stopTimer();
+                        this.handleAnswer(false, 'Waktu habis!');
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+            }
+
+            updateTimerUI() {
+                const timerBar = document.getElementById('game-timer-bar');
+                const timerText = document.getElementById('game-timer-text');
+                const pct = (this.timeLeft / this.maxTime) * 100;
+
+                timerBar.style.width = `${pct}%`;
+                timerText.innerText = `${this.timeLeft}s`;
+
+                if (this.timeLeft <= 10) {
+                    timerBar.className = "bg-gradient-to-r from-rose-500 to-amber-500 h-full transition-all duration-1000";
+                } else {
+                    timerBar.className = "bg-gradient-to-r from-emerald-500 to-indigo-500 h-full transition-all duration-1000";
+                }
+            }
+
+            toggleAutoUnzoom() {
+                this.autoUnzoomEnabled = !this.autoUnzoomEnabled;
+                const dot = document.getElementById('autounzoom-dot');
+                const text = document.getElementById('autounzoom-text');
+
+                if (this.autoUnzoomEnabled) {
+                    dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-ping";
+                    text.innerText = "Auto Zoom-Out: ON";
+                    this.showToast('Auto Zoom-Out diaktifkan', 'info');
+                } else {
+                    dot.className = "w-2 h-2 rounded-full bg-rose-400";
+                    text.innerText = "Auto Zoom-Out: OFF";
+                    this.showToast('Auto Zoom-Out dimatikan', 'info');
+                }
+            }
+
+            manualZoomOut() {
+                if (this.currentZoomStep > 1) {
+                    this.sound.click();
+                    this.currentZoomStep--;
+                    this.applyZoomVisual();
+                    this.showToast('Zoom Out dilakukan (-15 Poin)', 'info');
+                } else {
+                    this.showToast('Sudah mencapai tingkat terbawah (1x)', 'error');
+                }
+            }
+
+            useHint() {
+                if (this.hintUsed) return;
+                this.sound.hint();
+                this.hintUsed = true;
+                
+                const q = this.questions[this.currentIndex];
+                document.getElementById('hint-text').innerText = q.hint;
+                document.getElementById('hint-display-box').classList.remove('hidden');
+                document.getElementById('btn-hint').disabled = true;
+
+                this.showToast('Petunjuk dibuka (-30 Poin)', 'info');
+                this.updatePotentialPoints();
+            }
+
+            setInputMode(mode) {
+                this.sound.click();
+                this.inputMode = mode;
+                const btnMc = document.getElementById('mode-btn-mc');
+                const btnText = document.getElementById('mode-btn-text');
+                const containerMc = document.getElementById('container-mc');
+                const containerText = document.getElementById('container-text');
+
+                if (mode === 'mc') {
+                    btnMc.className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow";
+                    btnText.className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white";
+                    containerMc.classList.remove('hidden');
+                    containerText.classList.add('hidden');
+                } else {
+                    btnText.className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow";
+                    btnMc.className = "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white";
+                    containerText.classList.remove('hidden');
+                    containerMc.classList.add('hidden');
+                    document.getElementById('type-answer-input').focus();
+                }
+            }
+
+            renderChoices(q) {
+                const container = document.getElementById('container-mc');
+                container.innerHTML = '';
+
+                // Shuffle option choices
+                const choices = [...q.options].sort(() => Math.random() - 0.5);
+
+                choices.forEach((opt) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full py-3.5 px-4 rounded-2xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-slate-200 hover:text-white font-semibold text-sm transition text-left flex items-center justify-between group active:scale-[0.98]";
+                    btn.innerHTML = `
+                        <span>${opt}</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition"></i>
+                    `;
+                    btn.onclick = () => this.checkChoiceAnswer(opt);
+                    container.appendChild(btn);
+                });
+
+                lucide.createIcons();
+            }
+
+            checkChoiceAnswer(selectedOption) {
+                const q = this.questions[this.currentIndex];
+                const isCorrect = selectedOption.toLowerCase().trim() === q.name.toLowerCase().trim();
+                this.handleAnswer(isCorrect, isCorrect ? 'Jawaban Benar!' : `Salah! Jawaban: ${q.name}`);
+            }
+
+            submitTypedAnswer() {
+                const input = document.getElementById('type-answer-input');
+                const userVal = input.value.trim();
+                if (!userVal) return;
+
+                const q = this.questions[this.currentIndex];
+                const isCorrect = this.fuzzyCheckAnswer(userVal, q.name);
+
+                this.handleAnswer(isCorrect, isCorrect ? 'Jawaban Tepat Sekali!' : `Salah! Jawaban: ${q.name}`);
+            }
+
+            /**
+             * Fuzzy String Matching to allow minor typos or partial names
+             */
+            fuzzyCheckAnswer(input, actual) {
+                const cleanInput = input.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                const cleanActual = actual.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+
+                if (!cleanInput) return false;
+                if (cleanInput === cleanActual) return true;
+
+                // Check if user typed last name or primary key word (e.g., "Messi" for "Lionel Messi")
+                const words = cleanActual.split(' ');
+                for (let word of words) {
+                    if (word.length >= 3 && cleanInput === word) return true;
+                }
+
+                // Check string inclusion if long enough
+                if (cleanActual.length > 4 && cleanActual.includes(cleanInput) && cleanInput.length >= 4) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            handleAnswer(isCorrect, message) {
+                this.stopTimer();
+
+                // Fully reveal unzoom image for feedback moment
+                const img = document.getElementById('game-image');
+                img.style.transform = 'scale(1)';
+
+                if (isCorrect) {
+                    this.sound.correct();
+                    this.streak++;
+                    if (this.streak > this.maxStreak) this.maxStreak = this.streak;
+                    this.correctCount++;
+
+                    // Calculate score added
+                    const basePoints = 100;
+                    const zoomBonus = this.currentZoomStep * 30;
+                    const timeBonus = Math.floor(this.timeLeft * 2);
+                    const streakMultiplier = 1 + (this.streak - 1) * 0.2; // 1x, 1.2x, 1.4x...
+
+                    let questionScore = Math.floor((basePoints + zoomBonus + timeBonus) * streakMultiplier);
+                    if (this.hintUsed) questionScore = Math.max(20, questionScore - 30);
+
+                    this.score += questionScore;
+                    this.updateNavHUD();
+
+                    this.showToast(`✨ ${message} (+${questionScore} Poin)`, 'success');
+                } else {
+                    this.sound.wrong();
+                    this.streak = 0;
+                    this.updateNavHUD();
+                    this.showToast(`❌ ${message}`, 'error');
+                }
+
+                // Wait 2 seconds showing full picture before advancing
+                setTimeout(() => {
+                    this.currentIndex++;
+                    this.loadQuestion();
+                }, 2000);
+            }
+
+            endGame() {
+                this.stopTimer();
+                this.sound.victory();
+
+                const total = this.questions.length;
+                const accuracy = total > 0 ? Math.round((this.correctCount / total) * 100) : 0;
+
+                document.getElementById('final-score').innerText = this.score;
+                document.getElementById('final-accuracy').innerText = `${accuracy}%`;
+                document.getElementById('final-correct').innerText = `${this.correctCount} / ${total}`;
+                document.getElementById('final-max-streak').innerText = `${this.maxStreak}x`;
+
+                // High score check
+                let isNewRecord = false;
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('zoom_game_highscore', this.highScore.toString());
+                    this.updateHighScoreDisplay();
+                    isNewRecord = true;
+                    document.getElementById('final-highscore-status').innerText = 'REKOR BARU! 🎉';
+                    document.getElementById('final-highscore-status').className = 'text-base font-bold text-amber-400 animate-pulse';
+                } else {
+                    document.getElementById('final-highscore-status').innerText = 'Selesai';
+                    document.getElementById('final-highscore-status').className = 'text-base font-bold text-slate-400';
+                }
+
+                this.showScreen('game-over');
+
+                // Trigger confetti animation
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                }
+            }
+
+            restartGame() {
+                if (this.questions.length > 0) {
+                    this.resetGameStats();
+                    this.showScreen('game');
+                    this.loadQuestion();
+                } else {
+                    this.showScreen('welcome');
+                }
+            }
+
+            /* ==================== CUSTOM CREATOR LOGIC ==================== */
+
+            handleCustomUrlChange() {
+                const url = document.getElementById('custom-img-url').value.trim();
+                if (url) {
+                    this.customImgData = url;
+                    document.getElementById('creator-img-preview').src = url;
+                }
+            }
+
+            handleCustomFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                document.getElementById('file-upload-label').innerText = file.name;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.customImgData = e.target.result;
+                    document.getElementById('creator-img-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            setCustomFocalPoint(event) {
+                const container = document.getElementById('focal-picker-container');
+                const rect = container.getBoundingClientRect();
+                
+                const clickX = event.clientX - rect.left;
+                const clickY = event.clientY - rect.top;
+
+                const pctX = Math.round((clickX / rect.width) * 100);
+                const pctY = Math.round((clickY / rect.height) * 100);
+
+                this.creatorFocalX = pctX;
+                this.creatorFocalY = pctY;
+
+                const marker = document.getElementById('focal-marker');
+                marker.style.left = `${pctX}%`;
+                marker.style.top = `${pctY}%`;
+
+                document.getElementById('focal-x-val').innerText = pctX;
+                document.getElementById('focal-y-val').innerText = pctY;
+            }
+
+            saveCustomQuestion(event) {
+                event.preventDefault();
+
+                const answer = document.getElementById('custom-answer').value.trim();
+                const opt1 = document.getElementById('custom-opt-1').value.trim();
+                const opt2 = document.getElementById('custom-opt-2').value.trim();
+                const opt3 = document.getElementById('custom-opt-3').value.trim();
+                const hint = document.getElementById('custom-hint').value.trim();
+
+                if (!answer || !opt1 || !opt2 || !opt3 || !hint) {
+                    this.showToast('Harap isi semua kolom formulir!', 'error');
+                    return;
+                }
+
+                const newQuestion = {
+                    id: 'custom_' + Date.now(),
+                    name: answer,
+                    category: 'kustom',
+                    hint: hint,
+                    imageUrl: this.customImgData,
+                    focalX: this.creatorFocalX,
+                    focalY: this.creatorFocalY,
+                    options: [answer, opt1, opt2, opt3]
+                };
+
+                this.customQuestions.push(newQuestion);
+                localStorage.setItem('zoom_game_custom', JSON.stringify(this.customQuestions));
+
+                this.showToast('Soal Kustom Berhasil Disimpan!', 'success');
+                this.updateCustomCountDisplay();
+
+                // Reset form
+                document.getElementById('creator-form').reset();
+                document.getElementById('file-upload-label').innerText = 'Unggah File Gambar';
+
+                this.showScreen('welcome');
+            }
+        }
+
+        // Initialize application on page load
+        let app;
+        window.onload = () => {
+            app = new ZoomGameApp();
+            app.init();
+        };
+    </script>
+</body>
+</html>
