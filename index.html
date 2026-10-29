@@ -62,7 +62,7 @@
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="app.showScreen('welcome')">
                 <div class="bg-gradient-to-tr from-indigo-500 to-emerald-400 p-2.5 rounded-2xl shadow-lg">
-                    <i data-lucide="zoom-in" class="w-6 h-6 text-white"></i>
+                    <i data-lucide="zoom-in" class="w-6 h-6 text-white">🔍</i>
                 </div>
                 <div>
                     <h1 class="font-black text-xl tracking-wider text-white">TEBAK SIAPA?</h1>
@@ -72,22 +72,22 @@
 
             <div id="nav-stats" class="hidden flex items-center gap-4 bg-slate-800/80 border border-slate-700 rounded-full px-4 py-1.5 text-sm">
                 <div class="flex items-center gap-1.5 text-amber-400 font-bold">
-                    <i data-lucide="trophy" class="w-4 h-4"></i>
+                    <i data-lucide="trophy" class="w-4 h-4">🏆</i>
                     <span id="nav-score">0</span>
                 </div>
                 <div class="h-4 w-[1px] bg-slate-700"></div>
                 <div class="flex items-center gap-1.5 text-orange-400 font-bold">
-                    <i data-lucide="zap" class="w-4 h-4"></i>
+                    <i data-lucide="zap" class="w-4 h-4">⚡</i>
                     <span id="nav-streak">0x</span>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
                 <button onclick="app.toggleSound()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
-                    <i id="sound-icon" data-lucide="volume-2" class="w-5 h-5 text-slate-300"></i>
+                    <i id="sound-icon" data-lucide="volume-2" class="w-5 h-5 text-slate-300">🔊</i>
                 </button>
                 <button onclick="app.showScreen('welcome')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
-                    <i data-lucide="home" class="w-5 h-5 text-slate-300"></i>
+                    <i data-lucide="home" class="w-5 h-5 text-slate-300">🏠</i>
                 </button>
             </div>
         </div>
@@ -97,11 +97,574 @@
     <main class="max-w-4xl w-full mx-auto p-4 md:p-6 flex-1 flex flex-col justify-center items-center">
 
         <!-- ==================== SCREEN 1: LANDING & PIN ENTRY ==================== -->
-        <section id="screen-welcome" class="w-full max-w-2xl space-y-8 animate-fadeIn">
+        <section id="screen-welcome" class="w-full max-w-2xl space-y-8">
             <!-- Kata Pengantar / Hero Banner -->
             <div class="text-center space-y-4 max-w-xl mx-auto pt-2">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Game Seru After Ibadah GP
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Game Seru After Ibadah GP
                 </div>
                 <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
-                    Seberapa Tajam <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-40
+                    Seberapa Tajam <span class="text-emerald-400">Mata Kamu?</span>
+                </h2>
+                <p class="text-slate-300 text-sm md:text-base leading-relaxed">
+                    Tebak siapa dia dengan mengenali subjek berdasarkan pose foto, pola anggota tubuh, warna kulit/rambut, aksesoris yang sering digunakan, dan lain sebagainya yang di-zoom secara ekstrim. Semakin cepat & makin sedikit kamu melakukan unzoom, makin tinggi skornya!
+                </p>
+            </div>
+
+            <!-- Card PIN Game -->
+            <div class="bg-white text-slate-900 p-8 rounded-3xl shadow-2xl space-y-6 text-center max-w-md mx-auto">
+                <h3 class="text-xl font-extrabold tracking-tight text-slate-800 uppercase">PIN GAME</h3>
+                
+                <div class="space-y-4">
+                    <input type="text" id="pin-input" maxlength="6" placeholder="Enter PIN" autocomplete="off" onkeydown="if(event.key==='Enter') app.joinByPin()" class="w-full text-center text-2xl font-black tracking-widest py-4 border-2 border-slate-300 rounded-2xl focus:outline-none focus:border-indigo-600 uppercase text-slate-800 placeholder:text-slate-400 placeholder:font-normal">
+                    
+                    <button onclick="app.joinByPin()" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-lg rounded-2xl shadow-lg transition active:scale-95">
+                        Join
+                    </button>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200">
+                    <button onclick="app.createNewGameSession()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shadow">
+                        <i data-lucide="plus-circle" class="w-4 h-4">➕</i>
+                        <span>+ New Game (Host / Admin)</span>
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-center text-xs text-slate-400">
+                Gunakan PIN demo <span class="font-mono font-bold text-emerald-400">123456</span> atau minta PIN dari Admin.
+            </p>
+        </section>
+
+        <!-- ==================== SCREEN 2: ADMIN LOBBY ==================== -->
+        <section id="screen-admin-lobby" class="hidden w-full max-w-xl space-y-6">
+            <div class="glass-panel p-6 md:p-8 rounded-3xl space-y-6 border border-slate-800">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Sesi Game Admin</span>
+                        <h2 class="text-2xl font-black text-white">Kelola Sesi Soal</h2>
+                    </div>
+                    <div class="bg-indigo-500/20 border border-indigo-500/40 px-4 py-2 rounded-2xl text-center">
+                        <span class="text-[10px] text-indigo-300 block font-semibold uppercase">PIN Sesi</span>
+                        <span id="admin-pin-display" class="text-2xl font-black text-white font-mono">------</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Daftar Soal Subjek (<span id="admin-question-count">0</span>)</span>
+                        <button onclick="app.showScreen('custom-creator')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition">
+                            <i data-lucide="plus" class="w-3.5 h-3.5">➕</i> Tambah Soal
+                        </button>
+                    </div>
+
+                    <div id="admin-question-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800 flex gap-3">
+                    <button onclick="app.showScreen('welcome')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-xl">
+                        Kembali
+                    </button>
+                    <button id="btn-start-session" onclick="app.startAdminSession()" class="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold text-sm rounded-xl shadow-lg disabled:opacity-50">
+                        Mulai Game Sekarang
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SCREEN 3: SOAL CREATOR ==================== -->
+        <section id="screen-custom-creator" class="hidden w-full max-w-2xl space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Tambah Soal Subjek Baru</h2>
+                    <p class="text-xs text-slate-400">Unggah foto dari perangkat atau ambil foto kamera langsung</p>
+                </div>
+                <button onclick="app.showScreen('admin-lobby')" class="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
+                    <i data-lucide="x" class="w-5 h-5">✖</i>
+                </button>
+            </div>
+
+            <form onsubmit="app.saveQuestion(event)" class="glass-panel p-6 rounded-3xl space-y-5 border border-slate-800">
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">1. Sumber Foto Subjek</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="relative">
+                            <input type="file" id="custom-img-file" accept="image/*" onchange="app.handleFileUpload(event)" class="hidden">
+                            <label for="custom-img-file" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-200 flex items-center justify-center gap-2 cursor-pointer transition">
+                                <i data-lucide="upload" class="w-4 h-4 text-indigo-400">📁</i>
+                                <span id="file-upload-label">Upload File</span>
+                            </label>
+                        </div>
+                        <button type="button" onclick="app.startCamera()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-200 flex items-center justify-center gap-2 transition">
+                            <i data-lucide="camera" class="w-4 h-4 text-emerald-400">📷</i>
+                            <span>Kamera Langsung</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">2. Tentukan Titik Zoom (Klik Foto)</label>
+                    <div id="focal-picker-container" onclick="app.setFocalPoint(event)" class="relative w-full h-60 bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 flex items-center justify-center cursor-crosshair">
+                        <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" alt="Preview" class="w-full h-full object-cover">
+                        <div id="focal-marker" class="absolute w-8 h-8 -ml-4 -mt-4 border-2 border-emerald-400 rounded-full bg-emerald-500/30 flex items-center justify-center shadow-lg pointer-events-none transition-all duration-200" style="left: 50%; top: 50%;">
+                            <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">3. Nama Subjek / Jawaban Benar</label>
+                    <input type="text" id="custom-answer" required placeholder="Contoh: Budi Santoso" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">4. 3 Pilihan Jawaban Salah</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <input type="text" id="custom-opt-1" required placeholder="Pilihan Salah 1" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" id="custom-opt-2" required placeholder="Pilihan Salah 2" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" id="custom-opt-3" required placeholder="Pilihan Salah 3" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">5. Teks Petunjuk (Hint)</label>
+                    <input type="text" id="custom-hint" required placeholder="Contoh: Pengurus Seksi Acara GP" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="app.showScreen('admin-lobby')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl">Batal</button>
+                    <button type="submit" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl shadow-lg">Simpan Soal</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Modal Kamera -->
+        <div id="camera-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-4">
+            <div class="glass-panel p-6 rounded-3xl max-w-md w-full space-y-4 text-center">
+                <h3 class="text-lg font-bold text-white">Ambil Foto Subjek</h3>
+                <div class="relative w-full h-64 bg-black rounded-2xl overflow-hidden">
+                    <video id="webcam-feed" autoplay playsinline class="w-full h-full object-cover"></video>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="app.stopCamera()" class="flex-1 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl">Batal</button>
+                    <button onclick="app.capturePhoto()" class="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl">Ambil Foto</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SCREEN 4: GAMEPLAY ==================== -->
+        <section id="screen-game" class="hidden w-full space-y-5">
+            <div class="glass-card p-4 rounded-2xl flex items-center justify-between gap-3">
+                <span id="game-progress" class="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-bold rounded-lg border border-indigo-500/40">Soal 1</span>
+                
+                <div class="flex items-center gap-3 flex-1 max-w-xs mx-auto">
+                    <i data-lucide="clock" class="w-4 h-4 text-slate-400">⏱</i>
+                    <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700">
+                        <div id="game-timer-bar" class="bg-gradient-to-r from-emerald-500 to-indigo-500 h-full w-full transition-all duration-1000"></div>
+                    </div>
+                    <span id="game-timer-text" class="text-xs font-mono font-bold text-slate-200">30s</span>
+                </div>
+
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-400 block">Poin</span>
+                    <span id="potential-points" class="text-sm font-black text-emerald-400">+250</span>
+                </div>
+            </div>
+
+            <div class="relative w-full h-72 md:h-96 rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center">
+                <div id="zoom-viewport" class="w-full h-full relative overflow-hidden flex items-center justify-center">
+                    <img id="game-image" src="" alt="Subjek" class="zoom-target w-full h-full object-cover" />
+                </div>
+                <div class="absolute inset-0 lens-overlay pointer-events-none"></div>
+
+                <div class="absolute top-4 left-4 glass-card px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2">
+                    <i data-lucide="search" class="w-3.5 h-3.5">🔍</i>
+                    <span>Zoom: <span id="zoom-level-text">10x</span></span>
+                </div>
+
+                <div id="hint-display-box" class="hidden absolute bottom-4 left-4 right-4 glass-card p-3 rounded-2xl border border-amber-500/40 text-amber-200 text-xs flex items-center gap-3">
+                    <i data-lucide="lightbulb" class="w-5 h-5 text-amber-400 shrink-0">💡</i>
+                    <span id="hint-text"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="app.manualZoomOut()" class="p-3 rounded-2xl glass-card hover:bg-slate-800 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2">
+                    <i data-lucide="zoom-out" class="w-4 h-4 text-emerald-400">🔍-</i> Zoom Out (-15)
+                </button>
+                <button id="btn-hint" onclick="app.useHint()" class="p-3 rounded-2xl glass-card hover:bg-slate-800 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2">
+                    <i data-lucide="help-circle" class="w-4 h-4 text-amber-400">❓</i> Petunjuk (-30)
+                </button>
+            </div>
+
+            <div id="answer-section" class="glass-panel p-4 rounded-3xl border border-slate-800">
+                <div id="container-mc" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+        </section>
+
+        <!-- ==================== SCREEN 5: GAME OVER ==================== -->
+        <section id="screen-game-over" class="hidden w-full max-w-md text-center space-y-6">
+            <div class="glass-panel p-8 rounded-3xl space-y-6 border border-slate-700">
+                <div class="inline-flex p-4 rounded-3xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                    <i data-lucide="trophy" class="w-12 h-12">🏆</i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-white">Sesi Selesai!</h2>
+                    <p class="text-xs text-slate-400">Hasil tebakan subjek kamu:</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-xs text-slate-400 font-semibold uppercase">Total Poin</div>
+                        <div id="final-score" class="text-3xl font-black text-emerald-400">0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-semibold uppercase">Akurasi</div>
+                        <div id="final-accuracy" class="text-3xl font-black text-indigo-400">0%</div>
+                    </div>
+                </div>
+                <button onclick="app.showScreen('welcome')" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition">
+                    Kembali ke Menu Utama
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast-message" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-2xl glass-panel border border-slate-700 text-sm font-bold transition-all duration-300 opacity-0 pointer-events-none z-50">
+        <span id="toast-text">Pesan</span>
+    </div>
+
+    <script>
+        class SoundEngine {
+            constructor() { this.ctx = null; this.muted = false; }
+            init() { if (!this.ctx) { const AudioCtx = window.AudioContext || window.webkitAudioContext; if (AudioCtx) this.ctx = new AudioCtx(); } }
+            playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
+                if (this.muted) return; this.init(); if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            correct() { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.2), i * 80)); }
+            wrong() { this.playTone(180, 'sawtooth', 0.25); setTimeout(() => this.playTone(130, 'sawtooth', 0.3), 120); }
+            click() { this.playTone(800, 'sine', 0.05); }
+        }
+
+        class ZoomGameApp {
+            constructor() {
+                this.sound = new SoundEngine();
+                this.currentPin = '';
+                this.questions = [];
+                this.currentIndex = 0;
+                this.score = 0;
+                this.streak = 0;
+                this.correctCount = 0;
+                this.currentZoomStep = 5;
+                this.timer = null;
+                this.timeLeft = 30;
+                this.creatorFocalX = 50;
+                this.creatorFocalY = 50;
+                this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
+                this.videoStream = null;
+
+                this.setupDemoSession();
+            }
+
+            init() {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+                document.body.addEventListener('click', () => this.sound.init(), { once: true });
+            }
+
+            setupDemoSession() {
+                const demoQuestions = [{
+                    id: 'q_demo',
+                    name: 'Panitia GP',
+                    hint: 'Subjek contoh awal game',
+                    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
+                    focalX: 50,
+                    focalY: 30,
+                    options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
+                }];
+                localStorage.setItem('session_123456', JSON.stringify(demoQuestions));
+            }
+
+            showScreen(id) {
+                this.sound.click();
+                ['welcome', 'admin-lobby', 'custom-creator', 'game', 'game-over'].forEach(s => {
+                    document.getElementById(`screen-${s}`).classList.add('hidden');
+                });
+                document.getElementById(`screen-${id}`).classList.remove('hidden');
+
+                const navStats = document.getElementById('nav-stats');
+                if (id === 'game') navStats.classList.remove('hidden');
+                else { navStats.classList.add('hidden'); this.stopTimer(); }
+            }
+
+            showToast(msg) {
+                const t = document.getElementById('toast-message');
+                document.getElementById('toast-text').innerText = msg;
+                t.classList.remove('opacity-0', 'pointer-events-none');
+                setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2000);
+            }
+
+            toggleSound() {
+                this.sound.muted = !this.sound.muted;
+                const icon = document.getElementById('sound-icon');
+                if (icon) {
+                    icon.setAttribute('data-lucide', this.sound.muted ? 'volume-x' : 'volume-2');
+                }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+
+            joinByPin() {
+                const pin = document.getElementById('pin-input').value.trim();
+                if (!pin) { this.showToast('Masukkan PIN terlebih dahulu!'); return; }
+
+                const data = localStorage.getItem(`session_${pin}`);
+                if (!data) { this.showToast('PIN Sesi tidak ditemukan!'); return; }
+
+                this.questions = JSON.parse(data);
+                if (this.questions.length === 0) { this.showToast('Sesi ini belum memiliki soal!'); return; }
+
+                this.currentPin = pin;
+                this.resetGameStats();
+                this.showScreen('game');
+                this.loadQuestion();
+            }
+
+            createNewGameSession() {
+                this.currentPin = Math.floor(100000 + Math.random() * 900000).toString();
+                this.questions = [];
+                localStorage.setItem(`session_${this.currentPin}`, JSON.stringify(this.questions));
+                this.renderAdminLobby();
+                this.showScreen('admin-lobby');
+            }
+
+            renderAdminLobby() {
+                document.getElementById('admin-pin-display').innerText = this.currentPin;
+                document.getElementById('admin-question-count').innerText = this.questions.length;
+
+                const list = document.getElementById('admin-question-list');
+                list.innerHTML = '';
+
+                if (this.questions.length === 0) {
+                    list.innerHTML = `<div class="text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-2xl">Belum ada soal subjek ditambahkan</div>`;
+                    document.getElementById('btn-start-session').disabled = true;
+                } else {
+                    document.getElementById('btn-start-session').disabled = false;
+                    this.questions.forEach((q, idx) => {
+                        const item = document.createElement('div');
+                        item.className = "p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs";
+                        item.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <img src="${q.imageUrl}" class="w-8 h-8 rounded-lg object-cover">
+                                <span class="font-bold text-white">${idx + 1}. ${q.name}</span>
+                            </div>
+                            <button onclick="app.removeQuestion(${idx})" class="text-rose-400 p-1"><i data-lucide="trash-2" class="w-4 h-4">🗑</i></button>
+                        `;
+                        list.appendChild(item);
+                    });
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            }
+
+            removeQuestion(idx) {
+                this.questions.splice(idx, 1);
+                localStorage.setItem(`session_${this.currentPin}`, JSON.stringify(this.questions));
+                this.renderAdminLobby();
+            }
+
+            startAdminSession() {
+                if (this.questions.length === 0) return;
+                this.resetGameStats();
+                this.showScreen('game');
+                this.loadQuestion();
+            }
+
+            handleFileUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                document.getElementById('file-upload-label').innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    this.customImgData = ev.target.result;
+                    document.getElementById('creator-img-preview').src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            async startCamera() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    this.videoStream = stream;
+                    document.getElementById('webcam-feed').srcObject = stream;
+                    document.getElementById('camera-modal').classList.remove('hidden');
+                } catch (err) {
+                    this.showToast('Gagal mengakses kamera');
+                }
+            }
+
+            capturePhoto() {
+                const video = document.getElementById('webcam-feed');
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                this.customImgData = canvas.toDataURL('image/png');
+                document.getElementById('creator-img-preview').src = this.customImgData;
+                this.stopCamera();
+            }
+
+            stopCamera() {
+                if (this.videoStream) {
+                    this.videoStream.getTracks().forEach(t => t.stop());
+                    this.videoStream = null;
+                }
+                document.getElementById('camera-modal').classList.add('hidden');
+            }
+
+            setFocalPoint(e) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pctX = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                const pctY = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+                this.creatorFocalX = pctX; this.creatorFocalY = pctY;
+                const m = document.getElementById('focal-marker');
+                m.style.left = `${pctX}%`; m.style.top = `${pctY}%`;
+            }
+
+            saveQuestion(e) {
+                e.preventDefault();
+                const ans = document.getElementById('custom-answer').value.trim();
+                const opt1 = document.getElementById('custom-opt-1').value.trim();
+                const opt2 = document.getElementById('custom-opt-2').value.trim();
+                const opt3 = document.getElementById('custom-opt-3').value.trim();
+                const hint = document.getElementById('custom-hint').value.trim();
+
+                this.questions.push({
+                    id: 'q_' + Date.now(),
+                    name: ans,
+                    hint: hint,
+                    imageUrl: this.customImgData,
+                    focalX: this.creatorFocalX,
+                    focalY: this.creatorFocalY,
+                    options: [ans, opt1, opt2, opt3]
+                });
+
+                localStorage.setItem(`session_${this.currentPin}`, JSON.stringify(this.questions));
+                this.renderAdminLobby();
+                this.showScreen('admin-lobby');
+            }
+
+            resetGameStats() {
+                this.currentIndex = 0; this.score = 0; this.streak = 0; this.correctCount = 0;
+                document.getElementById('nav-score').innerText = '0';
+                document.getElementById('nav-streak').innerText = '0x';
+            }
+
+            loadQuestion() {
+                if (this.currentIndex >= this.questions.length) { this.endGame(); return; }
+                const q = this.questions[this.currentIndex];
+                document.getElementById('game-progress').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}`;
+
+                this.currentZoomStep = 5;
+                document.getElementById('hint-display-box').classList.add('hidden');
+                document.getElementById('btn-hint').disabled = false;
+
+                const img = document.getElementById('game-image');
+                img.src = q.imageUrl;
+                img.style.transformOrigin = `${q.focalX}% ${q.focalY}%`;
+
+                this.applyZoom();
+                this.renderChoices(q);
+                this.startTimer();
+            }
+
+            applyZoom() {
+                const map = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
+                const scale = map[this.currentZoomStep] || 1;
+                document.getElementById('game-image').style.transform = `scale(${scale})`;
+                document.getElementById('zoom-level-text').innerText = `${scale}x`;
+                document.getElementById('potential-points').innerText = `+${100 + this.currentZoomStep * 30}`;
+            }
+
+            startTimer() {
+                this.stopTimer();
+                this.timeLeft = 30;
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    document.getElementById('game-timer-bar').style.width = `${(this.timeLeft / 30) * 100}%`;
+                    document.getElementById('game-timer-text').innerText = `${this.timeLeft}s`;
+                    if (this.timeLeft <= 0) { this.stopTimer(); this.checkAnswer(''); }
+                }, 1000);
+            }
+
+            stopTimer() { if (this.timer) { clearInterval(this.timer); this.timer = null; } }
+
+            manualZoomOut() {
+                if (this.currentZoomStep > 1) { this.currentZoomStep--; this.applyZoom(); }
+            }
+
+            useHint() {
+                const q = this.questions[this.currentIndex];
+                document.getElementById('hint-text').innerText = q.hint;
+                document.getElementById('hint-display-box').classList.remove('hidden');
+                document.getElementById('btn-hint').disabled = true;
+            }
+
+            renderChoices(q) {
+                const c = document.getElementById('container-mc');
+                c.innerHTML = '';
+                [...q.options].sort(() => Math.random() - 0.5).forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full py-3.5 px-4 rounded-2xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-sm text-left transition";
+                    btn.innerText = opt;
+                    btn.onclick = () => this.checkAnswer(opt);
+                    c.appendChild(btn);
+                });
+            }
+
+            checkAnswer(selected) {
+                this.stopTimer();
+                const q = this.questions[this.currentIndex];
+                document.getElementById('game-image').style.transform = 'scale(1)';
+
+                if (selected.toLowerCase().trim() === q.name.toLowerCase().trim()) {
+                    this.sound.correct();
+                    this.correctCount++;
+                    this.streak++;
+                    this.score += 100 + this.currentZoomStep * 30;
+                    document.getElementById('nav-score').innerText = this.score;
+                    document.getElementById('nav-streak').innerText = `${this.streak}x`;
+                    this.showToast('✨ Jawaban Benar!');
+                } else {
+                    this.sound.wrong();
+                    this.streak = 0;
+                    document.getElementById('nav-streak').innerText = '0x';
+                    this.showToast(`❌ Salah! Jawaban: ${q.name}`);
+                }
+
+                setTimeout(() => { this.currentIndex++; this.loadQuestion(); }, 2000);
+            }
+
+            endGame() {
+                this.stopTimer();
+                const acc = Math.round((this.correctCount / this.questions.length) * 100) || 0;
+                document.getElementById('final-score').innerText = this.score;
+                document.getElementById('final-accuracy').innerText = `${acc}%`;
+                this.showScreen('game-over');
+                if (typeof confetti === 'function') confetti({ particleCount: 80, spread: 60 });
+            }
+        }
+
+        let app;
+        window.onload = () => { app = new ZoomGameApp(); app.init(); };
+    </script>
+</body>
+</html>
