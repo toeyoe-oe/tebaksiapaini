@@ -53,6 +53,10 @@
             background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
             background-size: 20px 20px;
         }
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
@@ -62,7 +66,7 @@
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="app.showScreen('welcome')">
                 <div class="bg-gradient-to-tr from-indigo-500 to-emerald-400 p-2.5 rounded-2xl shadow-lg">
-                    <i data-lucide="zoom-in" class="w-6 h-6 text-white"></i>
+                    <i data-lucide="grid" class="w-6 h-6 text-white">👾</i>
                 </div>
                 <div>
                     <h1 class="font-black text-xl tracking-wider text-white">TEBAK SIAPA?</h1>
@@ -72,22 +76,22 @@
 
             <div id="nav-stats" class="hidden flex items-center gap-4 bg-slate-800/80 border border-slate-700 rounded-full px-4 py-1.5 text-sm">
                 <div class="flex items-center gap-1.5 text-amber-400 font-bold">
-                    <i data-lucide="trophy" class="w-4 h-4"></i>
+                    <i data-lucide="trophy" class="w-4 h-4">🏆</i>
                     <span id="nav-score">0</span>
                 </div>
                 <div class="h-4 w-[1px] bg-slate-700"></div>
                 <div class="flex items-center gap-1.5 text-orange-400 font-bold">
-                    <i data-lucide="zap" class="w-4 h-4"></i>
+                    <i data-lucide="zap" class="w-4 h-4">⚡</i>
                     <span id="nav-streak">0x</span>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
                 <button onclick="app.toggleSound()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
-                    <i id="sound-icon" data-lucide="volume-2" class="w-5 h-5 text-slate-300"></i>
+                    <i id="sound-icon" data-lucide="volume-2" class="w-5 h-5 text-slate-300">🔊</i>
                 </button>
                 <button onclick="app.showScreen('welcome')" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
-                    <i data-lucide="home" class="w-5 h-5 text-slate-300"></i>
+                    <i data-lucide="home" class="w-5 h-5 text-slate-300">🏠</i>
                 </button>
             </div>
         </div>
@@ -97,28 +101,42 @@
     <main class="max-w-4xl w-full mx-auto p-4 md:p-6 flex-1 flex flex-col justify-center items-center">
 
         <!-- ==================== SCREEN 1: LANDING & PIN ENTRY ==================== -->
-        <section id="screen-welcome" class="w-full max-w-md space-y-6">
-            <div class="bg-white text-slate-900 p-8 rounded-3xl shadow-2xl space-y-6 text-center">
-                <h2 class="text-xl font-extrabold tracking-tight text-slate-800 uppercase">PIN GAME</h2>
+        <section id="screen-welcome" class="w-full max-w-2xl space-y-8 animate-fadeIn">
+            <!-- Hero Banner -->
+            <div class="text-center space-y-4 max-w-xl mx-auto pt-2">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Mode Pixel & Zoom In
+                </div>
+                <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
+                    Seberapa Tajam <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Mata Kamu?</span>
+                </h2>
+                <p class="text-slate-300 text-sm md:text-base leading-relaxed">
+                    Tebak wajah/subjek dari tampilan piksel pecah 8-bit atau zoom ekstrim! Makin cepat dan makin sedikit kamu melakukan pertolongan, makin tinggi skornya!
+                </p>
+            </div>
+
+            <!-- Card PIN Game -->
+            <div class="bg-white text-slate-900 p-8 rounded-3xl shadow-2xl space-y-6 text-center max-w-md mx-auto">
+                <h3 class="text-xl font-extrabold tracking-tight text-slate-800 uppercase">PIN GAME</h3>
                 
                 <div class="space-y-4">
                     <input type="text" id="pin-input" maxlength="6" placeholder="Enter PIN" autocomplete="off" onkeydown="if(event.key==='Enter') app.joinByPin()" class="w-full text-center text-2xl font-black tracking-widest py-4 border-2 border-slate-300 rounded-2xl focus:outline-none focus:border-indigo-600 uppercase text-slate-800 placeholder:text-slate-400 placeholder:font-normal">
                     
                     <button onclick="app.joinByPin()" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-lg rounded-2xl shadow-lg transition active:scale-95">
-                        Join
+                        Join Game
                     </button>
                 </div>
 
                 <div class="pt-2 border-t border-slate-200">
                     <button onclick="app.createNewGameSession()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shadow">
-                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <i data-lucide="plus-circle" class="w-4 h-4">➕</i>
                         <span>+ New Game (Host / Admin)</span>
                     </button>
                 </div>
             </div>
 
             <p class="text-center text-xs text-slate-400">
-                Gunakan PIN demo <span class="font-mono font-bold text-emerald-400">123456</span> atau minta PIN dari Admin.
+                Gunakan PIN demo <span class="font-mono font-bold text-emerald-400">123456</span> untuk uji coba cepat.
             </p>
         </section>
 
@@ -140,13 +158,11 @@
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-400 uppercase">Daftar Soal Subjek (<span id="admin-question-count">0</span>)</span>
                         <button onclick="app.showScreen('custom-creator')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Soal
+                            <i data-lucide="plus" class="w-3.5 h-3.5">➕</i> Tambah Soal
                         </button>
                     </div>
 
-                    <div id="admin-question-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                        <!-- Questions list rendered dynamically -->
-                    </div>
+                    <div id="admin-question-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
                 </div>
 
                 <div class="pt-4 border-t border-slate-800 flex gap-3">
@@ -165,33 +181,42 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-black text-white">Tambah Soal Subjek Baru</h2>
-                    <p class="text-xs text-slate-400">Unggah foto dari perangkat atau ambil foto kamera langsung</p>
+                    <p class="text-xs text-slate-400">Pilih mode tampilan, gambar foto, dan kunci jawaban</p>
                 </div>
                 <button onclick="app.showScreen('admin-lobby')" class="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                    <i data-lucide="x" class="w-5 h-5">✖</i>
                 </button>
             </div>
 
             <form onsubmit="app.saveQuestion(event)" class="glass-panel p-6 rounded-3xl space-y-5 border border-slate-800">
                 <div class="space-y-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">1. Sumber Foto Subjek</label>
+                    <label class="text-xs font-semibold text-indigo-300 uppercase tracking-wider block">1. Mode Efek Visual Soal</label>
+                    <select id="custom-type" onchange="app.toggleCreatorModeUI()" class="w-full bg-slate-900 border border-indigo-500/50 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-400 font-bold">
+                        <option value="pixel">👾 Mode Pixelated (Foto Pecah 8-Bit)</option>
+                        <option value="zoom">🔍 Mode Zoom In (Fokus Area Specific)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">2. Sumber Foto Subjek</label>
                     <div class="grid grid-cols-2 gap-3">
                         <div class="relative">
                             <input type="file" id="custom-img-file" accept="image/*" onchange="app.handleFileUpload(event)" class="hidden">
                             <label for="custom-img-file" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-200 flex items-center justify-center gap-2 cursor-pointer transition">
-                                <i data-lucide="upload" class="w-4 h-4 text-indigo-400"></i>
+                                <i data-lucide="upload" class="w-4 h-4 text-indigo-400">📁</i>
                                 <span id="file-upload-label">Upload File</span>
                             </label>
                         </div>
                         <button type="button" onclick="app.startCamera()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-200 flex items-center justify-center gap-2 transition">
-                            <i data-lucide="camera" class="w-4 h-4 text-emerald-400"></i>
+                            <i data-lucide="camera" class="w-4 h-4 text-emerald-400">📷</i>
                             <span>Kamera Langsung</span>
                         </button>
                     </div>
                 </div>
 
+                <!-- Preview Box -->
                 <div class="space-y-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">2. Tentukan Titik Zoom (Klik Foto)</label>
+                    <label id="focal-picker-label" class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">3. Preview Foto Subjek</label>
                     <div id="focal-picker-container" onclick="app.setFocalPoint(event)" class="relative w-full h-60 bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 flex items-center justify-center cursor-crosshair">
                         <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" alt="Preview" class="w-full h-full object-cover">
                         <div id="focal-marker" class="absolute w-8 h-8 -ml-4 -mt-4 border-2 border-emerald-400 rounded-full bg-emerald-500/30 flex items-center justify-center shadow-lg pointer-events-none transition-all duration-200" style="left: 50%; top: 50%;">
@@ -201,12 +226,12 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">3. Nama Subjek / Jawaban Benar</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">4. Nama Subjek / Jawaban Benar</label>
                     <input type="text" id="custom-answer" required placeholder="Contoh: Budi Santoso" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">4. 3 Pilihan Jawaban Salah</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">5. 3 Pilihan Jawaban Salah</label>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <input type="text" id="custom-opt-1" required placeholder="Pilihan Salah 1" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
                         <input type="text" id="custom-opt-2" required placeholder="Pilihan Salah 2" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
@@ -215,7 +240,7 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">5. Teks Petunjuk (Hint)</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider block">6. Teks Petunjuk (Hint)</label>
                     <input type="text" id="custom-hint" required placeholder="Contoh: Pengurus Seksi Acara GP" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
 
@@ -246,7 +271,7 @@
                 <span id="game-progress" class="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-bold rounded-lg border border-indigo-500/40">Soal 1</span>
                 
                 <div class="flex items-center gap-3 flex-1 max-w-xs mx-auto">
-                    <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                    <i data-lucide="clock" class="w-4 h-4 text-slate-400">⏱</i>
                     <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700">
                         <div id="game-timer-bar" class="bg-gradient-to-r from-emerald-500 to-indigo-500 h-full w-full transition-all duration-1000"></div>
                     </div>
@@ -259,29 +284,31 @@
                 </div>
             </div>
 
+            <!-- Viewport Display (Dual Image & Canvas) -->
             <div class="relative w-full h-72 md:h-96 rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center">
                 <div id="zoom-viewport" class="w-full h-full relative overflow-hidden flex items-center justify-center">
-                    <img id="game-image" src="" alt="Subjek" class="zoom-target w-full h-full object-cover" />
+                    <img id="game-image" src="" alt="Subjek" class="zoom-target w-full h-full object-cover hidden" />
+                    <canvas id="game-canvas" class="w-full h-full object-cover hidden"></canvas>
                 </div>
                 <div class="absolute inset-0 lens-overlay pointer-events-none"></div>
 
                 <div class="absolute top-4 left-4 glass-card px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2">
-                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
-                    <span>Zoom: <span id="zoom-level-text">10x</span></span>
+                    <i id="effect-badge-icon" data-lucide="grid" class="w-3.5 h-3.5">👾</i>
+                    <span id="effect-level-text">Piksel: 36px</span>
                 </div>
 
                 <div id="hint-display-box" class="hidden absolute bottom-4 left-4 right-4 glass-card p-3 rounded-2xl border border-amber-500/40 text-amber-200 text-xs flex items-center gap-3">
-                    <i data-lucide="lightbulb" class="w-5 h-5 text-amber-400 shrink-0"></i>
+                    <i data-lucide="lightbulb" class="w-5 h-5 text-amber-400 shrink-0">💡</i>
                     <span id="hint-text"></span>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <button onclick="app.manualZoomOut()" class="p-3 rounded-2xl glass-card hover:bg-slate-800 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2">
-                    <i data-lucide="zoom-out" class="w-4 h-4 text-emerald-400"></i> Zoom Out (-15)
+                <button onclick="app.manualStepDown()" class="p-3 rounded-2xl glass-card hover:bg-slate-800 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2">
+                    <i data-lucide="eye" class="w-4 h-4 text-emerald-400">👁</i> <span id="btn-step-label">Fokuskan Gambar</span>
                 </button>
                 <button id="btn-hint" onclick="app.useHint()" class="p-3 rounded-2xl glass-card hover:bg-slate-800 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2">
-                    <i data-lucide="help-circle" class="w-4 h-4 text-amber-400"></i> Petunjuk (-30)
+                    <i data-lucide="help-circle" class="w-4 h-4 text-amber-400">❓</i> Petunjuk (-30)
                 </button>
             </div>
 
@@ -294,7 +321,7 @@
         <section id="screen-game-over" class="hidden w-full max-w-md text-center space-y-6">
             <div class="glass-panel p-8 rounded-3xl space-y-6 border border-slate-700">
                 <div class="inline-flex p-4 rounded-3xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                    <i data-lucide="trophy" class="w-12 h-12"></i>
+                    <i data-lucide="trophy" class="w-12 h-12">🏆</i>
                 </div>
                 <div>
                     <h2 class="text-3xl font-black text-white">Sesi Selesai!</h2>
@@ -352,7 +379,7 @@
                 this.score = 0;
                 this.streak = 0;
                 this.correctCount = 0;
-                this.currentZoomStep = 5;
+                this.currentStep = 5;
                 this.timer = null;
                 this.timeLeft = 30;
                 this.creatorFocalX = 50;
@@ -365,20 +392,33 @@
             }
 
             init() {
-                lucide.createIcons();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
                 document.body.addEventListener('click', () => this.sound.init(), { once: true });
             }
 
             setupDemoSession() {
-                const demoQuestions = [{
-                    id: 'q_demo',
-                    name: 'Panitia GP',
-                    hint: 'Subjek contoh awal game',
-                    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
-                    focalX: 50,
-                    focalY: 30,
-                    options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
-                }];
+                const demoQuestions = [
+                    {
+                        id: 'q_demo1',
+                        type: 'pixel',
+                        name: 'Panitia GP',
+                        hint: 'Mode Piksel 8-Bit Pecah',
+                        imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
+                        focalX: 50,
+                        focalY: 30,
+                        options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
+                    },
+                    {
+                        id: 'q_demo2',
+                        type: 'zoom',
+                        name: 'Seksi Acara',
+                        hint: 'Mode Zoom In Fokus Titik',
+                        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
+                        focalX: 50,
+                        focalY: 40,
+                        options: ['Seksi Acara', 'Ketua GP', 'Panitia GP', 'Seksi Musik']
+                    }
+                ];
                 localStorage.setItem('session_123456', JSON.stringify(demoQuestions));
             }
 
@@ -403,8 +443,9 @@
 
             toggleSound() {
                 this.sound.muted = !this.sound.muted;
-                document.getElementById('sound-icon').setAttribute('data-lucide', this.sound.muted ? 'volume-x' : 'volume-2');
-                lucide.createIcons();
+                const icon = document.getElementById('sound-icon');
+                if (icon) icon.setAttribute('data-lucide', this.sound.muted ? 'volume-x' : 'volume-2');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
 
             joinByPin() {
@@ -444,18 +485,22 @@
                 } else {
                     document.getElementById('btn-start-session').disabled = false;
                     this.questions.forEach((q, idx) => {
+                        const typeTag = q.type === 'zoom' ? '🔍 Zoom' : '👾 Pixel';
                         const item = document.createElement('div');
                         item.className = "p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs";
                         item.innerHTML = `
                             <div class="flex items-center gap-3">
                                 <img src="${q.imageUrl}" class="w-8 h-8 rounded-lg object-cover">
-                                <span class="font-bold text-white">${idx + 1}. ${q.name}</span>
+                                <div>
+                                    <span class="font-bold text-white">${idx + 1}. ${q.name}</span>
+                                    <span class="ml-2 px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px]">${typeTag}</span>
+                                </div>
                             </div>
-                            <button onclick="app.removeQuestion(${idx})" class="text-rose-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            <button onclick="app.removeQuestion(${idx})" class="text-rose-400 p-1"><i data-lucide="trash-2" class="w-4 h-4">🗑</i></button>
                         `;
                         list.appendChild(item);
                     });
-                    lucide.createIcons();
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             }
 
@@ -470,6 +515,16 @@
                 this.resetGameStats();
                 this.showScreen('game');
                 this.loadQuestion();
+            }
+
+            toggleCreatorModeUI() {
+                const type = document.getElementById('custom-type').value;
+                const label = document.getElementById('focal-picker-label');
+                if (type === 'zoom') {
+                    label.innerText = '3. Tentukan Titik Zoom (Klik Foto)';
+                } else {
+                    label.innerText = '3. Preview Foto Subjek (Mode Pixelated)';
+                }
             }
 
             handleFileUpload(e) {
@@ -525,6 +580,7 @@
 
             saveQuestion(e) {
                 e.preventDefault();
+                const type = document.getElementById('custom-type').value;
                 const ans = document.getElementById('custom-answer').value.trim();
                 const opt1 = document.getElementById('custom-opt-1').value.trim();
                 const opt2 = document.getElementById('custom-opt-2').value.trim();
@@ -533,6 +589,7 @@
 
                 this.questions.push({
                     id: 'q_' + Date.now(),
+                    type: type,
                     name: ans,
                     hint: hint,
                     imageUrl: this.customImgData,
@@ -557,25 +614,87 @@
                 const q = this.questions[this.currentIndex];
                 document.getElementById('game-progress').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}`;
 
-                this.currentZoomStep = 5;
+                this.currentStep = 5;
                 document.getElementById('hint-display-box').classList.add('hidden');
                 document.getElementById('btn-hint').disabled = false;
 
                 const img = document.getElementById('game-image');
                 img.src = q.imageUrl;
-                img.style.transformOrigin = `${q.focalX}% ${q.focalY}%`;
+                img.onload = () => this.applyVisualEffect();
 
-                this.applyZoom();
+                this.applyVisualEffect();
                 this.renderChoices(q);
                 this.startTimer();
             }
 
-            applyZoom() {
-                const map = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
-                const scale = map[this.currentZoomStep] || 1;
-                document.getElementById('game-image').style.transform = `scale(${scale})`;
-                document.getElementById('zoom-level-text').innerText = `${scale}x`;
-                document.getElementById('potential-points').innerText = `+${100 + this.currentZoomStep * 30}`;
+            // Fungsi Rendering Efek Visual (Pixel vs Zoom)
+            applyVisualEffect() {
+                const q = this.questions[this.currentIndex];
+                const mode = q.type || 'pixel';
+                const img = document.getElementById('game-image');
+                const canvas = document.getElementById('game-canvas');
+                const levelText = document.getElementById('effect-level-text');
+                const btnLabel = document.getElementById('btn-step-label');
+
+                document.getElementById('potential-points').innerText = `+${100 + this.currentStep * 30}`;
+
+                if (mode === 'pixel') {
+                    img.classList.add('hidden');
+                    canvas.classList.remove('hidden');
+
+                    const pixelMap = { 5: 36, 4: 24, 3: 14, 2: 6, 1: 1 };
+                    const pxSize = pixelMap[this.currentStep] || 1;
+                    levelText.innerText = `Piksel: ${pxSize}px`;
+                    btnLabel.innerText = 'Haluskan Piksel (-15)';
+
+                    this.renderPixelated(img, canvas, pxSize);
+                } else {
+                    canvas.classList.add('hidden');
+                    img.classList.remove('hidden');
+
+                    const zoomMap = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
+                    const scale = zoomMap[this.currentStep] || 1;
+                    levelText.innerText = `Zoom: ${scale}x`;
+                    btnLabel.innerText = 'Zoom Out (-15)';
+
+                    img.style.transformOrigin = `${q.focalX || 50}% ${q.focalY || 50}%`;
+                    img.style.transform = `scale(${scale})`;
+                }
+            }
+
+            renderPixelated(img, canvas, pixelSize) {
+                const ctx = canvas.getContext('2d');
+                const w = img.naturalWidth || 640;
+                const h = img.naturalHeight || 480;
+                canvas.width = w;
+                canvas.height = h;
+
+                if (pixelSize <= 1) {
+                    ctx.drawImage(img, 0, 0, w, h);
+                    return;
+                }
+
+                const smallW = Math.max(1, Math.floor(w / pixelSize));
+                const smallH = Math.max(1, Math.floor(h / pixelSize));
+
+                const offscreen = document.createElement('canvas');
+                offscreen.width = smallW;
+                offscreen.height = smallH;
+                const offCtx = offscreen.getContext('2d');
+                offCtx.drawImage(img, 0, 0, smallW, smallH);
+
+                ctx.imageSmoothingEnabled = false;
+                ctx.mozImageSmoothingEnabled = false;
+                ctx.webkitImageSmoothingEnabled = false;
+                ctx.msImageSmoothingEnabled = false;
+                ctx.drawImage(offscreen, 0, 0, smallW, smallH, 0, 0, w, h);
+            }
+
+            manualStepDown() {
+                if (this.currentStep > 1) {
+                    this.currentStep--;
+                    this.applyVisualEffect();
+                }
             }
 
             startTimer() {
@@ -590,10 +709,6 @@
             }
 
             stopTimer() { if (this.timer) { clearInterval(this.timer); this.timer = null; } }
-
-            manualZoomOut() {
-                if (this.currentZoomStep > 1) { this.currentZoomStep--; this.applyZoom(); }
-            }
 
             useHint() {
                 const q = this.questions[this.currentIndex];
@@ -617,13 +732,16 @@
             checkAnswer(selected) {
                 this.stopTimer();
                 const q = this.questions[this.currentIndex];
-                document.getElementById('game-image').style.transform = 'scale(1)';
+                
+                // Reveal Full Image
+                this.currentStep = 1;
+                this.applyVisualEffect();
 
                 if (selected.toLowerCase().trim() === q.name.toLowerCase().trim()) {
                     this.sound.correct();
                     this.correctCount++;
                     this.streak++;
-                    this.score += 100 + this.currentZoomStep * 30;
+                    this.score += 100 + this.currentStep * 30;
                     document.getElementById('nav-score').innerText = this.score;
                     document.getElementById('nav-streak').innerText = `${this.streak}x`;
                     this.showToast('✨ Jawaban Benar!');
