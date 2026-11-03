@@ -254,7 +254,7 @@
 
                 <div class="absolute top-4 left-4 glass-card px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2">
                     <span id="host-badge-icon">🧩</span>
-                    <span id="host-level-text">Reveal: 16% Terbuka</span>
+                    <span id="host-level-text">Reveal: 15% Terbuka</span>
                 </div>
             </div>
 
@@ -262,7 +262,7 @@
 
             <div class="flex gap-3">
                 <button onclick="app.hostManualStepDown()" class="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-2xl border border-slate-700">
-                    👁 Buka Lebih Banyak Kotak (-15)
+                    👁 Buka Area Lebih Luas (-15)
                 </button>
                 <button onclick="app.hostEndQuestion()" class="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm rounded-2xl shadow-lg">
                     Selesaikan Soal Ini ➔
@@ -296,28 +296,43 @@
 
             <form onsubmit="app.saveQuestion(event)" class="glass-panel p-6 rounded-3xl space-y-4 border border-slate-800">
                 <div>
-                    <label class="text-xs font-semibold text-indigo-300 uppercase block mb-1">Mode Efek Visual</label>
+                    <label class="text-xs font-semibold text-indigo-300 uppercase block mb-1">1. Mode Efek Visual</label>
                     <select id="custom-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold">
-                        <option value="reveal">🧩 Mode Image Reveal (Buka Kotak Grid)</option>
+                        <option value="reveal">🧩 Mode Image Reveal (Buka Fokus Subjek)</option>
                         <option value="pixel">👾 Mode Pixelated (Foto Pecah)</option>
                         <option value="zoom">🔍 Mode Zoom In (Fokus)</option>
                     </select>
                 </div>
+
                 <div>
-                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">Upload Foto Subjek</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">2. Upload Foto Subjek</label>
                     <input type="file" id="custom-img-file" accept="image/*" onchange="app.handleFileUpload(event)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
                 </div>
-                <div class="h-44 bg-slate-900 rounded-2xl overflow-hidden relative border border-slate-700 flex items-center justify-center">
-                    <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" class="w-full h-full object-cover">
-                </div>
+
                 <div>
-                    <input type="text" id="custom-answer" required placeholder="Jawaban Benar (Opsi Merah)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white">
+                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">3. Klik Area Fokus Penting pada Foto</label>
+                    <div id="focal-picker-container" onclick="app.setFocalPoint(event)" class="h-52 bg-slate-900 rounded-2xl overflow-hidden relative border border-slate-700 flex items-center justify-center cursor-crosshair">
+                        <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" class="w-full h-full object-cover">
+                        <div id="focal-marker" class="absolute w-8 h-8 -ml-4 -mt-4 border-2 border-emerald-400 rounded-full bg-emerald-500/30 flex items-center justify-center shadow-lg pointer-events-none transition-all duration-200" style="left: 50%; top: 50%;">
+                            <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <input type="text" id="custom-opt-1" required placeholder="Salah 1 (Biru)" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
-                    <input type="text" id="custom-opt-2" required placeholder="Salah 2 (Kuning)" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
-                    <input type="text" id="custom-opt-3" required placeholder="Salah 3 (Hijau)" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
+
+                <div>
+                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">4. Jawaban Benar (Merah)</label>
+                    <input type="text" id="custom-answer" required placeholder="Contoh: Budi Santoso" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white">
                 </div>
+
+                <div>
+                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">5. 3 Pilihan Salah (Biru, Kuning, Hijau)</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="text" id="custom-opt-1" required placeholder="Salah 1" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
+                        <input type="text" id="custom-opt-2" required placeholder="Salah 2" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
+                        <input type="text" id="custom-opt-3" required placeholder="Salah 3" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
+                    </div>
+                </div>
+
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="app.showScreen('host-lobby')" class="flex-1 py-3 bg-slate-800 text-slate-300 text-sm font-semibold rounded-xl">Batal</button>
                     <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow">Simpan Soal</button>
@@ -367,6 +382,8 @@
                 this.currentStep = 5;
                 this.timer = null;
                 this.timeLeft = 30;
+                this.creatorFocalX = 50;
+                this.creatorFocalY = 50;
                 this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
 
                 // Google STUN Server Config
@@ -394,11 +411,13 @@
                 this.questions = [
                     {
                         id: 'q1', type: 'reveal', name: 'Ketua GP',
+                        focalX: 50, focalY: 35,
                         imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
                         options: ['Ketua GP', 'Sekretaris GP', 'Bendahara GP', 'Seksi Musik']
                     },
                     {
                         id: 'q2', type: 'pixel', name: 'Panitia GP',
+                        focalX: 50, focalY: 35,
                         imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=80',
                         options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
                     }
@@ -562,65 +581,68 @@
                     this.renderPixelated(img, canvas, pxSize);
                 } else if (mode === 'reveal') {
                     img.classList.add('hidden'); canvas.classList.remove('hidden');
-                    const revealMap = { 5: '16%', 4: '36%', 3: '58%', 2: '80%', 1: '100%' };
+                    const revealMap = { 5: '15%', 4: '35%', 3: '58%', 2: '80%', 1: '100%' };
                     badgeIcon.innerText = '🧩'; levelText.innerText = `Reveal: ${revealMap[this.currentStep] || '100%'} Terbuka`;
-                    this.renderImageReveal(img, canvas, this.currentStep);
+                    this.renderImageReveal(img, canvas, this.currentStep, q.focalX || 50, q.focalY || 50);
                 } else {
                     // Zoom mode
                     canvas.classList.add('hidden'); img.classList.remove('hidden');
                     const zoomMap = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
                     const scale = zoomMap[this.currentStep] || 1;
                     badgeIcon.innerText = '🔍'; levelText.innerText = `Zoom: ${scale}x`;
+                    img.style.transformOrigin = `${q.focalX || 50}% ${q.focalY || 50}%`;
                     img.style.transform = `scale(${scale})`;
                 }
             }
 
-            // Fungsi Mode Image Reveal (Kotak-Kotak Grid Terbuka Bertahap)
-            renderImageReveal(img, canvas, step) {
+            // Algoritma Image Reveal Terbuka Berdasarkan Jarak Titik Fokus Penting
+            renderImageReveal(img, canvas, step, focalX = 50, focalY = 50) {
                 const ctx = canvas.getContext('2d');
                 const w = img.naturalWidth || 640;
                 const h = img.naturalHeight || 480;
                 canvas.width = w; canvas.height = h;
 
-                // Gambar dasar foto penuh
+                // 1. Render foto asli terlebih dahulu
                 ctx.drawImage(img, 0, 0, w, h);
 
                 if (step <= 1) return; // Step 1 = Terbuka 100%
 
-                const cols = 6;
-                const rows = 6;
+                const cols = 8; // Grid 8x8 (64 ubin halus)
+                const rows = 8;
                 const tileW = w / cols;
                 const tileH = h / rows;
+                const totalTiles = cols * rows;
 
-                // Jumlah ubin terbuka per step (Step 5 paling dikit terbuka)
-                const visibleCountMap = { 5: 6, 4: 13, 3: 21, 2: 29, 1: 36 };
-                const visibleCount = visibleCountMap[step] || 36;
+                // Rasio persentase ubin yang terbuka per Step
+                const revealRatios = { 5: 0.15, 4: 0.35, 3: 0.58, 2: 0.80, 1: 1.0 };
+                const revealCount = Math.floor(totalTiles * (revealRatios[step] || 1.0));
 
-                // Urutan posisi ubin (dimulai dari area tengah memencar ke luar)
-                const sequence = [
-                    14, 15, 20, 21, 13, 22, 8, 9, 26, 27, 7, 10,
-                    25, 28, 2, 3, 32, 33, 1, 4, 31, 34, 0, 5,
-                    30, 35, 6, 11, 24, 29, 12, 17, 18, 23, 16, 19
-                ];
-
-                const visibleSet = new Set(sequence.slice(0, visibleCount));
-
-                // Tutup ubin yang belum terbuka dengan warna Slate Dark + Garis Grid
-                ctx.fillStyle = '#0f172a';
-                ctx.strokeStyle = '#334155';
-                ctx.lineWidth = 1.5;
-
+                // 2. Hitung jarak setiap ubin ke koordinat Titik Fokus (focalX, focalY)
+                const tiles = [];
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
-                        const idx = r * cols + c;
-                        if (!visibleSet.has(idx)) {
-                            const x = c * tileW;
-                            const y = r * tileH;
-                            ctx.fillRect(x, y, tileW, tileH);
-                            ctx.strokeRect(x, y, tileW, tileH);
-                        }
+                        const tileCenterX = ((c + 0.5) / cols) * 100;
+                        const tileCenterY = ((r + 0.5) / rows) * 100;
+                        const dist = Math.hypot(tileCenterX - focalX, tileCenterY - focalY);
+
+                        tiles.push({ r, c, x: c * tileW, y: r * tileH, dist: dist });
                     }
                 }
+
+                // 3. Urutkan ubin dari yang paling dekat dengan titik fokus ke yang paling jauh
+                tiles.sort((a, b) => a.dist - b.dist);
+
+                // Ubin sisanya (yang lebih jauh) ditutup penutup gelap halus
+                const hiddenTiles = tiles.slice(revealCount);
+
+                ctx.fillStyle = '#0f172a'; // Slate-900
+                ctx.strokeStyle = '#1e293b'; // Slate-800 Line
+                ctx.lineWidth = 1;
+
+                hiddenTiles.forEach(tile => {
+                    ctx.fillRect(tile.x, tile.y, tileW, tileH);
+                    ctx.strokeRect(tile.x, tile.y, tileW, tileH);
+                });
             }
 
             renderPixelated(img, canvas, pixelSize) {
@@ -860,6 +882,17 @@
 
             /* ================= CREATOR LOGIC ================= */
 
+            setFocalPoint(e) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pctX = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                const pctY = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+                this.creatorFocalX = pctX;
+                this.creatorFocalY = pctY;
+                const m = document.getElementById('focal-marker');
+                m.style.left = `${pctX}%`;
+                m.style.top = `${pctY}%`;
+            }
+
             handleFileUpload(e) {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -883,6 +916,8 @@
                     id: 'q_' + Date.now(),
                     type: type,
                     name: ans,
+                    focalX: this.creatorFocalX,
+                    focalY: this.creatorFocalY,
                     imageUrl: this.customImgData,
                     options: [ans, opt1, opt2, opt3]
                 });
