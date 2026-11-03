@@ -10,6 +10,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Canvas Confetti CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- PeerJS CDN (Real-Time WebRTC Cross-Device) -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -30,33 +32,12 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        .zoom-target {
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease;
-            transform-origin: center center;
-        }
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.88);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .lens-overlay {
-            background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        canvas {
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
+        body { font-family: 'Inter', sans-serif; user-select: none; -webkit-user-select: none; }
+        .zoom-target { transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease; transform-origin: center center; }
+        .glass-panel { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-card { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .lens-overlay { background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 20px 20px; }
+        canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500">
@@ -76,7 +57,7 @@
 
             <div class="flex items-center gap-2">
                 <span id="role-badge" class="px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-xs font-bold rounded-full">
-                    Pilih Peran
+                    Belum Terhubung
                 </span>
                 <button onclick="app.toggleSound()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
                     <i id="sound-icon" data-lucide="volume-2" class="w-5 h-5 text-slate-300">🔊</i>
@@ -90,7 +71,6 @@
 
         <!-- ==================== SCREEN 1: LANDING & ROLE SELECTION ==================== -->
         <section id="screen-welcome" class="w-full max-w-2xl space-y-8 animate-fadeIn">
-            <!-- Hero Banner -->
             <div class="text-center space-y-3 max-w-xl mx-auto pt-2">
                 <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
                     <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Mode Multiplayer Real-Time Kahoot
@@ -99,54 +79,44 @@
                     Seberapa Tajam <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Mata Kamu?</span>
                 </h2>
                 <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
-                    Host membuka Layar Utama Proyektor, Pemain memasukkan PIN dari HP masing-masing untuk bergabung!
+                    Host membuka Layar Utama Proyektor, Pemain memasukkan PIN dari HP masing-masing untuk bertanding secara langsung!
                 </p>
             </div>
 
-            <!-- Role Selector Tabs / Cards Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
-                <!-- CARD 1: PLAYER (PEMAIN) -->
+                <!-- CARD PEMAIN -->
                 <div class="bg-white text-slate-900 p-6 rounded-3xl shadow-2xl space-y-4 text-center border-2 border-transparent hover:border-emerald-500 transition">
-                    <div class="w-12 h-12 mx-auto bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                        📱
-                    </div>
+                    <div class="w-12 h-12 mx-auto bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">📱</div>
                     <div>
-                        <h3 class="text-lg font-black text-slate-800 uppercase">GABUNG ROOM (PEMAIN)</h3>
+                        <h3 class="text-lg font-black text-slate-800 uppercase">PEMAIN (PLAYER)</h3>
                         <p class="text-xs text-slate-500 mt-1">Masukkan PIN dari Host untuk masuk Room</p>
                     </div>
                     
                     <div class="space-y-2.5 pt-2">
-                        <input type="text" id="pin-input" maxlength="6" placeholder="PIN ROOM (ex: 123456)" autocomplete="off" class="w-full text-center text-lg font-black tracking-widest py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 uppercase text-slate-800 placeholder:text-slate-400 placeholder:font-normal placeholder:tracking-normal placeholder:text-xs">
-                        <input type="text" id="player-nickname" maxlength="15" placeholder="Nama / Nickname Kamu" autocomplete="off" class="w-full text-center text-sm font-bold py-2.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 text-slate-800 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs">
+                        <input type="text" id="pin-input" maxlength="6" placeholder="PIN ROOM (ex: 123456)" autocomplete="off" class="w-full text-center text-lg font-black tracking-widest py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 uppercase text-slate-800">
+                        <input type="text" id="player-nickname" maxlength="15" placeholder="Nama / Nickname Kamu" autocomplete="off" class="w-full text-center text-sm font-bold py-2.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 text-slate-800">
                         
-                        <button onclick="app.joinRoomAsPlayer()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+                        <button id="btn-player-join" onclick="app.joinRoomAsPlayer()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
                             <span>MASUK ROOM SEKARANG</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- CARD 2: HOST (ADMIN / PROYEKTOR) -->
+                <!-- CARD HOST -->
                 <div class="glass-panel p-6 rounded-3xl shadow-2xl space-y-4 text-center border border-slate-700 hover:border-indigo-500 transition flex flex-col justify-between">
                     <div class="space-y-4">
-                        <div class="w-12 h-12 mx-auto bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center text-xl font-bold border border-indigo-500/30">
-                            📺
-                        </div>
+                        <div class="w-12 h-12 mx-auto bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center text-xl font-bold border border-indigo-500/30">📺</div>
                         <div>
-                            <h3 class="text-lg font-black text-white uppercase">BUAT ROOM (HOST / ADMIN)</h3>
+                            <h3 class="text-lg font-black text-white uppercase">HOST (ADMIN / PROYEKTOR)</h3>
                             <p class="text-xs text-slate-400 mt-1">Buat Room game baru & kontrol Layar Proyektor</p>
                         </div>
                     </div>
 
                     <div class="space-y-2.5 pt-4">
-                        <button onclick="app.createHostRoom()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                        <button id="btn-create-host" onclick="app.createHostRoom()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2">
                             <i data-lucide="plus-circle" class="w-4 h-4">➕</i>
                             <span>Buat Sesi Game Baru</span>
-                        </button>
-                        
-                        <button onclick="app.createDemoHostRoom()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
-                            <i data-lucide="play-circle" class="w-3.5 h-3.5 text-emerald-400">▶</i>
-                            <span>Buka Room Demo (PIN: 123456)</span>
                         </button>
                     </div>
                 </div>
@@ -168,7 +138,6 @@
                     </div>
                 </div>
 
-                <!-- Live Connected Players Grid -->
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-300 uppercase">Pemain Terhubung (<span id="host-player-count">0</span>)</span>
@@ -179,14 +148,14 @@
 
                     <div id="host-player-list" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-56 overflow-y-auto p-3 bg-slate-900/60 rounded-2xl border border-slate-800">
                         <div class="col-span-full text-center py-8 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
-                            Menunggu pemain memasukkan PIN di perangkat mereka...
+                            Menunggu pemain memasukkan PIN dari HP mereka...
                         </div>
                     </div>
                 </div>
 
                 <div class="pt-4 border-t border-slate-800 flex gap-3">
-                    <button onclick="app.showScreen('welcome')" class="py-3.5 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl">
-                        Kembali
+                    <button onclick="location.reload()" class="py-3.5 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl">
+                        Tutup Room
                     </button>
                     <button id="btn-start-game" onclick="app.hostStartGame()" class="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-black text-base rounded-xl shadow-xl transition active:scale-95">
                         🚀 MULAI GAME SEKARANG
@@ -195,55 +164,51 @@
             </div>
         </section>
 
-        <!-- ==================== SCREEN 3: PLAYER WAITING / GAME VIEW ==================== -->
+        <!-- ==================== SCREEN 3: PLAYER VIEW (HP) ==================== -->
         <section id="screen-player-view" class="hidden w-full max-w-md space-y-6 text-center">
             
-            <!-- Player Waiting in Room -->
+            <!-- Player Waiting -->
             <div id="player-state-waiting" class="glass-panel p-8 rounded-3xl space-y-5 border border-slate-800">
-                <div class="w-16 h-16 mx-auto bg-indigo-500/20 border border-indigo-500/40 rounded-full flex items-center justify-center text-indigo-400 text-2xl animate-bounce">
-                    👤
-                </div>
+                <div class="w-16 h-16 mx-auto bg-indigo-500/20 border border-indigo-500/40 rounded-full flex items-center justify-center text-indigo-400 text-2xl animate-bounce">📱</div>
                 <div>
                     <h3 class="text-2xl font-black text-white" id="player-disp-name">Pemain</h3>
-                    <p class="text-xs text-emerald-400 font-bold mt-1">Status: Terhubung ke Room Host</p>
+                    <p class="text-xs text-emerald-400 font-bold mt-1">✅ Terhubung ke Room Host!</p>
                 </div>
                 <div class="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 text-xs text-slate-400">
-                    Perhatikan Layar Utama Proyektor! Tombol jawaban akan otomatis muncul begitu Host memulai game.
+                    Perhatikan Layar Proyektor Host! Tombol jawaban warna-warni akan otomatis aktif di HP kamu begitu Host memulai game.
                 </div>
             </div>
 
-            <!-- Player Active Input (4 Big Kahoot Buttons) -->
+            <!-- Player Active Inputs -->
             <div id="player-state-active" class="hidden space-y-4">
                 <div class="glass-card p-3 rounded-2xl flex items-center justify-between text-xs font-bold text-slate-300">
-                    <span>Pilih Jawaban Kamu:</span>
+                    <span>Pilih Jawaban di HP Kamu:</span>
                     <span id="player-timer-text" class="text-emerald-400 font-mono">30s</span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 h-72 md:h-80">
                     <button onclick="app.playerSubmitAnswer(0)" class="bg-kahootRed hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1">
                         <span class="text-4xl">▲</span>
-                        <span id="p-opt-0" class="text-xs font-extrabold">MERAH</span>
+                        <span id="p-opt-0" class="text-xs font-extrabold uppercase">MERAH</span>
                     </button>
                     <button onclick="app.playerSubmitAnswer(1)" class="bg-kahootBlue hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1">
                         <span class="text-4xl">◆</span>
-                        <span id="p-opt-1" class="text-xs font-extrabold">BIRU</span>
+                        <span id="p-opt-1" class="text-xs font-extrabold uppercase">BIRU</span>
                     </button>
                     <button onclick="app.playerSubmitAnswer(2)" class="bg-kahootYellow hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1">
                         <span class="text-4xl">●</span>
-                        <span id="p-opt-2" class="text-xs font-extrabold">KUNING</span>
+                        <span id="p-opt-2" class="text-xs font-extrabold uppercase">KUNING</span>
                     </button>
                     <button onclick="app.playerSubmitAnswer(3)" class="bg-kahootGreen hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1">
                         <span class="text-4xl">■</span>
-                        <span id="p-opt-3" class="text-xs font-extrabold">HIJAU</span>
+                        <span id="p-opt-3" class="text-xs font-extrabold uppercase">HIJAU</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Player Submitted Waiting -->
+            <!-- Player Submitted -->
             <div id="player-state-submitted" class="hidden glass-panel p-8 rounded-3xl space-y-4 border border-slate-800">
-                <div class="w-16 h-16 mx-auto bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center text-emerald-400 text-3xl">
-                    ✔
-                </div>
+                <div class="w-16 h-16 mx-auto bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center text-emerald-400 text-3xl">✔</div>
                 <h3 class="text-2xl font-black text-white">Jawaban Terkirim!</h3>
                 <p class="text-xs text-slate-400">Menunggu Host menyelesaikan soal ini...</p>
             </div>
@@ -260,7 +225,7 @@
 
         </section>
 
-        <!-- ==================== SCREEN 4: HOST GAMEPLAY (PROYEKTOR) ==================== -->
+        <!-- ==================== SCREEN 4: HOST GAMEPLAY ==================== -->
         <section id="screen-host-game" class="hidden w-full space-y-5">
             <div class="glass-card p-4 rounded-2xl flex items-center justify-between gap-3">
                 <span id="host-progress-text" class="px-3.5 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-bold rounded-lg border border-indigo-500/40">Soal 1</span>
@@ -279,7 +244,7 @@
                 </div>
             </div>
 
-            <!-- Host Display Viewport -->
+            <!-- Host Viewport -->
             <div class="relative w-full h-72 md:h-96 rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center shadow-2xl">
                 <div class="w-full h-full relative overflow-hidden flex items-center justify-center">
                     <img id="host-game-image" src="" alt="Subjek" class="zoom-target w-full h-full object-cover hidden" />
@@ -291,19 +256,13 @@
                     <span id="host-badge-icon">🔍</span>
                     <span id="host-level-text">Zoom: 10x</span>
                 </div>
-
-                <div id="host-hint-box" class="hidden absolute bottom-4 left-4 right-4 glass-card p-3 rounded-2xl border border-amber-500/40 text-amber-200 text-xs flex items-center gap-3">
-                    <i data-lucide="lightbulb" class="w-5 h-5 text-amber-400 shrink-0">💡</i>
-                    <span id="host-hint-text"></span>
-                </div>
             </div>
 
-            <!-- Host Option Cards -->
             <div id="host-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
 
             <div class="flex gap-3">
                 <button onclick="app.hostManualStepDown()" class="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-2xl border border-slate-700">
-                    👁 Fokuskan Gambar (-15)
+                    👁 Haluskan / Terangkan (-15)
                 </button>
                 <button onclick="app.hostEndQuestion()" class="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm rounded-2xl shadow-lg">
                     Selesaikan Soal Ini ➔
@@ -345,7 +304,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">Upload Foto</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">Upload Foto Subjek</label>
                     <input type="file" id="custom-img-file" accept="image/*" onchange="app.handleFileUpload(event)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
                 </div>
                 <div class="h-44 bg-slate-900 rounded-2xl overflow-hidden relative border border-slate-700 flex items-center justify-center">
@@ -359,12 +318,9 @@
                     <input type="text" id="custom-opt-2" required placeholder="Salah 2 (Kuning)" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
                     <input type="text" id="custom-opt-3" required placeholder="Salah 3 (Hijau)" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
                 </div>
-                <div>
-                    <input type="text" id="custom-hint" required placeholder="Petunjuk (Hint)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white">
-                </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="app.showScreen('host-lobby')" class="flex-1 py-3 bg-slate-800 text-slate-300 text-sm font-semibold rounded-xl">Batal</button>
-                    <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow">Simpan</button>
+                    <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow">Simpan Soal</button>
                 </div>
             </form>
         </section>
@@ -396,13 +352,16 @@
             click() { this.playTone(800, 'sine', 0.05); }
         }
 
-        class KahootRealtimeEngine {
+        class PeerKahootEngine {
             constructor() {
                 this.sound = new SoundEngine();
                 this.role = 'player';
                 this.pin = '';
                 this.playerName = '';
-                this.players = []; // [{ name, score, currentAns }]
+                this.peer = null;
+                this.playerConnections = []; // Host list of player conns
+                this.hostConn = null; // Player connection to host
+                this.players = []; // [{ name, score, currentAns, connId }]
                 this.questions = [];
                 this.currentIndex = 0;
                 this.currentStep = 5;
@@ -410,20 +369,7 @@
                 this.timeLeft = 30;
                 this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
 
-                // Setup Broadcast Channel & Window Storage Listener for Real-Time Sync
-                this.channel = new BroadcastChannel('gp_kahoot_room_sync');
-                this.channel.onmessage = (e) => this.handleSyncEvent(e.data);
-                
-                window.addEventListener('storage', (e) => {
-                    if (e.key && e.key.startsWith('room_event_')) {
-                        try {
-                            const data = JSON.parse(e.newValue);
-                            if (data) this.handleSyncEvent(data);
-                        } catch(err) {}
-                    }
-                });
-
-                this.setupDemoQuestions();
+                this.setupDefaultQuestions();
             }
 
             init() {
@@ -431,85 +377,19 @@
                 document.body.addEventListener('click', () => this.sound.init(), { once: true });
             }
 
-            setupDemoQuestions() {
-                const demo = [
+            setupDefaultQuestions() {
+                this.questions = [
                     {
-                        id: 'q_demo1',
-                        type: 'silhouette',
-                        name: 'Ketua GP',
-                        hint: 'Pengurus Harian GP Mangngamaseang',
+                        id: 'q1', type: 'silhouette', name: 'Ketua GP',
                         imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
                         options: ['Ketua GP', 'Sekretaris GP', 'Bendahara GP', 'Seksi Musik']
                     },
                     {
-                        id: 'q_demo2',
-                        type: 'pixel',
-                        name: 'Panitia GP',
-                        hint: 'Seksi Panitia Acara',
+                        id: 'q2', type: 'pixel', name: 'Panitia GP',
                         imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=80',
                         options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
                     }
                 ];
-                localStorage.setItem('session_123456', JSON.stringify(demo));
-            }
-
-            emit(action, payload = {}) {
-                const packet = { action, payload, pin: this.pin, timestamp: Date.now() };
-                this.channel.postMessage(packet);
-                localStorage.setItem(`room_event_${this.pin}`, JSON.stringify(packet));
-            }
-
-            handleSyncEvent(data) {
-                if (!data || data.pin !== this.pin) return;
-
-                switch (data.action) {
-                    case 'PLAYER_JOINED':
-                        if (this.role === 'host') {
-                            if (!this.players.find(p => p.name === data.payload.name)) {
-                                this.players.push({ name: data.payload.name, score: 0, currentAns: -1 });
-                                this.renderHostPlayerList();
-                                this.showToast(`📱 ${data.payload.name} bergabung ke Room!`);
-                            }
-                        }
-                        break;
-
-                    case 'GAME_STARTED':
-                        if (this.role === 'player') {
-                            this.showScreen('player-view');
-                            this.setPlayerState('active');
-                            this.renderPlayerOptions(data.payload.options);
-                            this.showToast('🚀 Game Dimulai! Pilih Jawaban di HP');
-                        }
-                        break;
-
-                    case 'QUESTION_START':
-                        if (this.role === 'player') {
-                            this.setPlayerState('active');
-                            this.renderPlayerOptions(data.payload.options);
-                        }
-                        break;
-
-                    case 'ANSWER_SUBMITTED':
-                        if (this.role === 'host') {
-                            const p = this.players.find(item => item.name === data.payload.name);
-                            if (p) {
-                                p.currentAns = data.payload.optionIndex;
-                                if (data.payload.optionIndex === 0) { // Opsi 0 selalu jawaban benar
-                                    p.score += 100 + data.payload.step * 30 + data.payload.timeLeft * 2;
-                                }
-                            }
-                            this.updateHostAnsweredCount();
-                        }
-                        break;
-
-                    case 'QUESTION_ENDED':
-                        if (this.role === 'player') {
-                            const myData = data.payload.players.find(p => p.name === this.playerName);
-                            const isCorrect = myData && myData.currentAns === 0;
-                            this.showPlayerResult(isCorrect, myData ? myData.score : 0);
-                        }
-                        break;
-                }
             }
 
             showScreen(id) {
@@ -524,7 +404,7 @@
                 const t = document.getElementById('toast-message');
                 document.getElementById('toast-text').innerText = msg;
                 t.classList.remove('opacity-0', 'pointer-events-none');
-                setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2200);
+                setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2500);
             }
 
             toggleSound() {
@@ -533,32 +413,71 @@
                 if (icon) icon.innerText = this.sound.muted ? '🔇' : '🔊';
             }
 
-            /* ================= HOST ROOM LOGIC ================= */
+            /* ================= HOST WEBRTC ROOM ================= */
 
             createHostRoom() {
                 this.role = 'host';
                 this.pin = Math.floor(100000 + Math.random() * 900000).toString();
                 this.players = [];
-                this.questions = [];
-                localStorage.setItem(`session_${this.pin}`, JSON.stringify(this.questions));
+                this.playerConnections = [];
 
-                document.getElementById('role-badge').innerText = '📺 HOST ROOM';
-                document.getElementById('host-pin-display').innerText = this.pin;
-                this.renderHostPlayerList();
-                this.showScreen('host-lobby');
+                this.showToast('Menghubungkan ke server PeerJS...');
+                
+                // Construct global unique peer ID from PIN
+                const peerId = `gpgp-room-${this.pin}`;
+                this.peer = new Peer(peerId);
+
+                this.peer.on('open', (id) => {
+                    document.getElementById('role-badge').innerText = '📺 HOST ROOM';
+                    document.getElementById('host-pin-display').innerText = this.pin;
+                    this.renderHostPlayerList();
+                    this.showScreen('host-lobby');
+                    this.showToast(`Room Siap! PIN: ${this.pin}`);
+                });
+
+                this.peer.on('connection', (conn) => {
+                    this.playerConnections.push(conn);
+                    
+                    conn.on('data', (data) => {
+                        this.handleHostReceivedData(conn, data);
+                    });
+
+                    conn.on('close', () => {
+                        this.players = this.players.filter(p => p.connId !== conn.peer);
+                        this.renderHostPlayerList();
+                    });
+                });
+
+                this.peer.on('error', (err) => {
+                    console.error(err);
+                    this.showToast('Gagal membuat room. Coba klik lagi.');
+                });
             }
 
-            createDemoHostRoom() {
-                this.role = 'host';
-                this.pin = '123456';
-                this.players = [];
-                const data = localStorage.getItem('session_123456');
-                this.questions = data ? JSON.parse(data) : [];
+            handleHostReceivedData(conn, data) {
+                if (data.action === 'JOIN') {
+                    if (!this.players.find(p => p.connId === conn.peer)) {
+                        this.players.push({ connId: conn.peer, name: data.name, score: 0, currentAns: -1 });
+                        this.renderHostPlayerList();
+                        this.showToast(`📱 ${data.name} bergabung!`);
+                        conn.send({ action: 'JOIN_CONFIRM', success: true });
+                    }
+                } else if (data.action === 'SUBMIT_ANSWER') {
+                    const p = this.players.find(item => item.connId === conn.peer);
+                    if (p) {
+                        p.currentAns = data.optionIndex;
+                        if (data.optionIndex === 0) { // Opsi 0 selalu jawaban benar di objek
+                            p.score += 100 + data.step * 30 + data.timeLeft * 2;
+                        }
+                    }
+                    this.updateHostAnsweredCount();
+                }
+            }
 
-                document.getElementById('role-badge').innerText = '📺 HOST ROOM (DEMO)';
-                document.getElementById('host-pin-display').innerText = this.pin;
-                this.renderHostPlayerList();
-                this.showScreen('host-lobby');
+            broadcastToPlayers(packet) {
+                this.playerConnections.forEach(conn => {
+                    if (conn.open) conn.send(packet);
+                });
             }
 
             renderHostPlayerList() {
@@ -567,7 +486,7 @@
                 list.innerHTML = '';
 
                 if (this.players.length === 0) {
-                    list.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Menunggu pemain memasukkan PIN di perangkat mereka...</div>`;
+                    list.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Menunggu pemain memasukkan PIN dari HP mereka...</div>`;
                 } else {
                     this.players.forEach(p => {
                         const item = document.createElement('div');
@@ -582,7 +501,6 @@
                 if (this.questions.length === 0) { this.showToast('Tambahkan soal terlebih dahulu!'); return; }
                 this.currentIndex = 0;
                 this.hostLoadQuestion();
-                this.emit('GAME_STARTED', { options: this.questions[0].options });
             }
 
             hostLoadQuestion() {
@@ -599,8 +517,6 @@
                 this.updateHostAnsweredCount();
 
                 this.currentStep = 5;
-                document.getElementById('host-hint-box').classList.add('hidden');
-
                 const img = document.getElementById('host-game-image');
                 img.src = q.imageUrl;
                 img.onload = () => this.applyHostVisualEffect();
@@ -610,7 +526,8 @@
                 this.showScreen('host-game');
                 this.startHostTimer();
 
-                this.emit('QUESTION_START', { options: q.options });
+                // Kirim sinyal ke SEMUA HP Pemain
+                this.broadcastToPlayers({ action: 'QUESTION_START', options: q.options });
             }
 
             applyHostVisualEffect() {
@@ -709,7 +626,9 @@
                 this.currentStep = 1;
                 this.applyHostVisualEffect();
 
-                this.emit('QUESTION_ENDED', { players: this.players });
+                // Broadcast hasil ke HP Pemain
+                const summary = this.players.map(p => ({ name: p.name, score: p.score, currentAns: p.currentAns }));
+                this.broadcastToPlayers({ action: 'QUESTION_ENDED', players: summary });
 
                 setTimeout(() => {
                     this.renderLeaderboard();
@@ -746,7 +665,7 @@
                 }
             }
 
-            /* ================= PLAYER LOGIC ================= */
+            /* ================= PLAYER WEBRTC LOGIC ================= */
 
             joinRoomAsPlayer() {
                 const pin = document.getElementById('pin-input').value.trim();
@@ -758,12 +677,45 @@
                 this.playerName = name;
                 this.role = 'player';
 
-                document.getElementById('role-badge').innerText = `📱 Player: ${name}`;
-                document.getElementById('player-disp-name').innerText = name;
+                this.showToast('Menghubungkan ke Room Host...');
 
-                this.emit('PLAYER_JOINED', { name });
-                this.showScreen('player-view');
-                this.setPlayerState('waiting');
+                this.peer = new Peer();
+                this.peer.on('open', () => {
+                    const hostPeerId = `gpgp-room-${pin}`;
+                    this.hostConn = this.peer.connect(hostPeerId);
+
+                    this.hostConn.on('open', () => {
+                        this.hostConn.send({ action: 'JOIN', name: name });
+                        document.getElementById('role-badge').innerText = `📱 Player: ${name}`;
+                        document.getElementById('player-disp-name').innerText = name;
+                        this.showScreen('player-view');
+                        this.setPlayerState('waiting');
+                    });
+
+                    this.hostConn.on('data', (data) => {
+                        this.handlePlayerReceivedData(data);
+                    });
+
+                    this.hostConn.on('error', (err) => {
+                        this.showToast('Gagal terhubung ke PIN Room Host.');
+                    });
+                });
+
+                this.peer.on('error', (err) => {
+                    this.showToast('PIN Room tidak ditemukan! Pastikan Host sudah aktif.');
+                });
+            }
+
+            handlePlayerReceivedData(data) {
+                if (data.action === 'QUESTION_START') {
+                    this.setPlayerState('active');
+                    this.renderPlayerOptions(data.options);
+                    this.showToast('🚀 Soal Dimulai! Pilih di HP');
+                } else if (data.action === 'QUESTION_ENDED') {
+                    const myData = data.players.find(p => p.name === this.playerName);
+                    const isCorrect = myData && myData.currentAns === 0;
+                    this.showPlayerResult(isCorrect, myData ? myData.score : 0);
+                }
             }
 
             setPlayerState(state) {
@@ -785,12 +737,14 @@
             playerSubmitAnswer(optIdx) {
                 this.sound.click();
                 this.setPlayerState('submitted');
-                this.emit('ANSWER_SUBMITTED', {
-                    name: this.playerName,
-                    optionIndex: optIdx,
-                    step: this.currentStep,
-                    timeLeft: this.timeLeft
-                });
+                if (this.hostConn && this.hostConn.open) {
+                    this.hostConn.send({
+                        action: 'SUBMIT_ANSWER',
+                        optionIndex: optIdx,
+                        step: this.currentStep,
+                        timeLeft: this.timeLeft
+                    });
+                }
             }
 
             showPlayerResult(isCorrect, totalScore) {
@@ -835,25 +789,22 @@
                 const opt1 = document.getElementById('custom-opt-1').value.trim();
                 const opt2 = document.getElementById('custom-opt-2').value.trim();
                 const opt3 = document.getElementById('custom-opt-3').value.trim();
-                const hint = document.getElementById('custom-hint').value.trim();
 
                 this.questions.push({
                     id: 'q_' + Date.now(),
                     type: type,
                     name: ans,
-                    hint: hint,
                     imageUrl: this.customImgData,
                     options: [ans, opt1, opt2, opt3]
                 });
 
-                localStorage.setItem(`session_${this.pin}`, JSON.stringify(this.questions));
                 this.showToast('Soal Baru Berhasil Disimpan!');
                 this.showScreen('host-lobby');
             }
         }
 
         let app;
-        window.onload = () => { app = new KahootRealtimeEngine(); app.init(); };
+        window.onload = () => { app = new PeerKahootEngine(); app.init(); };
     </script>
 </body>
 </html>
