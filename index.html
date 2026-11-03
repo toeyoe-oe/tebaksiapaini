@@ -144,18 +144,40 @@
                     </div>
                 </div>
 
+                <!-- SELECTOR MODE PERTANDINGAN (SOAL RESMI VS SOAL TRIAL) -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-300 uppercase tracking-wider block">Pilih Mode Sesi yang Dimainkan:</label>
+                    <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800">
+                        <button id="tab-mode-host" onclick="app.switchQuestionSet('host')" class="py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow">
+                            <span>📋 Soal Resmi Host</span>
+                            <span id="badge-host-count" class="px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-200 text-[10px]">0</span>
+                        </button>
+                        <button id="tab-mode-trial" onclick="app.switchQuestionSet('trial')" class="py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+                            <span>🧪 Mode Trial (Latihan)</span>
+                            <span id="badge-trial-count" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px]">2</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PLAYER LIST & QUESTION LIST CONTAINER -->
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-300 uppercase">Pemain Terhubung (<span id="host-player-count">0</span>)</span>
-                        <button onclick="app.showScreen('custom-creator')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 flex items-center gap-1 transition">
-                            <i data-lucide="settings" class="w-3.5 h-3.5 text-emerald-400">⚙️</i> Tambah Soal
+                        <button id="btn-add-custom-q" onclick="app.showScreen('custom-creator')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl border border-emerald-500/40 flex items-center gap-1 transition">
+                            <i data-lucide="plus" class="w-3.5 h-3.5">➕</i> Tambah Soal Host
                         </button>
                     </div>
 
-                    <div id="host-player-list" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-56 overflow-y-auto p-3 bg-slate-900/60 rounded-2xl border border-slate-800">
-                        <div class="col-span-full text-center py-8 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+                    <div id="host-player-list" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-40 overflow-y-auto p-3 bg-slate-900/60 rounded-2xl border border-slate-800">
+                        <div class="col-span-full text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
                             Menunggu pemain memasukkan PIN dari HP mereka...
                         </div>
+                    </div>
+
+                    <!-- DAFTAR SOAL DALAM MODE AKTIF -->
+                    <div class="pt-2">
+                        <span id="label-active-set" class="text-[11px] font-semibold text-slate-400 block mb-1.5">Daftar Soal yang Akan Dimainkan:</span>
+                        <div id="host-question-preview-list" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
                     </div>
                 </div>
 
@@ -279,7 +301,6 @@
         <!-- ==================== SCREEN 5: HOST LEADERBOARD (PREMIUM PODIUM) ==================== -->
         <section id="screen-host-leaderboard" class="hidden w-full max-w-3xl space-y-8 animate-fadeIn">
             
-            <!-- Header Title -->
             <div class="text-center space-y-2">
                 <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-widest">
                     🏆 Pemenang Turnamen 🏆
@@ -340,7 +361,7 @@
 
             </div>
 
-            <!-- RUNNER-UP LIST (PERINGKAT 4 DAN SETERUSNYA) -->
+            <!-- RUNNER-UP LIST -->
             <div class="glass-panel p-5 rounded-3xl space-y-3 border border-slate-800 max-w-xl mx-auto">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Peringkat Lainnya</h3>
                 <div id="leaderboard-runnerup-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
@@ -362,7 +383,7 @@
         <!-- ==================== SCREEN 6: CREATOR ==================== -->
         <section id="screen-custom-creator" class="hidden w-full max-w-2xl space-y-6">
             <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-black text-white">Tambah Soal Baru</h2>
+                <h2 class="text-2xl font-black text-white">Tambah Soal Resmi Host Baru</h2>
                 <button onclick="app.showScreen('host-lobby')" class="p-2 rounded-xl bg-slate-800 text-slate-300">✖</button>
             </div>
 
@@ -449,6 +470,12 @@
                 this.playerConnections = [];
                 this.hostConn = null;
                 this.players = [];
+                
+                // PEMISAHAN BANK SOAL: HOST VS TRIAL
+                this.trialQuestions = [];
+                this.hostQuestions = [];
+                this.activeQuestionSet = 'host'; // Default 'host' atau 'trial'
+
                 this.questions = [];
                 this.currentIndex = 0;
                 this.currentStep = 5;
@@ -479,21 +506,28 @@
                 document.body.addEventListener('click', () => this.sound.init(), { once: true });
             }
 
+            // SOAL TRIAL TERPISAH (KHUSUS PEMANASAN / UJI COBA)
             setupDefaultQuestions() {
-                this.questions = [
+                this.trialQuestions = [
                     {
-                        id: 'q1', type: 'reveal', name: 'Ketua GP',
+                        id: 'trial_q1', type: 'reveal', name: 'Contoh Subjek Trial 1',
                         focalX: 50, focalY: 35,
                         imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
-                        options: ['Ketua GP', 'Sekretaris GP', 'Bendahara GP', 'Seksi Musik']
+                        options: ['Contoh Subjek Trial 1', 'Anggota Pemuda A', 'Anggota Pemuda B', 'Seksi Acara']
                     },
                     {
-                        id: 'q2', type: 'pixel', name: 'Panitia GP',
+                        id: 'trial_q2', type: 'pixel', name: 'Contoh Subjek Trial 2',
                         focalX: 50, focalY: 35,
                         imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=80',
-                        options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
+                        options: ['Contoh Subjek Trial 2', 'Panitia Acara', 'Pengurus Harian', 'Seksi Musik']
                     }
                 ];
+
+                // Load host questions dari local storage jika ada
+                const savedHostQ = localStorage.getItem('gpgp_host_questions');
+                if (savedHostQ) {
+                    try { this.hostQuestions = JSON.parse(savedHostQ); } catch(e) { this.hostQuestions = []; }
+                }
             }
 
             showScreen(id) {
@@ -517,7 +551,7 @@
                 if (icon) icon.innerText = this.sound.muted ? '🔇' : '🔊';
             }
 
-            /* ================= HOST WEBRTC ROOM ================= */
+            /* ================= HOST WEBRTC ROOM & BANK SOAL ================= */
 
             createHostRoom() {
                 this.role = 'host';
@@ -535,6 +569,7 @@
                     document.getElementById('role-badge').innerText = '📺 HOST ROOM';
                     document.getElementById('host-pin-display').innerText = this.pin;
                     this.renderHostPlayerList();
+                    this.switchQuestionSet(this.activeQuestionSet); // Inisialisasi daftar soal
                     this.showScreen('host-lobby');
                     this.showToast(`✅ Room Siap! PIN: ${this.pin}`);
                 });
@@ -558,6 +593,70 @@
                     console.error('Host Peer Error:', err);
                     this.showToast('⚠️ Gagal terhubung ke server signaling. Coba buat room lagi.');
                 });
+            }
+
+            switchQuestionSet(setType) {
+                this.activeQuestionSet = setType;
+                
+                const btnHost = document.getElementById('tab-mode-host');
+                const btnTrial = document.getElementById('tab-mode-trial');
+                const labelActive = document.getElementById('label-active-set');
+                const btnStart = document.getElementById('btn-start-game');
+
+                if (setType === 'host') {
+                    btnHost.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow";
+                    btnTrial.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white";
+                    labelActive.innerText = "📋 Daftar Soal RESMI Host yang Akan Dimainkan:";
+                    btnStart.innerText = "🚀 MULAI SESI GAME RESMI";
+                    this.questions = [...this.hostQuestions];
+                } else {
+                    btnTrial.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-emerald-600 text-white shadow";
+                    btnHost.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white";
+                    labelActive.innerText = "🧪 Daftar Soal TRIAL / UJI COBA yang Akan Dimainkan:";
+                    btnStart.innerText = "🧪 MULAI SESI TRIAL (LATIHAN)";
+                    this.questions = [...this.trialQuestions];
+                }
+
+                document.getElementById('badge-host-count').innerText = this.hostQuestions.length;
+                document.getElementById('badge-trial-count').innerText = this.trialQuestions.length;
+
+                this.renderHostQuestionPreviewList();
+            }
+
+            renderHostQuestionPreviewList() {
+                const list = document.getElementById('host-question-preview-list');
+                list.innerHTML = '';
+
+                if (this.questions.length === 0) {
+                    list.innerHTML = `<div class="text-center py-4 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Belum ada soal ditambahkan di mode ini. Klik "+ Tambah Soal Host" di atas.</div>`;
+                } else {
+                    this.questions.forEach((q, idx) => {
+                        let typeTag = '🧩 Reveal';
+                        if (q.type === 'pixel') typeTag = '👾 Pixel';
+                        if (q.type === 'zoom') typeTag = '🔍 Zoom';
+
+                        const item = document.createElement('div');
+                        item.className = "p-2.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs";
+                        item.innerHTML = `
+                            <div class="flex items-center gap-2.5">
+                                <img src="${q.imageUrl}" class="w-7 h-7 rounded-lg object-cover">
+                                <div>
+                                    <span class="font-bold text-white">${idx + 1}. ${q.name}</span>
+                                    <span class="ml-1.5 px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px]">${typeTag}</span>
+                                </div>
+                            </div>
+                            ${this.activeQuestionSet === 'host' ? `<button onclick="app.removeHostQuestion(${idx})" class="text-rose-400 p-1 hover:text-rose-300"><i data-lucide="trash-2" class="w-3.5 h-3.5">🗑</i></button>` : ''}
+                        `;
+                        list.appendChild(item);
+                    });
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            }
+
+            removeHostQuestion(idx) {
+                this.hostQuestions.splice(idx, 1);
+                localStorage.setItem('gpgp_host_questions', JSON.stringify(this.hostQuestions));
+                this.switchQuestionSet('host');
             }
 
             handleHostReceivedData(conn, data) {
@@ -592,7 +691,7 @@
                 list.innerHTML = '';
 
                 if (this.players.length === 0) {
-                    list.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Menunggu pemain memasukkan PIN dari HP mereka...</div>`;
+                    list.innerHTML = `<div class="col-span-full text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Menunggu pemain memasukkan PIN dari HP mereka...</div>`;
                 } else {
                     this.players.forEach(p => {
                         const item = document.createElement('div');
@@ -604,7 +703,14 @@
             }
 
             hostStartGame() {
-                if (this.questions.length === 0) { this.showToast('Tambahkan soal terlebih dahulu!'); return; }
+                if (this.questions.length === 0) {
+                    if (this.activeQuestionSet === 'host') {
+                        this.showToast('Belum ada soal buatan Host! Tambahkan soal atau pilih Mode Trial.');
+                    } else {
+                        this.showToast('Soal Trial Kosong!');
+                    }
+                    return;
+                }
                 this.currentIndex = 0;
                 this.hostLoadQuestion();
             }
@@ -617,7 +723,8 @@
                 }
 
                 const q = this.questions[this.currentIndex];
-                document.getElementById('host-progress-text').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}`;
+                const modeLabel = this.activeQuestionSet === 'trial' ? ' [TRIAL]' : '';
+                document.getElementById('host-progress-text').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}${modeLabel}`;
 
                 this.players.forEach(p => p.currentAns = -1);
                 this.updateHostAnsweredCount();
@@ -782,11 +889,8 @@
 
             renderLeaderboard() {
                 const sorted = [...this.players].sort((a, b) => b.score - a.score);
-                
-                // Set data ranking ke objek
                 const rankedList = sorted.map((p, idx) => ({ name: p.name, score: p.score, rank: idx + 1 }));
 
-                // Render Podium 1, 2, 3
                 const p1 = rankedList[0] || { name: '---', score: 0 };
                 const p2 = rankedList[1] || { name: '---', score: 0 };
                 const p3 = rankedList[2] || { name: '---', score: 0 };
@@ -800,7 +904,6 @@
                 document.getElementById('podium-3-name').innerText = p3.name;
                 document.getElementById('podium-3-score').innerText = `${p3.score} Pts`;
 
-                // Render Runner-up (Rank 4 ke atas)
                 const runnerUpContainer = document.getElementById('leaderboard-runnerup-list');
                 runnerUpContainer.innerHTML = '';
 
@@ -822,44 +925,26 @@
                     });
                 }
 
-                // Ubah teks tombol jika sudah soal terakhir
                 const btnNext = document.getElementById('btn-next-or-restart');
                 if (this.currentIndex >= this.questions.length - 1) {
-                    btnNext.innerHTML = `<span>🔄 Selesai & Sesi Baru</span>`;
-                    btnNext.onclick = () => location.reload();
+                    btnNext.innerHTML = `<span>Kembali ke Lobby Room ➔</span>`;
+                    btnNext.onclick = () => this.showScreen('host-lobby');
                 } else {
                     btnNext.innerHTML = `<span>Lanjut Soal Berikutnya ➔</span>`;
                     btnNext.onclick = () => this.hostNextQuestion();
                 }
 
-                // Broadcast hasil klasemen akhir ke seluruh HP Pemain
                 this.broadcastToPlayers({ action: 'FINAL_LEADERBOARD', players: rankedList });
-
-                // Bunyikan konfeti juara
                 this.triggerWinnerConfetti();
             }
 
             triggerWinnerConfetti() {
                 if (typeof confetti !== 'function') return;
-                
-                // Blast 1 (Tengah)
                 confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
-
-                // Blast 2 (Samping)
                 setTimeout(() => {
                     confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 } });
                     confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 } });
                 }, 300);
-
-                // Blast 3 (Hujan Emas)
-                setTimeout(() => {
-                    confetti({
-                        particleCount: 80,
-                        spread: 100,
-                        origin: { y: 0.4 },
-                        colors: ['#f59e0b', '#fbbf24', '#d97706', '#ffffff']
-                    });
-                }, 700);
             }
 
             hostNextQuestion() {
@@ -1047,7 +1132,7 @@
                 const opt2 = document.getElementById('custom-opt-2').value.trim();
                 const opt3 = document.getElementById('custom-opt-3').value.trim();
 
-                this.questions.push({
+                this.hostQuestions.push({
                     id: 'q_' + Date.now(),
                     type: type,
                     name: ans,
@@ -1057,7 +1142,9 @@
                     options: [ans, opt1, opt2, opt3]
                 });
 
-                this.showToast('Soal Baru Berhasil Disimpan!');
+                localStorage.setItem('gpgp_host_questions', JSON.stringify(this.hostQuestions));
+                this.showToast('Soal Resmi Host Berhasil Disimpan!');
+                this.switchQuestionSet('host');
                 this.showScreen('host-lobby');
             }
         }
