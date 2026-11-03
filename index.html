@@ -33,7 +33,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; user-select: none; -webkit-user-select: none; }
-        .zoom-target { transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease; transform-origin: center center; }
+        .zoom-target { transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); transform-origin: center center; }
         .glass-panel { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .glass-card { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .lens-overlay { background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 20px 20px; }
@@ -73,7 +73,7 @@
         <section id="screen-welcome" class="w-full max-w-2xl space-y-8 animate-fadeIn">
             <div class="text-center space-y-3 max-w-xl mx-auto pt-2">
                 <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Mode Multiplayer Real-Time Kahoot
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Mode Image Reveal, Pixel & Zoom In
                 </div>
                 <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
                     Seberapa Tajam <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Mata Kamu?</span>
@@ -253,8 +253,8 @@
                 <div class="absolute inset-0 lens-overlay pointer-events-none"></div>
 
                 <div class="absolute top-4 left-4 glass-card px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2">
-                    <span id="host-badge-icon">🔍</span>
-                    <span id="host-level-text">Zoom: 10x</span>
+                    <span id="host-badge-icon">🧩</span>
+                    <span id="host-level-text">Reveal: 16% Terbuka</span>
                 </div>
             </div>
 
@@ -262,7 +262,7 @@
 
             <div class="flex gap-3">
                 <button onclick="app.hostManualStepDown()" class="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-2xl border border-slate-700">
-                    👁 Haluskan / Terangkan (-15)
+                    👁 Buka Lebih Banyak Kotak (-15)
                 </button>
                 <button onclick="app.hostEndQuestion()" class="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm rounded-2xl shadow-lg">
                     Selesaikan Soal Ini ➔
@@ -297,8 +297,8 @@
             <form onsubmit="app.saveQuestion(event)" class="glass-panel p-6 rounded-3xl space-y-4 border border-slate-800">
                 <div>
                     <label class="text-xs font-semibold text-indigo-300 uppercase block mb-1">Mode Efek Visual</label>
-                    <select id="custom-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
-                        <option value="silhouette">👤 Mode Siluet (Bayangan)</option>
+                    <select id="custom-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold">
+                        <option value="reveal">🧩 Mode Image Reveal (Buka Kotak Grid)</option>
                         <option value="pixel">👾 Mode Pixelated (Foto Pecah)</option>
                         <option value="zoom">🔍 Mode Zoom In (Fokus)</option>
                     </select>
@@ -333,531 +333,567 @@
     </div>
 
     <script>
-    class SoundEngine {
-        constructor() { this.ctx = null; this.muted = false; }
-        init() { if (!this.ctx) { const AudioCtx = window.AudioContext || window.webkitAudioContext; if (AudioCtx) this.ctx = new AudioCtx(); } }
-        playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
-            if (this.muted) return; this.init(); if (!this.ctx) return;
-            try {
-                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-                osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + duration);
-            } catch (e) {}
-        }
-        correct() { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.2), i * 80)); }
-        wrong() { this.playTone(180, 'sawtooth', 0.25); setTimeout(() => this.playTone(130, 'sawtooth', 0.3), 120); }
-        click() { this.playTone(800, 'sine', 0.05); }
-    }
-
-    class PeerKahootEngine {
-        constructor() {
-            this.sound = new SoundEngine();
-            this.role = 'player';
-            this.pin = '';
-            this.playerName = '';
-            this.peer = null;
-            this.playerConnections = []; 
-            this.hostConn = null; 
-            this.players = []; 
-            this.questions = [];
-            this.currentIndex = 0;
-            this.currentStep = 5;
-            this.timer = null;
-            this.timeLeft = 30;
-            this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
-
-            // Konfigurasi Google STUN Server untuk menembus Firewall & Beda Jaringan
-            this.peerConfig = {
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun2.l.google.com:19302' },
-                        { urls: 'stun:stun3.l.google.com:19302' },
-                        { urls: 'stun:stun4.l.google.com:19302' }
-                    ]
-                }
-            };
-
-            this.setupDefaultQuestions();
+        class SoundEngine {
+            constructor() { this.ctx = null; this.muted = false; }
+            init() { if (!this.ctx) { const AudioCtx = window.AudioContext || window.webkitAudioContext; if (AudioCtx) this.ctx = new AudioCtx(); } }
+            playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
+                if (this.muted) return; this.init(); if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            correct() { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.2), i * 80)); }
+            wrong() { this.playTone(180, 'sawtooth', 0.25); setTimeout(() => this.playTone(130, 'sawtooth', 0.3), 120); }
+            click() { this.playTone(800, 'sine', 0.05); }
         }
 
-        init() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-            document.body.addEventListener('click', () => this.sound.init(), { once: true });
-        }
+        class PeerKahootEngine {
+            constructor() {
+                this.sound = new SoundEngine();
+                this.role = 'player';
+                this.pin = '';
+                this.playerName = '';
+                this.peer = null;
+                this.playerConnections = [];
+                this.hostConn = null;
+                this.players = [];
+                this.questions = [];
+                this.currentIndex = 0;
+                this.currentStep = 5;
+                this.timer = null;
+                this.timeLeft = 30;
+                this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
 
-        setupDefaultQuestions() {
-            this.questions = [
-                {
-                    id: 'q1', type: 'silhouette', name: 'Ketua GP',
-                    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
-                    options: ['Ketua GP', 'Sekretaris GP', 'Bendahara GP', 'Seksi Musik']
-                },
-                {
-                    id: 'q2', type: 'pixel', name: 'Panitia GP',
-                    imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=80',
-                    options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
-                }
-            ];
-        }
+                // Google STUN Server Config
+                this.peerConfig = {
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' },
+                            { urls: 'stun:stun3.l.google.com:19302' },
+                            { urls: 'stun:stun4.l.google.com:19302' }
+                        ]
+                    }
+                };
 
-        showScreen(id) {
-            this.sound.click();
-            ['welcome', 'host-lobby', 'player-view', 'host-game', 'host-leaderboard', 'custom-creator'].forEach(s => {
-                document.getElementById(`screen-${s}`).classList.add('hidden');
-            });
-            document.getElementById(`screen-${id}`).classList.remove('hidden');
-        }
+                this.setupDefaultQuestions();
+            }
 
-        showToast(msg) {
-            const t = document.getElementById('toast-message');
-            document.getElementById('toast-text').innerText = msg;
-            t.classList.remove('opacity-0', 'pointer-events-none');
-            setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 3000);
-        }
+            init() {
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                document.body.addEventListener('click', () => this.sound.init(), { once: true });
+            }
 
-        toggleSound() {
-            this.sound.muted = !this.sound.muted;
-            const icon = document.getElementById('sound-icon');
-            if (icon) icon.innerText = this.sound.muted ? '🔇' : '🔊';
-        }
+            setupDefaultQuestions() {
+                this.questions = [
+                    {
+                        id: 'q1', type: 'reveal', name: 'Ketua GP',
+                        imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
+                        options: ['Ketua GP', 'Sekretaris GP', 'Bendahara GP', 'Seksi Musik']
+                    },
+                    {
+                        id: 'q2', type: 'pixel', name: 'Panitia GP',
+                        imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=80',
+                        options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
+                    }
+                ];
+            }
 
-        /* ================= HOST LOGIC ================= */
-
-        createHostRoom() {
-            this.role = 'host';
-            this.pin = Math.floor(100000 + Math.random() * 900000).toString();
-            this.players = [];
-            this.playerConnections = [];
-
-            this.showToast('📡 Membuka Room & Registrasi PIN...');
-            
-            const peerId = `gpgp-room-${this.pin}`;
-            if (this.peer) this.peer.destroy();
-            this.peer = new Peer(peerId, this.peerConfig);
-
-            this.peer.on('open', (id) => {
-                document.getElementById('role-badge').innerText = '📺 HOST ROOM';
-                document.getElementById('host-pin-display').innerText = this.pin;
-                this.renderHostPlayerList();
-                this.showScreen('host-lobby');
-                this.showToast(`✅ Room Siap! PIN: ${this.pin}`);
-            });
-
-            this.peer.on('connection', (conn) => {
-                conn.on('open', () => {
-                    this.playerConnections.push(conn);
+            showScreen(id) {
+                this.sound.click();
+                ['welcome', 'host-lobby', 'player-view', 'host-game', 'host-leaderboard', 'custom-creator'].forEach(s => {
+                    document.getElementById(`screen-${s}`).classList.add('hidden');
                 });
+                document.getElementById(`screen-${id}`).classList.remove('hidden');
+            }
+
+            showToast(msg) {
+                const t = document.getElementById('toast-message');
+                document.getElementById('toast-text').innerText = msg;
+                t.classList.remove('opacity-0', 'pointer-events-none');
+                setTimeout(() => t.classList.add('opacity-0', 'pointer-events-none'), 2800);
+            }
+
+            toggleSound() {
+                this.sound.muted = !this.sound.muted;
+                const icon = document.getElementById('sound-icon');
+                if (icon) icon.innerText = this.sound.muted ? '🔇' : '🔊';
+            }
+
+            /* ================= HOST WEBRTC ROOM ================= */
+
+            createHostRoom() {
+                this.role = 'host';
+                this.pin = Math.floor(100000 + Math.random() * 900000).toString();
+                this.players = [];
+                this.playerConnections = [];
+
+                this.showToast('📡 Membuka Room & Registrasi PIN...');
                 
-                conn.on('data', (data) => {
-                    this.handleHostReceivedData(conn, data);
+                const peerId = `gpgp-room-${this.pin}`;
+                if (this.peer) this.peer.destroy();
+                this.peer = new Peer(peerId, this.peerConfig);
+
+                this.peer.on('open', (id) => {
+                    document.getElementById('role-badge').innerText = '📺 HOST ROOM';
+                    document.getElementById('host-pin-display').innerText = this.pin;
+                    this.renderHostPlayerList();
+                    this.showScreen('host-lobby');
+                    this.showToast(`✅ Room Siap! PIN: ${this.pin}`);
                 });
 
-                conn.on('close', () => {
-                    this.players = this.players.filter(p => p.connId !== conn.peer);
-                    this.renderHostPlayerList();
+                this.peer.on('connection', (conn) => {
+                    conn.on('open', () => {
+                        this.playerConnections.push(conn);
+                    });
+
+                    conn.on('data', (data) => {
+                        this.handleHostReceivedData(conn, data);
+                    });
+
+                    conn.on('close', () => {
+                        this.players = this.players.filter(p => p.connId !== conn.peer);
+                        this.renderHostPlayerList();
+                    });
                 });
-            });
 
-            this.peer.on('error', (err) => {
-                console.error('Host Peer Error:', err);
-                this.showToast('⚠️ Gagal terhubung ke server signaling. Coba buat room lagi.');
-            });
-        }
+                this.peer.on('error', (err) => {
+                    console.error('Host Peer Error:', err);
+                    this.showToast('⚠️ Gagal terhubung ke server signaling. Coba buat room lagi.');
+                });
+            }
 
-        handleHostReceivedData(conn, data) {
-            if (data.action === 'JOIN') {
-                if (!this.players.find(p => p.connId === conn.peer)) {
-                    this.players.push({ connId: conn.peer, name: data.name, score: 0, currentAns: -1 });
-                    this.renderHostPlayerList();
-                    this.showToast(`📱 ${data.name} masuk ke room!`);
-                    conn.send({ action: 'JOIN_CONFIRM', success: true });
-                }
-            } else if (data.action === 'SUBMIT_ANSWER') {
-                const p = this.players.find(item => item.connId === conn.peer);
-                if (p) {
-                    p.currentAns = data.optionIndex;
-                    if (data.optionIndex === 0) {
-                        p.score += 100 + data.step * 30 + data.timeLeft * 2;
+            handleHostReceivedData(conn, data) {
+                if (data.action === 'JOIN') {
+                    if (!this.players.find(p => p.connId === conn.peer)) {
+                        this.players.push({ connId: conn.peer, name: data.name, score: 0, currentAns: -1 });
+                        this.renderHostPlayerList();
+                        this.showToast(`📱 ${data.name} bergabung!`);
+                        conn.send({ action: 'JOIN_CONFIRM', success: true });
                     }
+                } else if (data.action === 'SUBMIT_ANSWER') {
+                    const p = this.players.find(item => item.connId === conn.peer);
+                    if (p) {
+                        p.currentAns = data.optionIndex;
+                        if (data.optionIndex === 0) {
+                            p.score += 100 + data.step * 30 + data.timeLeft * 2;
+                        }
+                    }
+                    this.updateHostAnsweredCount();
                 }
-                this.updateHostAnsweredCount();
             }
-        }
 
-        broadcastToPlayers(packet) {
-            this.playerConnections.forEach(conn => {
-                if (conn && conn.open) conn.send(packet);
-            });
-        }
-
-        renderHostPlayerList() {
-            document.getElementById('host-player-count').innerText = this.players.length;
-            const list = document.getElementById('host-player-list');
-            list.innerHTML = '';
-
-            if (this.players.length === 0) {
-                list.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Menunggu pemain memasukkan PIN di HP...</div>`;
-            } else {
-                this.players.forEach(p => {
-                    const item = document.createElement('div');
-                    item.className = "p-3 bg-indigo-600/20 border border-indigo-500/40 rounded-xl text-center text-xs font-bold text-white shadow flex items-center justify-center gap-2";
-                    item.innerHTML = `<span>👤</span> <span>${p.name}</span>`;
-                    list.appendChild(item);
+            broadcastToPlayers(packet) {
+                this.playerConnections.forEach(conn => {
+                    if (conn && conn.open) conn.send(packet);
                 });
             }
-        }
 
-        hostStartGame() {
-            if (this.questions.length === 0) { this.showToast('Tambahkan soal terlebih dahulu!'); return; }
-            if (this.players.length === 0) { this.showToast('Belum ada pemain yang bergabung!'); }
-            this.currentIndex = 0;
-            this.hostLoadQuestion();
-        }
+            renderHostPlayerList() {
+                document.getElementById('host-player-count').innerText = this.players.length;
+                const list = document.getElementById('host-player-list');
+                list.innerHTML = '';
 
-        hostLoadQuestion() {
-            if (this.currentIndex >= this.questions.length) {
-                this.renderLeaderboard();
-                this.showScreen('host-leaderboard');
-                return;
+                if (this.players.length === 0) {
+                    list.innerHTML = `<div class="col-span-full text-center py-8 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Menunggu pemain memasukkan PIN dari HP mereka...</div>`;
+                } else {
+                    this.players.forEach(p => {
+                        const item = document.createElement('div');
+                        item.className = "p-3 bg-indigo-600/20 border border-indigo-500/40 rounded-xl text-center text-xs font-bold text-white shadow flex items-center justify-center gap-2";
+                        item.innerHTML = `<span>👤</span> <span>${p.name}</span>`;
+                        list.appendChild(item);
+                    });
+                }
             }
 
-            const q = this.questions[this.currentIndex];
-            document.getElementById('host-progress-text').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}`;
-
-            this.players.forEach(p => p.currentAns = -1);
-            this.updateHostAnsweredCount();
-
-            this.currentStep = 5;
-            const img = document.getElementById('host-game-image');
-            img.src = q.imageUrl;
-            img.onload = () => this.applyHostVisualEffect();
-
-            this.applyHostVisualEffect();
-            this.renderHostOptions(q);
-            this.showScreen('host-game');
-            this.startHostTimer();
-
-            this.broadcastToPlayers({ action: 'QUESTION_START', options: q.options });
-        }
-
-        applyHostVisualEffect() {
-            const q = this.questions[this.currentIndex];
-            const mode = q.type || 'silhouette';
-            const img = document.getElementById('host-game-image');
-            const canvas = document.getElementById('host-game-canvas');
-            const badgeIcon = document.getElementById('host-badge-icon');
-            const levelText = document.getElementById('host-level-text');
-
-            img.style.transform = 'none'; img.style.filter = 'none';
-
-            if (mode === 'pixel') {
-                img.classList.add('hidden'); canvas.classList.remove('hidden');
-                const pixelMap = { 5: 36, 4: 24, 3: 14, 2: 6, 1: 1 };
-                const pxSize = pixelMap[this.currentStep] || 1;
-                badgeIcon.innerText = '👾'; levelText.innerText = `Piksel: ${pxSize}px`;
-                this.renderPixelated(img, canvas, pxSize);
-            } else if (mode === 'silhouette') {
-                canvas.classList.add('hidden'); img.classList.remove('hidden');
-                const brightMap = { 5: 0, 4: 0.25, 3: 0.5, 2: 0.75, 1: 1 };
-                const brightness = brightMap[this.currentStep] !== undefined ? brightMap[this.currentStep] : 1;
-                badgeIcon.innerText = '👤'; levelText.innerText = `Siluet: ${Math.round((1-brightness)*100)}% Gelap`;
-                img.style.filter = `brightness(${brightness})`;
-            } else {
-                canvas.classList.add('hidden'); img.classList.remove('hidden');
-                const zoomMap = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
-                const scale = zoomMap[this.currentStep] || 1;
-                badgeIcon.innerText = '🔍'; levelText.innerText = `Zoom: ${scale}x`;
-                img.style.transform = `scale(${scale})`;
-            }
-        }
-
-        renderPixelated(img, canvas, pixelSize) {
-            const ctx = canvas.getContext('2d');
-            const w = img.naturalWidth || 640;
-            const h = img.naturalHeight || 480;
-            canvas.width = w; canvas.height = h;
-
-            if (pixelSize <= 1) { ctx.drawImage(img, 0, 0, w, h); return; }
-            const smallW = Math.max(1, Math.floor(w / pixelSize));
-            const smallH = Math.max(1, Math.floor(h / pixelSize));
-            const off = document.createElement('canvas');
-            off.width = smallW; off.height = smallH;
-            off.getContext('2d').drawImage(img, 0, 0, smallW, smallH);
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(off, 0, 0, smallW, smallH, 0, 0, w, h);
-        }
-
-        hostManualStepDown() {
-            if (this.currentStep > 1) {
-                this.currentStep--;
-                this.applyHostVisualEffect();
-            }
-        }
-
-        renderHostOptions(q) {
-            const container = document.getElementById('host-options-grid');
-            container.innerHTML = '';
-            const colors = [
-                { bg: 'bg-kahootRed', shape: '▲' },
-                { bg: 'bg-kahootBlue', shape: '◆' },
-                { bg: 'bg-kahootYellow', shape: '●' },
-                { bg: 'bg-kahootGreen', shape: '■' }
-            ];
-
-            q.options.forEach((opt, idx) => {
-                const style = colors[idx] || colors[0];
-                const card = document.createElement('div');
-                card.className = `${style.bg} p-4 rounded-2xl text-white flex items-center gap-3 shadow-lg`;
-                card.innerHTML = `<span class="text-2xl font-black">${style.shape}</span><span class="text-sm font-extrabold flex-1">${opt}</span>`;
-                container.appendChild(card);
-            });
-        }
-
-        updateHostAnsweredCount() {
-            const count = this.players.filter(p => p.currentAns !== -1).length;
-            document.getElementById('host-answered-count').innerText = `${count} / ${this.players.length}`;
-        }
-
-        startHostTimer() {
-            this.stopHostTimer();
-            this.timeLeft = 30;
-            this.timer = setInterval(() => {
-                this.timeLeft--;
-                document.getElementById('host-timer-bar').style.width = `${(this.timeLeft / 30) * 100}%`;
-                document.getElementById('host-timer-text').innerText = `${this.timeLeft}s`;
-                if (this.timeLeft <= 0) this.hostEndQuestion();
-            }, 1000);
-        }
-
-        stopHostTimer() { if (this.timer) { clearInterval(this.timer); this.timer = null; } }
-
-        hostEndQuestion() {
-            this.stopHostTimer();
-            this.currentStep = 1;
-            this.applyHostVisualEffect();
-
-            const summary = this.players.map(p => ({ name: p.name, score: p.score, currentAns: p.currentAns }));
-            this.broadcastToPlayers({ action: 'QUESTION_ENDED', players: summary });
-
-            setTimeout(() => {
-                this.renderLeaderboard();
-                this.showScreen('host-leaderboard');
-            }, 2500);
-        }
-
-        renderLeaderboard() {
-            const sorted = [...this.players].sort((a, b) => b.score - a.score);
-            const container = document.getElementById('leaderboard-list');
-            container.innerHTML = '';
-
-            sorted.slice(0, 5).forEach((p, idx) => {
-                const item = document.createElement('div');
-                item.className = "p-3.5 glass-card rounded-2xl flex items-center justify-between border border-slate-700";
-                item.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black flex items-center justify-center text-xs">${idx + 1}</span>
-                        <span class="font-extrabold text-white text-sm">${p.name}</span>
-                    </div>
-                    <span class="font-black text-emerald-400 text-base">${p.score} Pts</span>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        hostNextQuestion() {
-            this.currentIndex++;
-            if (this.currentIndex < this.questions.length) {
+            hostStartGame() {
+                if (this.questions.length === 0) { this.showToast('Tambahkan soal terlebih dahulu!'); return; }
+                this.currentIndex = 0;
                 this.hostLoadQuestion();
-            } else {
-                this.showToast('Sesi Permainan Selesai!');
-                if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 70 });
             }
-        }
 
-        /* ================= PLAYER LOGIC ================= */
+            hostLoadQuestion() {
+                if (this.currentIndex >= this.questions.length) {
+                    this.renderLeaderboard();
+                    this.showScreen('host-leaderboard');
+                    return;
+                }
 
-        joinRoomAsPlayer(retryCount = 0) {
-            const pin = document.getElementById('pin-input').value.trim();
-            const name = document.getElementById('player-nickname').value.trim();
-        
-            if (!pin || !name) { 
-                this.showToast('Masukkan PIN Room dan Nama Kamu!'); 
-                return; 
+                const q = this.questions[this.currentIndex];
+                document.getElementById('host-progress-text').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}`;
+
+                this.players.forEach(p => p.currentAns = -1);
+                this.updateHostAnsweredCount();
+
+                this.currentStep = 5;
+                const img = document.getElementById('host-game-image');
+                img.src = q.imageUrl;
+                img.onload = () => this.applyHostVisualEffect();
+
+                this.applyHostVisualEffect();
+                this.renderHostOptions(q);
+                this.showScreen('host-game');
+                this.startHostTimer();
+
+                this.broadcastToPlayers({ action: 'QUESTION_START', options: q.options });
             }
-        
-            this.pin = pin;
-            this.playerName = name;
-            this.role = 'player';
-        
-            // Tampilkan indikator status koneksi yang lebih jelas
-            if (retryCount === 0) {
-                this.showToast('🔍 Mencari Room Host...');
-            } else {
-                this.showToast(`🔄 Antrean sibuk, mencoba ulang (${retryCount}/4)...`);
+
+            applyHostVisualEffect() {
+                const q = this.questions[this.currentIndex];
+                const mode = q.type || 'reveal';
+                const img = document.getElementById('host-game-image');
+                const canvas = document.getElementById('host-game-canvas');
+                const badgeIcon = document.getElementById('host-badge-icon');
+                const levelText = document.getElementById('host-level-text');
+
+                img.style.transform = 'none';
+
+                if (mode === 'pixel') {
+                    img.classList.add('hidden'); canvas.classList.remove('hidden');
+                    const pixelMap = { 5: 36, 4: 24, 3: 14, 2: 6, 1: 1 };
+                    const pxSize = pixelMap[this.currentStep] || 1;
+                    badgeIcon.innerText = '👾'; levelText.innerText = `Piksel: ${pxSize}px`;
+                    this.renderPixelated(img, canvas, pxSize);
+                } else if (mode === 'reveal') {
+                    img.classList.add('hidden'); canvas.classList.remove('hidden');
+                    const revealMap = { 5: '16%', 4: '36%', 3: '58%', 2: '80%', 1: '100%' };
+                    badgeIcon.innerText = '🧩'; levelText.innerText = `Reveal: ${revealMap[this.currentStep] || '100%'} Terbuka`;
+                    this.renderImageReveal(img, canvas, this.currentStep);
+                } else {
+                    // Zoom mode
+                    canvas.classList.add('hidden'); img.classList.remove('hidden');
+                    const zoomMap = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
+                    const scale = zoomMap[this.currentStep] || 1;
+                    badgeIcon.innerText = '🔍'; levelText.innerText = `Zoom: ${scale}x`;
+                    img.style.transform = `scale(${scale})`;
+                }
             }
-        
-            // Bersihkan instance peer lama jika ada retrying
-            if (this.peer && !this.peer.destroyed) {
-                this.peer.destroy();
-            }
-        
-            this.peer = new Peer(this.peerConfig);
-        
-            this.peer.on('open', () => {
-                const hostPeerId = `gpgp-room-${pin}`;
-                this.hostConn = this.peer.connect(hostPeerId, { reliable: true });
-        
-                // Set timeout 5 detik untuk mengantisipasi koneksi menggantung
-                const connectTimeout = setTimeout(() => {
-                    if (!this.hostConn || !this.hostConn.open) {
-                        this.handleJoinRetry(retryCount);
+
+            // Fungsi Mode Image Reveal (Kotak-Kotak Grid Terbuka Bertahap)
+            renderImageReveal(img, canvas, step) {
+                const ctx = canvas.getContext('2d');
+                const w = img.naturalWidth || 640;
+                const h = img.naturalHeight || 480;
+                canvas.width = w; canvas.height = h;
+
+                // Gambar dasar foto penuh
+                ctx.drawImage(img, 0, 0, w, h);
+
+                if (step <= 1) return; // Step 1 = Terbuka 100%
+
+                const cols = 6;
+                const rows = 6;
+                const tileW = w / cols;
+                const tileH = h / rows;
+
+                // Jumlah ubin terbuka per step (Step 5 paling dikit terbuka)
+                const visibleCountMap = { 5: 6, 4: 13, 3: 21, 2: 29, 1: 36 };
+                const visibleCount = visibleCountMap[step] || 36;
+
+                // Urutan posisi ubin (dimulai dari area tengah memencar ke luar)
+                const sequence = [
+                    14, 15, 20, 21, 13, 22, 8, 9, 26, 27, 7, 10,
+                    25, 28, 2, 3, 32, 33, 1, 4, 31, 34, 0, 5,
+                    30, 35, 6, 11, 24, 29, 12, 17, 18, 23, 16, 19
+                ];
+
+                const visibleSet = new Set(sequence.slice(0, visibleCount));
+
+                // Tutup ubin yang belum terbuka dengan warna Slate Dark + Garis Grid
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = '#334155';
+                ctx.lineWidth = 1.5;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const idx = r * cols + c;
+                        if (!visibleSet.has(idx)) {
+                            const x = c * tileW;
+                            const y = r * tileH;
+                            ctx.fillRect(x, y, tileW, tileH);
+                            ctx.strokeRect(x, y, tileW, tileH);
+                        }
                     }
-                }, 5000);
-        
-                this.hostConn.on('open', () => {
-                    clearTimeout(connectTimeout);
-                    this.hostConn.send({ action: 'JOIN', name: name });
-                    document.getElementById('role-badge').innerText = `📱 Player: ${name}`;
-                    document.getElementById('player-disp-name').innerText = name;
-                    this.showScreen('player-view');
-                    this.setPlayerState('waiting');
-                    this.showToast('✅ Berhasil Terhubung ke Host!');
+                }
+            }
+
+            renderPixelated(img, canvas, pixelSize) {
+                const ctx = canvas.getContext('2d');
+                const w = img.naturalWidth || 640;
+                const h = img.naturalHeight || 480;
+                canvas.width = w; canvas.height = h;
+
+                if (pixelSize <= 1) { ctx.drawImage(img, 0, 0, w, h); return; }
+                const smallW = Math.max(1, Math.floor(w / pixelSize));
+                const smallH = Math.max(1, Math.floor(h / pixelSize));
+                const off = document.createElement('canvas');
+                off.width = smallW; off.height = smallH;
+                off.getContext('2d').drawImage(img, 0, 0, smallW, smallH);
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(off, 0, 0, smallW, smallH, 0, 0, w, h);
+            }
+
+            hostManualStepDown() {
+                if (this.currentStep > 1) {
+                    this.currentStep--;
+                    this.applyHostVisualEffect();
+                }
+            }
+
+            renderHostOptions(q) {
+                const container = document.getElementById('host-options-grid');
+                container.innerHTML = '';
+                const colors = [
+                    { bg: 'bg-kahootRed', shape: '▲' },
+                    { bg: 'bg-kahootBlue', shape: '◆' },
+                    { bg: 'bg-kahootYellow', shape: '●' },
+                    { bg: 'bg-kahootGreen', shape: '■' }
+                ];
+
+                q.options.forEach((opt, idx) => {
+                    const style = colors[idx] || colors[0];
+                    const card = document.createElement('div');
+                    card.className = `${style.bg} p-4 rounded-2xl text-white flex items-center gap-3 shadow-lg`;
+                    card.innerHTML = `<span class="text-2xl font-black">${style.shape}</span><span class="text-sm font-extrabold flex-1">${opt}</span>`;
+                    container.appendChild(card);
                 });
-        
-                this.hostConn.on('data', (data) => {
-                    this.handlePlayerReceivedData(data);
+            }
+
+            updateHostAnsweredCount() {
+                const count = this.players.filter(p => p.currentAns !== -1).length;
+                document.getElementById('host-answered-count').innerText = `${count} / ${this.players.length}`;
+            }
+
+            startHostTimer() {
+                this.stopHostTimer();
+                this.timeLeft = 30;
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    document.getElementById('host-timer-bar').style.width = `${(this.timeLeft / 30) * 100}%`;
+                    document.getElementById('host-timer-text').innerText = `${this.timeLeft}s`;
+                    if (this.timeLeft <= 0) this.hostEndQuestion();
+                }, 1000);
+            }
+
+            stopHostTimer() { if (this.timer) { clearInterval(this.timer); this.timer = null; } }
+
+            hostEndQuestion() {
+                this.stopHostTimer();
+                this.currentStep = 1;
+                this.applyHostVisualEffect();
+
+                const summary = this.players.map(p => ({ name: p.name, score: p.score, currentAns: p.currentAns }));
+                this.broadcastToPlayers({ action: 'QUESTION_ENDED', players: summary });
+
+                setTimeout(() => {
+                    this.renderLeaderboard();
+                    this.showScreen('host-leaderboard');
+                }, 2500);
+            }
+
+            renderLeaderboard() {
+                const sorted = [...this.players].sort((a, b) => b.score - a.score);
+                const container = document.getElementById('leaderboard-list');
+                container.innerHTML = '';
+
+                sorted.slice(0, 5).forEach((p, idx) => {
+                    const item = document.createElement('div');
+                    item.className = "p-3.5 glass-card rounded-2xl flex items-center justify-between border border-slate-700";
+                    item.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black flex items-center justify-center text-xs">${idx + 1}</span>
+                            <span class="font-extrabold text-white text-sm">${p.name}</span>
+                        </div>
+                        <span class="font-black text-emerald-400 text-base">${p.score} Pts</span>
+                    `;
+                    container.appendChild(item);
                 });
-        
-                this.hostConn.on('error', () => {
-                    clearTimeout(connectTimeout);
+            }
+
+            hostNextQuestion() {
+                this.currentIndex++;
+                if (this.currentIndex < this.questions.length) {
+                    this.hostLoadQuestion();
+                } else {
+                    this.showToast('Sesi Permainan Selesai!');
+                    if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 70 });
+                }
+            }
+
+            /* ================= PLAYER WEBRTC LOGIC (WITH AUTO-RETRY JITTER) ================= */
+
+            joinRoomAsPlayer(retryCount = 0) {
+                const pin = document.getElementById('pin-input').value.trim();
+                const name = document.getElementById('player-nickname').value.trim();
+
+                if (!pin || !name) { this.showToast('Masukkan PIN Room dan Nama Kamu!'); return; }
+
+                this.pin = pin;
+                this.playerName = name;
+                this.role = 'player';
+
+                if (retryCount === 0) {
+                    this.showToast('🔍 Mencari Room Host...');
+                } else {
+                    this.showToast(`🔄 Antrean sibuk, mencoba ulang (${retryCount}/4)...`);
+                }
+
+                if (this.peer && !this.peer.destroyed) this.peer.destroy();
+                this.peer = new Peer(this.peerConfig);
+
+                this.peer.on('open', () => {
+                    const hostPeerId = `gpgp-room-${pin}`;
+                    this.hostConn = this.peer.connect(hostPeerId, { reliable: true });
+
+                    const connectTimeout = setTimeout(() => {
+                        if (!this.hostConn || !this.hostConn.open) {
+                            this.handleJoinRetry(retryCount);
+                        }
+                    }, 5000);
+
+                    this.hostConn.on('open', () => {
+                        clearTimeout(connectTimeout);
+                        this.hostConn.send({ action: 'JOIN', name: name });
+                        document.getElementById('role-badge').innerText = `📱 Player: ${name}`;
+                        document.getElementById('player-disp-name').innerText = name;
+                        this.showScreen('player-view');
+                        this.setPlayerState('waiting');
+                        this.showToast('✅ Berhasil Terhubung ke Host!');
+                    });
+
+                    this.hostConn.on('data', (data) => {
+                        this.handlePlayerReceivedData(data);
+                    });
+
+                    this.hostConn.on('error', () => {
+                        clearTimeout(connectTimeout);
+                        this.handleJoinRetry(retryCount);
+                    });
+                });
+
+                this.peer.on('error', (err) => {
+                    console.warn('Peer Join Failed:', err);
                     this.handleJoinRetry(retryCount);
                 });
-            });
-        
-            this.peer.on('error', (err) => {
-                console.warn('Peer Join Attempt Failed:', err);
-                this.handleJoinRetry(retryCount);
-            });
-        }
-        
-        // Fungsi Pembantu: Mengatur Jeda Acak Sebelum Mencoba Ulang
-        handleJoinRetry(retryCount) {
-            const maxRetries = 4;
-            if (retryCount < maxRetries) {
-                // Jeda acak antara 600ms - 2000ms agar traffic masuk secara bertahap
-                const randomJitter = Math.floor(Math.random() * 1400) + 600; 
-                setTimeout(() => {
-                    this.joinRoomAsPlayer(retryCount + 1);
-                }, randomJitter);
-            } else {
-                this.showToast('❌ PIN Room tidak ditemukan atau Host sedang sibuk. Coba tekan tombol lagi.');
             }
-        }
 
-        handlePlayerReceivedData(data) {
-            if (data.action === 'QUESTION_START') {
-                this.setPlayerState('active');
-                this.renderPlayerOptions(data.options);
-                this.showToast('🚀 Soal Dimulai! Pilih Jawaban di HP');
-            } else if (data.action === 'QUESTION_ENDED') {
-                const myData = data.players.find(p => p.name === this.playerName);
-                const isCorrect = myData && myData.currentAns === 0;
-                this.showPlayerResult(isCorrect, myData ? myData.score : 0);
+            handleJoinRetry(retryCount) {
+                const maxRetries = 4;
+                if (retryCount < maxRetries) {
+                    const randomJitter = Math.floor(Math.random() * 1400) + 600;
+                    setTimeout(() => {
+                        this.joinRoomAsPlayer(retryCount + 1);
+                    }, randomJitter);
+                } else {
+                    this.showToast('❌ PIN Room tidak ditemukan atau Host sedang sibuk. Coba tekan tombol lagi.');
+                }
             }
-        }
 
-        setPlayerState(state) {
-            ['waiting', 'active', 'submitted', 'result'].forEach(s => {
-                document.getElementById(`player-state-${s}`).classList.add('hidden');
-            });
-            document.getElementById(`player-state-${state}`).classList.remove('hidden');
-        }
-
-        renderPlayerOptions(optionsArr) {
-            if (optionsArr && optionsArr.length >= 4) {
-                document.getElementById('p-opt-0').innerText = optionsArr[0];
-                document.getElementById('p-opt-1').innerText = optionsArr[1];
-                document.getElementById('p-opt-2').innerText = optionsArr[2];
-                document.getElementById('p-opt-3').innerText = optionsArr[3];
+            handlePlayerReceivedData(data) {
+                if (data.action === 'QUESTION_START') {
+                    this.setPlayerState('active');
+                    this.renderPlayerOptions(data.options);
+                    this.showToast('🚀 Soal Dimulai! Pilih Jawaban di HP');
+                } else if (data.action === 'QUESTION_ENDED') {
+                    const myData = data.players.find(p => p.name === this.playerName);
+                    const isCorrect = myData && myData.currentAns === 0;
+                    this.showPlayerResult(isCorrect, myData ? myData.score : 0);
+                }
             }
-        }
 
-        playerSubmitAnswer(optIdx) {
-            this.sound.click();
-            this.setPlayerState('submitted');
-            if (this.hostConn && this.hostConn.open) {
-                this.hostConn.send({
-                    action: 'SUBMIT_ANSWER',
-                    optionIndex: optIdx,
-                    step: this.currentStep,
-                    timeLeft: this.timeLeft
+            setPlayerState(state) {
+                ['waiting', 'active', 'submitted', 'result'].forEach(s => {
+                    document.getElementById(`player-state-${s}`).classList.add('hidden');
                 });
+                document.getElementById(`player-state-${state}`).classList.remove('hidden');
+            }
+
+            renderPlayerOptions(optionsArr) {
+                if (optionsArr && optionsArr.length >= 4) {
+                    document.getElementById('p-opt-0').innerText = optionsArr[0];
+                    document.getElementById('p-opt-1').innerText = optionsArr[1];
+                    document.getElementById('p-opt-2').innerText = optionsArr[2];
+                    document.getElementById('p-opt-3').innerText = optionsArr[3];
+                }
+            }
+
+            playerSubmitAnswer(optIdx) {
+                this.sound.click();
+                this.setPlayerState('submitted');
+                if (this.hostConn && this.hostConn.open) {
+                    this.hostConn.send({
+                        action: 'SUBMIT_ANSWER',
+                        optionIndex: optIdx,
+                        step: this.currentStep,
+                        timeLeft: this.timeLeft
+                    });
+                }
+            }
+
+            showPlayerResult(isCorrect, totalScore) {
+                this.setPlayerState('result');
+                const icon = document.getElementById('player-res-icon');
+                const title = document.getElementById('player-res-title');
+
+                if (isCorrect) {
+                    this.sound.correct();
+                    icon.className = "w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-3xl";
+                    icon.innerText = '🎉';
+                    title.innerText = 'JAWABAN BENAR!';
+                    title.className = 'text-2xl font-black text-emerald-400';
+                } else {
+                    this.sound.wrong();
+                    icon.className = "w-16 h-16 mx-auto rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center text-3xl";
+                    icon.innerText = '❌';
+                    title.innerText = 'JAWABAN SALAH';
+                    title.className = 'text-2xl font-black text-rose-400';
+                }
+
+                document.getElementById('player-res-score').innerText = totalScore;
+            }
+
+            /* ================= CREATOR LOGIC ================= */
+
+            handleFileUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    this.customImgData = ev.target.result;
+                    document.getElementById('creator-img-preview').src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            saveQuestion(e) {
+                e.preventDefault();
+                const type = document.getElementById('custom-type').value;
+                const ans = document.getElementById('custom-answer').value.trim();
+                const opt1 = document.getElementById('custom-opt-1').value.trim();
+                const opt2 = document.getElementById('custom-opt-2').value.trim();
+                const opt3 = document.getElementById('custom-opt-3').value.trim();
+
+                this.questions.push({
+                    id: 'q_' + Date.now(),
+                    type: type,
+                    name: ans,
+                    imageUrl: this.customImgData,
+                    options: [ans, opt1, opt2, opt3]
+                });
+
+                this.showToast('Soal Baru Berhasil Disimpan!');
+                this.showScreen('host-lobby');
             }
         }
 
-        showPlayerResult(isCorrect, totalScore) {
-            this.setPlayerState('result');
-            const icon = document.getElementById('player-res-icon');
-            const title = document.getElementById('player-res-title');
-
-            if (isCorrect) {
-                this.sound.correct();
-                icon.className = "w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-3xl";
-                icon.innerText = '🎉';
-                title.innerText = 'JAWABAN BENAR!';
-                title.className = 'text-2xl font-black text-emerald-400';
-            } else {
-                this.sound.wrong();
-                icon.className = "w-16 h-16 mx-auto rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center text-3xl";
-                icon.innerText = '❌';
-                title.innerText = 'JAWABAN SALAH';
-                title.className = 'text-2xl font-black text-rose-400';
-            }
-
-            document.getElementById('player-res-score').innerText = totalScore;
-        }
-
-        /* ================= CREATOR LOGIC ================= */
-
-        handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                this.customImgData = ev.target.result;
-                document.getElementById('creator-img-preview').src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        saveQuestion(e) {
-            e.preventDefault();
-            const type = document.getElementById('custom-type').value;
-            const ans = document.getElementById('custom-answer').value.trim();
-            const opt1 = document.getElementById('custom-opt-1').value.trim();
-            const opt2 = document.getElementById('custom-opt-2').value.trim();
-            const opt3 = document.getElementById('custom-opt-3').value.trim();
-
-            this.questions.push({
-                id: 'q_' + Date.now(),
-                type: type,
-                name: ans,
-                imageUrl: this.customImgData,
-                options: [ans, opt1, opt2, opt3]
-            });
-
-            this.showToast('Soal Baru Berhasil Disimpan!');
-            this.showScreen('host-lobby');
-        }
-    }
-
-    let app;
-    window.onload = () => { app = new PeerKahootEngine(); app.init(); };
-</script>
+        let app;
+        window.onload = () => { app = new PeerKahootEngine(); app.init(); };
+    </script>
 </body>
 </html>
