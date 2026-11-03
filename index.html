@@ -38,6 +38,12 @@
         .glass-card { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .lens-overlay { background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 20px 20px; }
         canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+        
+        @keyframes crownGlow {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.8)); transform: translateY(0); }
+            50% { filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)); transform: translateY(-4px); }
+        }
+        .crown-animated { animation: crownGlow 2.5s infinite ease-in-out; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500">
@@ -270,21 +276,87 @@
             </div>
         </section>
 
-        <!-- ==================== SCREEN 5: HOST LEADERBOARD ==================== -->
-        <section id="screen-host-leaderboard" class="hidden w-full max-w-md text-center space-y-6">
-            <div class="glass-panel p-8 rounded-3xl space-y-6 border border-slate-700">
-                <div class="inline-flex p-4 rounded-3xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                    <i data-lucide="trophy" class="w-12 h-12">🏆</i>
+        <!-- ==================== SCREEN 5: HOST LEADERBOARD (PREMIUM PODIUM) ==================== -->
+        <section id="screen-host-leaderboard" class="hidden w-full max-w-3xl space-y-8 animate-fadeIn">
+            
+            <!-- Header Title -->
+            <div class="text-center space-y-2">
+                <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-widest">
+                    🏆 Pemenang Turnamen 🏆
                 </div>
-                <div>
-                    <h2 class="text-3xl font-black text-white">KLASEMEN ROOM</h2>
-                    <p class="text-xs text-slate-400">Peringkat teratas pemain saat ini:</p>
+                <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
+                    LEADERBOARD <span class="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-300 to-emerald-400">JUARA</span>
+                </h2>
+                <p class="text-xs md:text-sm text-slate-400">Selamat kepada para pemenang dengan penglihatan ter-tajam!</p>
+            </div>
+
+            <!-- 3D PODIUM DECK (JUARA 1, 2, 3) -->
+            <div class="grid grid-cols-3 gap-3 md:gap-5 items-end pt-4 pb-2 max-w-2xl mx-auto px-2">
+                
+                <!-- JUARA 2 (PERAK / SILVER - KIRI) -->
+                <div id="podium-2-col" class="flex flex-col items-center">
+                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-slate-800 border-2 border-slate-300 flex items-center justify-center text-2xl shadow-lg mb-2 relative">
+                        <span class="absolute -top-2 -right-1 bg-slate-300 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full shadow">2nd</span>
+                        🥈
+                    </div>
+                    <div id="podium-2-name" class="font-black text-xs md:text-sm text-slate-200 truncate max-w-[90px] md:max-w-[120px] mb-0.5">---</div>
+                    <div id="podium-2-score" class="font-black text-xs text-indigo-400 mb-2">0 Pts</div>
+                    <div class="w-full h-32 md:h-40 bg-gradient-to-t from-slate-900 via-slate-800/90 to-slate-700/60 rounded-t-2xl border-t-2 border-x border-slate-400/50 flex flex-col justify-between p-3 text-center shadow-xl">
+                        <span class="text-3xl font-black text-slate-300">2</span>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">PERAK</span>
+                    </div>
                 </div>
-                <div id="leaderboard-list" class="space-y-2 text-left"></div>
-                <button onclick="app.hostNextQuestion()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-2xl shadow-lg">
-                    Lanjut Soal Berikutnya ➔
+
+                <!-- JUARA 1 (EMAS / GOLD - TENGAH) -->
+                <div id="podium-1-col" class="flex flex-col items-center">
+                    <div class="relative mb-2">
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-amber-400 text-2xl crown-animated">👑</div>
+                        <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-amber-950/80 border-4 border-amber-400 flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(245,158,11,0.6)] relative">
+                            <span class="absolute -top-2 -right-1 bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">1st</span>
+                            🥇
+                        </div>
+                    </div>
+                    <div id="podium-1-name" class="font-black text-sm md:text-base text-amber-300 truncate max-w-[110px] md:max-w-[140px] mb-0.5">---</div>
+                    <div id="podium-1-score" class="font-black text-sm text-emerald-400 mb-2">0 Pts</div>
+                    <div class="w-full h-44 md:h-52 bg-gradient-to-t from-amber-950 via-amber-900/90 to-yellow-500/40 rounded-t-2xl border-t-4 border-x border-amber-400 flex flex-col justify-between p-3 text-center shadow-[0_0_35px_rgba(245,158,11,0.3)]">
+                        <span class="text-4xl font-black text-amber-300">1</span>
+                        <span class="text-[10px] font-black text-amber-200 uppercase tracking-widest bg-amber-500/20 py-1 rounded-lg border border-amber-400/30">JUARA UTAMA</span>
+                    </div>
+                </div>
+
+                <!-- JUARA 3 (PERUNGGU / BRONZE - KANAN) -->
+                <div id="podium-3-col" class="flex flex-col items-center">
+                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-amber-950/50 border-2 border-amber-600 flex items-center justify-center text-2xl shadow-lg mb-2 relative">
+                        <span class="absolute -top-2 -right-1 bg-amber-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow">3rd</span>
+                        🥉
+                    </div>
+                    <div id="podium-3-name" class="font-black text-xs md:text-sm text-amber-200/90 truncate max-w-[90px] md:max-w-[120px] mb-0.5">---</div>
+                    <div id="podium-3-score" class="font-black text-xs text-amber-500 mb-2">0 Pts</div>
+                    <div class="w-full h-24 md:h-32 bg-gradient-to-t from-slate-900 via-amber-950/80 to-amber-800/40 rounded-t-2xl border-t-2 border-x border-amber-600/50 flex flex-col justify-between p-3 text-center shadow-xl">
+                        <span class="text-3xl font-black text-amber-500">3</span>
+                        <span class="text-[10px] font-black text-amber-400/80 uppercase tracking-wider">PERUNGGU</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RUNNER-UP LIST (PERINGKAT 4 DAN SETERUSNYA) -->
+            <div class="glass-panel p-5 rounded-3xl space-y-3 border border-slate-800 max-w-xl mx-auto">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Peringkat Lainnya</h3>
+                <div id="leaderboard-runnerup-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="flex gap-3 max-w-xl mx-auto pt-2">
+                <button onclick="app.triggerWinnerConfetti()" class="py-3.5 px-5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs rounded-2xl border border-amber-500/40 flex items-center justify-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4">✨</i> Sebar Konfeti
+                </button>
+                
+                <button id="btn-next-or-restart" onclick="app.hostNextQuestion()" class="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-extrabold text-sm rounded-2xl shadow-xl flex items-center justify-center gap-2">
+                    <span>Lanjut Soal Berikutnya ➔</span>
                 </button>
             </div>
+
         </section>
 
         <!-- ==================== SCREEN 6: CREATOR ==================== -->
@@ -585,7 +657,6 @@
                     badgeIcon.innerText = '🧩'; levelText.innerText = `Reveal: ${revealMap[this.currentStep] || '100%'} Terbuka`;
                     this.renderImageReveal(img, canvas, this.currentStep, q.focalX || 50, q.focalY || 50);
                 } else {
-                    // Zoom mode
                     canvas.classList.add('hidden'); img.classList.remove('hidden');
                     const zoomMap = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
                     const scale = zoomMap[this.currentStep] || 1;
@@ -595,48 +666,41 @@
                 }
             }
 
-            // Algoritma Image Reveal Terbuka Berdasarkan Jarak Titik Fokus Penting
             renderImageReveal(img, canvas, step, focalX = 50, focalY = 50) {
                 const ctx = canvas.getContext('2d');
                 const w = img.naturalWidth || 640;
                 const h = img.naturalHeight || 480;
                 canvas.width = w; canvas.height = h;
 
-                // 1. Render foto asli terlebih dahulu
                 ctx.drawImage(img, 0, 0, w, h);
 
-                if (step <= 1) return; // Step 1 = Terbuka 100%
+                if (step <= 1) return;
 
-                const cols = 8; // Grid 8x8 (64 ubin halus)
+                const cols = 8;
                 const rows = 8;
                 const tileW = w / cols;
                 const tileH = h / rows;
                 const totalTiles = cols * rows;
 
-                // Rasio persentase ubin yang terbuka per Step
                 const revealRatios = { 5: 0.15, 4: 0.35, 3: 0.58, 2: 0.80, 1: 1.0 };
                 const revealCount = Math.floor(totalTiles * (revealRatios[step] || 1.0));
 
-                // 2. Hitung jarak setiap ubin ke koordinat Titik Fokus (focalX, focalY)
                 const tiles = [];
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
                         const tileCenterX = ((c + 0.5) / cols) * 100;
                         const tileCenterY = ((r + 0.5) / rows) * 100;
                         const dist = Math.hypot(tileCenterX - focalX, tileCenterY - focalY);
-
                         tiles.push({ r, c, x: c * tileW, y: r * tileH, dist: dist });
                     }
                 }
 
-                // 3. Urutkan ubin dari yang paling dekat dengan titik fokus ke yang paling jauh
                 tiles.sort((a, b) => a.dist - b.dist);
 
-                // Ubin sisanya (yang lebih jauh) ditutup penutup gelap halus
                 const hiddenTiles = tiles.slice(revealCount);
 
-                ctx.fillStyle = '#0f172a'; // Slate-900
-                ctx.strokeStyle = '#1e293b'; // Slate-800 Line
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = '#1e293b';
                 ctx.lineWidth = 1;
 
                 hiddenTiles.forEach(tile => {
@@ -710,32 +774,92 @@
                 this.currentStep = 1;
                 this.applyHostVisualEffect();
 
-                const summary = this.players.map(p => ({ name: p.name, score: p.score, currentAns: p.currentAns }));
-                this.broadcastToPlayers({ action: 'QUESTION_ENDED', players: summary });
-
                 setTimeout(() => {
                     this.renderLeaderboard();
                     this.showScreen('host-leaderboard');
-                }, 2500);
+                }, 2000);
             }
 
             renderLeaderboard() {
                 const sorted = [...this.players].sort((a, b) => b.score - a.score);
-                const container = document.getElementById('leaderboard-list');
-                container.innerHTML = '';
+                
+                // Set data ranking ke objek
+                const rankedList = sorted.map((p, idx) => ({ name: p.name, score: p.score, rank: idx + 1 }));
 
-                sorted.slice(0, 5).forEach((p, idx) => {
-                    const item = document.createElement('div');
-                    item.className = "p-3.5 glass-card rounded-2xl flex items-center justify-between border border-slate-700";
-                    item.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black flex items-center justify-center text-xs">${idx + 1}</span>
-                            <span class="font-extrabold text-white text-sm">${p.name}</span>
-                        </div>
-                        <span class="font-black text-emerald-400 text-base">${p.score} Pts</span>
-                    `;
-                    container.appendChild(item);
-                });
+                // Render Podium 1, 2, 3
+                const p1 = rankedList[0] || { name: '---', score: 0 };
+                const p2 = rankedList[1] || { name: '---', score: 0 };
+                const p3 = rankedList[2] || { name: '---', score: 0 };
+
+                document.getElementById('podium-1-name').innerText = p1.name;
+                document.getElementById('podium-1-score').innerText = `${p1.score} Pts`;
+
+                document.getElementById('podium-2-name').innerText = p2.name;
+                document.getElementById('podium-2-score').innerText = `${p2.score} Pts`;
+
+                document.getElementById('podium-3-name').innerText = p3.name;
+                document.getElementById('podium-3-score').innerText = `${p3.score} Pts`;
+
+                // Render Runner-up (Rank 4 ke atas)
+                const runnerUpContainer = document.getElementById('leaderboard-runnerup-list');
+                runnerUpContainer.innerHTML = '';
+
+                const runners = rankedList.slice(3);
+                if (runners.length === 0) {
+                    runnerUpContainer.innerHTML = `<div class="text-center py-4 text-xs text-slate-500">Tidak ada pemain di peringkat luar podium.</div>`;
+                } else {
+                    runners.forEach(p => {
+                        const card = document.createElement('div');
+                        card.className = "p-3 glass-card rounded-2xl flex items-center justify-between border border-slate-700/60";
+                        card.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <span class="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-bold flex items-center justify-center text-xs">${p.rank}</span>
+                                <span class="font-extrabold text-white text-xs">${p.name}</span>
+                            </div>
+                            <span class="font-black text-emerald-400 text-xs">${p.score} Pts</span>
+                        `;
+                        runnerUpContainer.appendChild(card);
+                    });
+                }
+
+                // Ubah teks tombol jika sudah soal terakhir
+                const btnNext = document.getElementById('btn-next-or-restart');
+                if (this.currentIndex >= this.questions.length - 1) {
+                    btnNext.innerHTML = `<span>🔄 Selesai & Sesi Baru</span>`;
+                    btnNext.onclick = () => location.reload();
+                } else {
+                    btnNext.innerHTML = `<span>Lanjut Soal Berikutnya ➔</span>`;
+                    btnNext.onclick = () => this.hostNextQuestion();
+                }
+
+                // Broadcast hasil klasemen akhir ke seluruh HP Pemain
+                this.broadcastToPlayers({ action: 'FINAL_LEADERBOARD', players: rankedList });
+
+                // Bunyikan konfeti juara
+                this.triggerWinnerConfetti();
+            }
+
+            triggerWinnerConfetti() {
+                if (typeof confetti !== 'function') return;
+                
+                // Blast 1 (Tengah)
+                confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+
+                // Blast 2 (Samping)
+                setTimeout(() => {
+                    confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 } });
+                    confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 } });
+                }, 300);
+
+                // Blast 3 (Hujan Emas)
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 80,
+                        spread: 100,
+                        origin: { y: 0.4 },
+                        colors: ['#f59e0b', '#fbbf24', '#d97706', '#ffffff']
+                    });
+                }, 700);
             }
 
             hostNextQuestion() {
@@ -743,8 +867,7 @@
                 if (this.currentIndex < this.questions.length) {
                     this.hostLoadQuestion();
                 } else {
-                    this.showToast('Sesi Permainan Selesai!');
-                    if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 70 });
+                    this.showToast('Sesi Permainan Telah Selesai!');
                 }
             }
 
@@ -822,10 +945,11 @@
                     this.setPlayerState('active');
                     this.renderPlayerOptions(data.options);
                     this.showToast('🚀 Soal Dimulai! Pilih Jawaban di HP');
-                } else if (data.action === 'QUESTION_ENDED') {
+                } else if (data.action === 'FINAL_LEADERBOARD') {
                     const myData = data.players.find(p => p.name === this.playerName);
-                    const isCorrect = myData && myData.currentAns === 0;
-                    this.showPlayerResult(isCorrect, myData ? myData.score : 0);
+                    if (myData) {
+                        this.showPlayerFinalRank(myData.rank, myData.score, data.players.length);
+                    }
                 }
             }
 
@@ -858,26 +982,37 @@
                 }
             }
 
-            showPlayerResult(isCorrect, totalScore) {
+            showPlayerFinalRank(rank, score, totalPlayers) {
                 this.setPlayerState('result');
                 const icon = document.getElementById('player-res-icon');
                 const title = document.getElementById('player-res-title');
 
-                if (isCorrect) {
+                if (rank === 1) {
                     this.sound.correct();
-                    icon.className = "w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-3xl";
-                    icon.innerText = '🎉';
-                    title.innerText = 'JAWABAN BENAR!';
-                    title.className = 'text-2xl font-black text-emerald-400';
+                    icon.className = "w-16 h-16 mx-auto rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/50 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(245,158,11,0.5)]";
+                    icon.innerText = '🥇';
+                    title.innerText = '👑 JUARA 1 UTAMA!';
+                    title.className = 'text-2xl font-black text-amber-400';
+                } else if (rank === 2) {
+                    this.sound.correct();
+                    icon.className = "w-16 h-16 mx-auto rounded-full bg-slate-300/20 text-slate-200 border border-slate-300/50 flex items-center justify-center text-3xl";
+                    icon.innerText = '🥈';
+                    title.innerText = 'JUARA 2 PERAK!';
+                    title.className = 'text-2xl font-black text-slate-300';
+                } else if (rank === 3) {
+                    this.sound.correct();
+                    icon.className = "w-16 h-16 mx-auto rounded-full bg-amber-700/20 text-amber-500 border border-amber-600/50 flex items-center justify-center text-3xl";
+                    icon.innerText = '🥉';
+                    title.innerText = 'JUARA 3 PERUNGGU!';
+                    title.className = 'text-2xl font-black text-amber-500';
                 } else {
-                    this.sound.wrong();
-                    icon.className = "w-16 h-16 mx-auto rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center text-3xl";
-                    icon.innerText = '❌';
-                    title.innerText = 'JAWABAN SALAH';
-                    title.className = 'text-2xl font-black text-rose-400';
+                    icon.className = "w-16 h-16 mx-auto rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 flex items-center justify-center text-3xl";
+                    icon.innerText = '👏';
+                    title.innerText = `PERINGKAT ${rank} dari ${totalPlayers}`;
+                    title.className = 'text-xl font-black text-indigo-300';
                 }
 
-                document.getElementById('player-res-score').innerText = totalScore;
+                document.getElementById('player-res-score').innerText = score;
             }
 
             /* ================= CREATOR LOGIC ================= */
