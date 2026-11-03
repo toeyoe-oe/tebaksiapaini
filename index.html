@@ -681,26 +681,46 @@
 
         /* ================= PLAYER LOGIC ================= */
 
-        joinRoomAsPlayer() {
+        joinRoomAsPlayer(retryCount = 0) {
             const pin = document.getElementById('pin-input').value.trim();
             const name = document.getElementById('player-nickname').value.trim();
-
-            if (!pin || !name) { this.showToast('Masukkan PIN Room dan Nama Kamu!'); return; }
-
+        
+            if (!pin || !name) { 
+                this.showToast('Masukkan PIN Room dan Nama Kamu!'); 
+                return; 
+            }
+        
             this.pin = pin;
             this.playerName = name;
             this.role = 'player';
-
-            this.showToast('🔍 Mencari Room Host...');
-
-            if (this.peer) this.peer.destroy();
+        
+            // Tampilkan indikator status koneksi yang lebih jelas
+            if (retryCount === 0) {
+                this.showToast('🔍 Mencari Room Host...');
+            } else {
+                this.showToast(`🔄 Antrean sibuk, mencoba ulang (${retryCount}/4)...`);
+            }
+        
+            // Bersihkan instance peer lama jika ada retrying
+            if (this.peer && !this.peer.destroyed) {
+                this.peer.destroy();
+            }
+        
             this.peer = new Peer(this.peerConfig);
-
+        
             this.peer.on('open', () => {
                 const hostPeerId = `gpgp-room-${pin}`;
                 this.hostConn = this.peer.connect(hostPeerId, { reliable: true });
-
+        
+                // Set timeout 5 detik untuk mengantisipasi koneksi menggantung
+                const connectTimeout = setTimeout(() => {
+                    if (!this.hostConn || !this.hostConn.open) {
+                        this.handleJoinRetry(retryCount);
+                    }
+                }, 5000);
+        
                 this.hostConn.on('open', () => {
+                    clearTimeout(connectTimeout);
                     this.hostConn.send({ action: 'JOIN', name: name });
                     document.getElementById('role-badge').innerText = `📱 Player: ${name}`;
                     document.getElementById('player-disp-name').innerText = name;
@@ -708,21 +728,35 @@
                     this.setPlayerState('waiting');
                     this.showToast('✅ Berhasil Terhubung ke Host!');
                 });
-
+        
                 this.hostConn.on('data', (data) => {
                     this.handlePlayerReceivedData(data);
                 });
-
-                this.hostConn.on('error', (err) => {
-                    console.error('Player Conn Error:', err);
-                    this.showToast('⚠️ Gagal terhubung ke PIN Room Host.');
+        
+                this.hostConn.on('error', () => {
+                    clearTimeout(connectTimeout);
+                    this.handleJoinRetry(retryCount);
                 });
             });
-
+        
             this.peer.on('error', (err) => {
-                console.error('Player Peer Error:', err);
-                this.showToast('❌ PIN Room tidak ditemukan atau Host belum siap!');
+                console.warn('Peer Join Attempt Failed:', err);
+                this.handleJoinRetry(retryCount);
             });
+        }
+        
+        // Fungsi Pembantu: Mengatur Jeda Acak Sebelum Mencoba Ulang
+        handleJoinRetry(retryCount) {
+            const maxRetries = 4;
+            if (retryCount < maxRetries) {
+                // Jeda acak antara 600ms - 2000ms agar traffic masuk secara bertahap
+                const randomJitter = Math.floor(Math.random() * 1400) + 600; 
+                setTimeout(() => {
+                    this.joinRoomAsPlayer(retryCount + 1);
+                }, randomJitter);
+            } else {
+                this.showToast('❌ PIN Room tidak ditemukan atau Host sedang sibuk. Coba tekan tombol lagi.');
+            }
         }
 
         handlePlayerReceivedData(data) {
