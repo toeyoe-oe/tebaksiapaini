@@ -36,16 +36,16 @@
             -webkit-user-select: none;
         }
         .zoom-target {
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease;
             transform-origin: center center;
         }
         .glass-panel {
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.88);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .glass-card {
-            background: rgba(30, 41, 59, 0.75);
+            background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
@@ -59,14 +59,14 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-indigo-500">
 
     <!-- Header Navigation -->
-    <header class="w-full border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-40">
+    <header class="w-full border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="app.showScreen('welcome')">
                 <div class="bg-gradient-to-tr from-indigo-500 to-emerald-400 p-2.5 rounded-2xl shadow-lg">
-                    <i data-lucide="grid" class="w-6 h-6 text-white">👾</i>
+                    <i data-lucide="sparkles" class="w-6 h-6 text-white">✨</i>
                 </div>
                 <div>
                     <h1 class="font-black text-xl tracking-wider text-white">TEBAK SIAPA?</h1>
@@ -87,6 +87,9 @@
             </div>
 
             <div class="flex items-center gap-2">
+                <span id="role-badge" class="hidden md:inline-block px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-xs font-bold rounded-full">
+                    Belum Pilih Role
+                </span>
                 <button onclick="app.toggleSound()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
                     <i id="sound-icon" data-lucide="volume-2" class="w-5 h-5 text-slate-300">🔊</i>
                 </button>
@@ -100,39 +103,69 @@
     <!-- Main Container -->
     <main class="max-w-4xl w-full mx-auto p-4 md:p-6 flex-1 flex flex-col justify-center items-center">
 
-        <!-- ==================== SCREEN 1: LANDING & PIN ENTRY ==================== -->
+        <!-- ==================== SCREEN 1: LANDING & ROLE SELECTION ==================== -->
         <section id="screen-welcome" class="w-full max-w-2xl space-y-8 animate-fadeIn">
             <!-- Hero Banner -->
-            <div class="text-center space-y-4 max-w-xl mx-auto pt-2">
+            <div class="text-center space-y-3 max-w-xl mx-auto pt-2">
                 <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Mode Pixel & Zoom In
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Mode Pixel, Siluet & Zoom In
                 </div>
                 <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
                     Seberapa Tajam <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Mata Kamu?</span>
                 </h2>
-                <p class="text-slate-300 text-sm md:text-base leading-relaxed">
-                    Tebak wajah/subjek dari tampilan piksel pecah 8-bit atau zoom ekstrim! Makin cepat dan makin sedikit kamu melakukan pertolongan, makin tinggi skornya!
+                <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                    Pilih peran kamu di bawah ini untuk memulai permainan tebak subjek foto!
                 </p>
             </div>
 
-            <!-- Card PIN Game -->
-            <div class="bg-white text-slate-900 p-8 rounded-3xl shadow-2xl space-y-6 text-center max-w-md mx-auto">
-                <h3 class="text-xl font-extrabold tracking-tight text-slate-800 uppercase">PIN GAME</h3>
+            <!-- Role Selector Tabs / Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
-                <div class="space-y-4">
-                    <input type="text" id="pin-input" maxlength="6" placeholder="Enter PIN" autocomplete="off" onkeydown="if(event.key==='Enter') app.joinByPin()" class="w-full text-center text-2xl font-black tracking-widest py-4 border-2 border-slate-300 rounded-2xl focus:outline-none focus:border-indigo-600 uppercase text-slate-800 placeholder:text-slate-400 placeholder:font-normal">
+                <!-- CARD 1: PLAYER (PEMAIN) -->
+                <div class="bg-white text-slate-900 p-6 rounded-3xl shadow-2xl space-y-4 text-center border-2 border-transparent hover:border-emerald-500 transition">
+                    <div class="w-12 h-12 mx-auto bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+                        📱
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 uppercase">PEMAIN (PLAYER)</h3>
+                        <p class="text-xs text-slate-500 mt-1">Masuk dengan PIN untuk langsung bermain</p>
+                    </div>
                     
-                    <button onclick="app.joinByPin()" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-lg rounded-2xl shadow-lg transition active:scale-95">
-                        Join Game
-                    </button>
+                    <div class="space-y-2.5 pt-2">
+                        <input type="text" id="pin-input" maxlength="6" placeholder="PIN Sesi (ex: 123456)" autocomplete="off" class="w-full text-center text-lg font-black tracking-widest py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 uppercase text-slate-800 placeholder:text-slate-400 placeholder:font-normal placeholder:tracking-normal placeholder:text-xs">
+                        <input type="text" id="player-nickname" maxlength="15" placeholder="Nama / Nickname Kamu" autocomplete="off" class="w-full text-center text-sm font-bold py-2.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 text-slate-800 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs">
+                        
+                        <button onclick="app.selectRolePlayer()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+                            <span>MASUK GAME SEBAGAI PEMAIN</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="pt-2 border-t border-slate-200">
-                    <button onclick="app.createNewGameSession()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shadow">
-                        <i data-lucide="plus-circle" class="w-4 h-4">➕</i>
-                        <span>+ New Game (Host / Admin)</span>
-                    </button>
+                <!-- CARD 2: HOST (ADMIN / PROYEKTOR) -->
+                <div class="glass-panel p-6 rounded-3xl shadow-2xl space-y-4 text-center border border-slate-700 hover:border-indigo-500 transition flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 mx-auto bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center text-xl font-bold border border-indigo-500/30">
+                            📺
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-white uppercase">HOST (ADMIN / PROYEKTOR)</h3>
+                            <p class="text-xs text-slate-400 mt-1">Buka layar kontrol proyektor & kelola soal</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5 pt-4">
+                        <button onclick="app.selectRoleHostNewSession()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                            <i data-lucide="plus-circle" class="w-4 h-4">➕</i>
+                            <span>Buat Sesi Game Baru</span>
+                        </button>
+                        
+                        <button onclick="app.selectRoleHostManage()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
+                            <i data-lucide="settings" class="w-3.5 h-3.5 text-emerald-400">⚙️</i>
+                            <span>Kelola Bank Soal Admin</span>
+                        </button>
+                    </div>
                 </div>
+
             </div>
 
             <p class="text-center text-xs text-slate-400">
@@ -145,7 +178,7 @@
             <div class="glass-panel p-6 md:p-8 rounded-3xl space-y-6 border border-slate-800">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-4">
                     <div>
-                        <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Sesi Game Admin</span>
+                        <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Layar Kontrol Host</span>
                         <h2 class="text-2xl font-black text-white">Kelola Sesi Soal</h2>
                     </div>
                     <div class="bg-indigo-500/20 border border-indigo-500/40 px-4 py-2 rounded-2xl text-center">
@@ -167,7 +200,7 @@
 
                 <div class="pt-4 border-t border-slate-800 flex gap-3">
                     <button onclick="app.showScreen('welcome')" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-xl">
-                        Kembali
+                        Ganti Role
                     </button>
                     <button id="btn-start-session" onclick="app.startAdminSession()" class="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold text-sm rounded-xl shadow-lg disabled:opacity-50">
                         Mulai Game Sekarang
@@ -181,7 +214,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-black text-white">Tambah Soal Subjek Baru</h2>
-                    <p class="text-xs text-slate-400">Pilih mode tampilan, gambar foto, dan kunci jawaban</p>
+                    <p class="text-xs text-slate-400">Pilih mode efek visual, foto subjek, dan kunci jawaban</p>
                 </div>
                 <button onclick="app.showScreen('admin-lobby')" class="p-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
                     <i data-lucide="x" class="w-5 h-5">✖</i>
@@ -192,6 +225,7 @@
                 <div class="space-y-2">
                     <label class="text-xs font-semibold text-indigo-300 uppercase tracking-wider block">1. Mode Efek Visual Soal</label>
                     <select id="custom-type" onchange="app.toggleCreatorModeUI()" class="w-full bg-slate-900 border border-indigo-500/50 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-400 font-bold">
+                        <option value="silhouette">👤 Mode Siluet (Bayangan Hitam)</option>
                         <option value="pixel">👾 Mode Pixelated (Foto Pecah 8-Bit)</option>
                         <option value="zoom">🔍 Mode Zoom In (Fokus Area Specific)</option>
                     </select>
@@ -293,8 +327,8 @@
                 <div class="absolute inset-0 lens-overlay pointer-events-none"></div>
 
                 <div class="absolute top-4 left-4 glass-card px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2">
-                    <i id="effect-badge-icon" data-lucide="grid" class="w-3.5 h-3.5">👾</i>
-                    <span id="effect-level-text">Piksel: 36px</span>
+                    <span id="effect-badge-icon">👤</span>
+                    <span id="effect-level-text">Siluet: 100% Gelap</span>
                 </div>
 
                 <div id="hint-display-box" class="hidden absolute bottom-4 left-4 right-4 glass-card p-3 rounded-2xl border border-amber-500/40 text-amber-200 text-xs flex items-center gap-3">
@@ -373,6 +407,8 @@
         class ZoomGameApp {
             constructor() {
                 this.sound = new SoundEngine();
+                this.role = 'player'; // 'player' or 'host'
+                this.playerName = '';
                 this.currentPin = '';
                 this.questions = [];
                 this.currentIndex = 0;
@@ -400,16 +436,26 @@
                 const demoQuestions = [
                     {
                         id: 'q_demo1',
+                        type: 'silhouette',
+                        name: 'Ketua GP',
+                        hint: 'Mode Siluet Bayangan Hitam',
+                        imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
+                        focalX: 50,
+                        focalY: 30,
+                        options: ['Ketua GP', 'Sekretaris GP', 'Bendahara GP', 'Seksi Musik']
+                    },
+                    {
+                        id: 'q_demo2',
                         type: 'pixel',
                         name: 'Panitia GP',
                         hint: 'Mode Piksel 8-Bit Pecah',
-                        imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
+                        imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=80',
                         focalX: 50,
                         focalY: 30,
                         options: ['Panitia GP', 'Seksi Acara', 'Seksi Konsumsi', 'Seksi Musik']
                     },
                     {
-                        id: 'q_demo2',
+                        id: 'q_demo3',
                         type: 'zoom',
                         name: 'Seksi Acara',
                         hint: 'Mode Zoom In Fokus Titik',
@@ -420,6 +466,14 @@
                     }
                 ];
                 localStorage.setItem('session_123456', JSON.stringify(demoQuestions));
+            }
+
+            updateRoleBadge(roleName) {
+                const badge = document.getElementById('role-badge');
+                if (badge) {
+                    badge.innerText = roleName;
+                    badge.classList.remove('hidden');
+                }
             }
 
             showScreen(id) {
@@ -448,9 +502,13 @@
                 if (typeof lucide !== 'undefined') lucide.createIcons();
             }
 
-            joinByPin() {
+            /* ================= ROLE SELECTION LOGIC ================= */
+
+            selectRolePlayer() {
                 const pin = document.getElementById('pin-input').value.trim();
-                if (!pin) { this.showToast('Masukkan PIN terlebih dahulu!'); return; }
+                const name = document.getElementById('player-nickname').value.trim();
+
+                if (!pin) { this.showToast('Masukkan PIN Sesi terlebih dahulu!'); return; }
 
                 const data = localStorage.getItem(`session_${pin}`);
                 if (!data) { this.showToast('PIN Sesi tidak ditemukan!'); return; }
@@ -458,16 +516,34 @@
                 this.questions = JSON.parse(data);
                 if (this.questions.length === 0) { this.showToast('Sesi ini belum memiliki soal!'); return; }
 
+                this.role = 'player';
+                this.playerName = name || 'Pemain';
                 this.currentPin = pin;
+
+                this.updateRoleBadge(`📱 Player: ${this.playerName}`);
                 this.resetGameStats();
                 this.showScreen('game');
                 this.loadQuestion();
             }
 
-            createNewGameSession() {
+            selectRoleHostNewSession() {
+                this.role = 'host';
                 this.currentPin = Math.floor(100000 + Math.random() * 900000).toString();
                 this.questions = [];
                 localStorage.setItem(`session_${this.currentPin}`, JSON.stringify(this.questions));
+                
+                this.updateRoleBadge('📺 Host / Admin');
+                this.renderAdminLobby();
+                this.showScreen('admin-lobby');
+            }
+
+            selectRoleHostManage() {
+                this.role = 'host';
+                this.currentPin = '123456'; // Default demo session
+                const data = localStorage.getItem('session_123456');
+                this.questions = data ? JSON.parse(data) : [];
+
+                this.updateRoleBadge('📺 Host / Admin');
                 this.renderAdminLobby();
                 this.showScreen('admin-lobby');
             }
@@ -485,7 +561,10 @@
                 } else {
                     document.getElementById('btn-start-session').disabled = false;
                     this.questions.forEach((q, idx) => {
-                        const typeTag = q.type === 'zoom' ? '🔍 Zoom' : '👾 Pixel';
+                        let typeTag = '🔍 Zoom';
+                        if (q.type === 'pixel') typeTag = '👾 Pixel';
+                        if (q.type === 'silhouette') typeTag = '👤 Siluet';
+
                         const item = document.createElement('div');
                         item.className = "p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs";
                         item.innerHTML = `
@@ -522,6 +601,8 @@
                 const label = document.getElementById('focal-picker-label');
                 if (type === 'zoom') {
                     label.innerText = '3. Tentukan Titik Zoom (Klik Foto)';
+                } else if (type === 'silhouette') {
+                    label.innerText = '3. Preview Foto Subjek (Mode Siluet Bayangan)';
                 } else {
                     label.innerText = '3. Preview Foto Subjek (Mode Pixelated)';
                 }
@@ -627,16 +708,21 @@
                 this.startTimer();
             }
 
-            // Fungsi Rendering Efek Visual (Pixel vs Zoom)
+            // Fungsi Rendering Efek Visual (Pixel vs Silhouette vs Zoom)
             applyVisualEffect() {
                 const q = this.questions[this.currentIndex];
-                const mode = q.type || 'pixel';
+                const mode = q.type || 'silhouette';
                 const img = document.getElementById('game-image');
                 const canvas = document.getElementById('game-canvas');
+                const badgeIcon = document.getElementById('effect-badge-icon');
                 const levelText = document.getElementById('effect-level-text');
                 const btnLabel = document.getElementById('btn-step-label');
 
                 document.getElementById('potential-points').innerText = `+${100 + this.currentStep * 30}`;
+
+                // Reset default inline styles
+                img.style.transform = 'none';
+                img.style.filter = 'none';
 
                 if (mode === 'pixel') {
                     img.classList.add('hidden');
@@ -644,16 +730,33 @@
 
                     const pixelMap = { 5: 36, 4: 24, 3: 14, 2: 6, 1: 1 };
                     const pxSize = pixelMap[this.currentStep] || 1;
+                    badgeIcon.innerText = '👾';
                     levelText.innerText = `Piksel: ${pxSize}px`;
                     btnLabel.innerText = 'Haluskan Piksel (-15)';
 
                     this.renderPixelated(img, canvas, pxSize);
+                } else if (mode === 'silhouette') {
+                    canvas.classList.add('hidden');
+                    img.classList.remove('hidden');
+
+                    const brightMap = { 5: 0, 4: 0.25, 3: 0.5, 2: 0.75, 1: 1 };
+                    const brightness = brightMap[this.currentStep] !== undefined ? brightMap[this.currentStep] : 1;
+                    const darkPercent = Math.round((1 - brightness) * 100);
+
+                    badgeIcon.innerText = '👤';
+                    levelText.innerText = `Siluet: ${darkPercent}% Gelap`;
+                    btnLabel.innerText = 'Terangkan Siluet (-15)';
+
+                    img.style.filter = `brightness(${brightness})`;
                 } else {
+                    // Zoom Mode
                     canvas.classList.add('hidden');
                     img.classList.remove('hidden');
 
                     const zoomMap = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
                     const scale = zoomMap[this.currentStep] || 1;
+
+                    badgeIcon.innerText = '🔍';
                     levelText.innerText = `Zoom: ${scale}x`;
                     btnLabel.innerText = 'Zoom Out (-15)';
 
@@ -733,7 +836,7 @@
                 this.stopTimer();
                 const q = this.questions[this.currentIndex];
                 
-                // Reveal Full Image
+                // Reveal Full Original Image (Step 1)
                 this.currentStep = 1;
                 this.applyVisualEffect();
 
