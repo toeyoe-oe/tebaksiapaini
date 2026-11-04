@@ -245,6 +245,7 @@
                     <span class="text-xs text-slate-400 block font-semibold">Total Poin Kamu</span>
                     <span id="player-res-score" class="text-3xl font-black text-emerald-400">0</span>
                 </div>
+                <p id="player-thankyou-subtext" class="text-xs text-indigo-300 font-semibold pt-2">Terima kasih telah berpartisipasi! 🎉</p>
             </div>
 
         </section>
@@ -295,7 +296,7 @@
         </section>
 
         <!-- ==================== SCREEN 5: HOST LEADERBOARD ==================== -->
-        <section id="screen-host-leaderboard" class="hidden w-full max-w-3xl space-y-8 animate-fadeIn">
+        <section id="screen-host-leaderboard" class="hidden w-full max-w-3xl space-y-6 animate-fadeIn">
             <div class="text-center space-y-2">
                 <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-widest">
                     🏆 Pemenang Turnamen 🏆
@@ -306,7 +307,16 @@
                 <p class="text-xs md:text-sm text-slate-400">Selamat kepada para pemenang dengan penglihatan ter-tajam!</p>
             </div>
 
-            <div class="grid grid-cols-3 gap-3 md:gap-5 items-end pt-4 pb-2 max-w-2xl mx-auto px-2">
+            <!-- TAMPILAN JAWABAN BENAR DARI SOAL INI -->
+            <div id="host-correct-answer-box" class="glass-card p-4 rounded-2xl border border-emerald-500/40 flex items-center justify-between max-w-xl mx-auto shadow-lg bg-emerald-950/20">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">💡</span>
+                    <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider">Jawaban Benar Soal Ini:</span>
+                </div>
+                <span id="host-correct-answer-text" class="text-sm font-black text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/40">---</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 md:gap-5 items-end pt-2 pb-2 max-w-2xl mx-auto px-2">
                 <!-- JUARA 2 -->
                 <div id="podium-2-col" class="flex flex-col items-center">
                     <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-slate-800 border-2 border-slate-300 flex items-center justify-center text-2xl shadow-lg mb-2 relative">
@@ -353,6 +363,18 @@
             <div class="glass-panel p-5 rounded-3xl space-y-3 border border-slate-800 max-w-xl mx-auto">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Peringkat Lainnya</h3>
                 <div id="leaderboard-runnerup-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- KARTU KONFIRMASI SEMUA SOAL TELAH DIJAWAB & UCAPAN TERIMA KASIH -->
+            <div id="game-finished-card" class="hidden glass-panel p-6 rounded-3xl text-center space-y-3 border border-emerald-500/50 bg-emerald-950/30 max-w-xl mx-auto animate-fadeIn">
+                <div class="w-12 h-12 mx-auto bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl border border-emerald-500/40">🎉</div>
+                <h3 class="text-xl font-black text-emerald-300 uppercase tracking-wide">Semua Soal Telah Selesai Dijawab!</h3>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Terima kasih banyak atas partisipasinya seluruh anggota & rekan-rekan GP GPIB Mangngamaseang! Sampai jumpa di game seru berikutnya. ✨
+                </p>
+                <button onclick="app.showScreen('host-lobby')" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-extrabold text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+                    <span>✅ KONFIRMASI & SELESAIKAN GAME</span>
+                </button>
             </div>
 
             <div class="flex gap-3 max-w-xl mx-auto pt-2">
@@ -484,7 +506,6 @@
                 this.creatorFocalY = 50;
                 this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
 
-                // STATUS LOCK UNTUK PLAYER
                 this.hasAnswered = false;
                 this.currentQuestionIndex = -1;
 
@@ -699,7 +720,6 @@
                 this.showScreen('host-game');
                 this.startHostTimer();
 
-                // Kirim Indeks Soal ke Firebase
                 db.ref(`rooms/${this.pin}/state`).set({
                     status: 'question_active',
                     questionIndex: this.currentIndex,
@@ -829,7 +849,6 @@
                 const total = Object.keys(this.players).length;
                 document.getElementById('host-answered-count').innerText = `${count} / ${total}`;
 
-                // CEK OTOMATIS: JIKA SEMUA PLAYER SUDAH MENJAWAB, LANGSUNG SELESAIKAN SOAL!
                 if (total > 0 && count >= total && this.timer) {
                     this.showToast('⚡ Semua pemain telah menjawab! Menyelesaikan soal...');
                     setTimeout(() => this.hostEndQuestion(), 1000);
@@ -873,6 +892,13 @@
             }
 
             renderLeaderboard() {
+                // TAMPILKAN JAWABAN BENAR UNTUK SOAL SANYANG BARU SAJA SELESAI
+                const currentQ = this.questions[this.currentIndex];
+                if (currentQ) {
+                    const correctAnswerText = currentQ.options[0];
+                    document.getElementById('host-correct-answer-text').innerText = correctAnswerText;
+                }
+
                 db.ref(`rooms/${this.pin}/players`).once('value', (snap) => {
                     const playersData = snap.val() || {};
                     const arrayList = Object.keys(playersData).map(k => ({
@@ -923,11 +949,17 @@
                         });
                     }
 
+                    // LOGIKA TOMBOL & KARTU FINISH (APABILA SEMUA SOAL SELESAI)
+                    const isLastQuestion = this.currentIndex >= this.questions.length - 1;
+                    const finishedCard = document.getElementById('game-finished-card');
                     const btnNext = document.getElementById('btn-next-or-restart');
-                    if (this.currentIndex >= this.questions.length - 1) {
-                        btnNext.innerHTML = `<span>Kembali ke Lobby Room ➔</span>`;
-                        btnNext.onclick = () => this.showScreen('host-lobby');
+
+                    if (isLastQuestion) {
+                        finishedCard.classList.remove('hidden');
+                        btnNext.classList.add('hidden');
                     } else {
+                        finishedCard.classList.add('hidden');
+                        btnNext.classList.remove('hidden');
                         btnNext.innerHTML = `<span>Lanjut Soal Berikutnya ➔</span>`;
                         btnNext.onclick = () => this.hostNextQuestion();
                     }
@@ -992,13 +1024,11 @@
                         if (st.status === 'question_active') {
                             this.currentStep = st.step || 5;
 
-                            // DETEKSI APABILA BERPINDAH KE SOAL BARU
                             if (this.currentQuestionIndex !== st.questionIndex) {
                                 this.currentQuestionIndex = st.questionIndex;
-                                this.hasAnswered = false; // Reset kuncian untuk soal baru!
+                                this.hasAnswered = false;
                             }
 
-                            // HANYA BUKA TAMPILAN JIKA PLAYER BELUM MENJAWAB SOAL INI
                             if (!this.hasAnswered) {
                                 this.setPlayerState('active');
                                 this.renderPlayerOptions(st.options);
@@ -1035,10 +1065,10 @@
             }
 
             playerSubmitAnswer(optIdx) {
-                if (this.hasAnswered) return; // Cegah double-submit
+                if (this.hasAnswered) return;
 
                 this.sound.click();
-                this.hasAnswered = true; // Kunci permanen status player
+                this.hasAnswered = true;
                 this.setPlayerState('submitted');
 
                 db.ref(`rooms/${this.pin}/answers/${this.playerKey}`).set({
