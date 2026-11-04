@@ -268,11 +268,11 @@
                 </div>
             </div>
 
-            <!-- Host Viewport (Fit Contain Tanpa Terpotong) -->
-            <div class="relative w-full h-72 md:h-96 rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center shadow-2xl bg-slate-950">
+            <!-- Host Viewport (Rasio Aspek Terjaga Utuh) -->
+            <div class="relative w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center shadow-2xl bg-slate-950 p-2">
                 <div class="w-full h-full relative overflow-hidden flex items-center justify-center">
-                    <img id="host-game-image" src="" alt="Subjek" class="zoom-target max-w-full max-h-full object-contain hidden" />
-                    <canvas id="host-game-canvas" class="max-w-full max-h-full object-contain hidden"></canvas>
+                    <img id="host-game-image" src="" alt="Subjek" class="zoom-target max-w-full max-h-full object-contain hidden rounded-2xl" />
+                    <canvas id="host-game-canvas" class="max-w-full max-h-full object-contain hidden rounded-2xl"></canvas>
                 </div>
                 <div class="absolute inset-0 lens-overlay pointer-events-none"></div>
 
@@ -389,8 +389,8 @@
 
                 <div>
                     <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">3. Klik Area Fokus Penting pada Foto</label>
-                    <div id="focal-picker-container" onclick="app.setFocalPoint(event)" class="h-56 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-700 flex items-center justify-center cursor-crosshair">
-                        <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" class="max-w-full max-h-full object-contain">
+                    <div id="focal-picker-container" onclick="app.setFocalPoint(event)" class="h-60 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-700 flex items-center justify-center cursor-crosshair p-2">
+                        <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" class="max-w-full max-h-full object-contain rounded-xl">
                         <div id="focal-marker" class="absolute w-8 h-8 -ml-4 -mt-4 border-2 border-emerald-400 rounded-full bg-emerald-500/30 flex items-center justify-center shadow-lg pointer-events-none transition-all duration-200" style="left: 50%; top: 50%;">
                             <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
                         </div>
@@ -490,6 +490,16 @@
             init() {
                 if (typeof lucide !== 'undefined') lucide.createIcons();
                 document.body.addEventListener('click', () => this.sound.init(), { once: true });
+            }
+
+            // ALGORITMA PENGACAKAN MURNI (FISHER-YATES SHUFFLE)
+            shuffleArray(array) {
+                let arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
             }
 
             setupDefaultQuestions() {
@@ -669,16 +679,21 @@
                 db.ref(`rooms/${this.pin}/answers`).remove();
                 this.updateHostAnsweredCount(null);
 
+                // PENGACAKAN JAWABAN MURNI DENGAN FISHER-YATES
                 const correctAnswerText = q.options[0];
-                const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+                const shuffledOptions = this.shuffleArray(q.options);
                 this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
 
                 this.currentStep = 5;
                 const img = document.getElementById('host-game-image');
+                
+                // TUNGGU HINGGA GAMBAR SELESAI DIMUAT (Mencegah Fallback 640x480)
+                img.onload = () => {
+                    this.applyHostVisualEffect();
+                };
                 img.src = q.imageUrl;
-                img.onload = () => this.applyHostVisualEffect();
+                if (img.complete) this.applyHostVisualEffect();
 
-                this.applyHostVisualEffect();
                 this.renderHostOptions(shuffledOptions);
                 this.showScreen('host-game');
                 this.startHostTimer();
@@ -686,6 +701,7 @@
                 db.ref(`rooms/${this.pin}/state`).set({
                     status: 'question_active',
                     options: shuffledOptions,
+                    correctIndex: this.currentCorrectIndex,
                     step: 5
                 });
             }
@@ -723,9 +739,11 @@
 
             renderImageReveal(img, canvas, step, focalX = 50, focalY = 50) {
                 const ctx = canvas.getContext('2d');
-                const w = img.naturalWidth || 640;
-                const h = img.naturalHeight || 480;
-                canvas.width = w; canvas.height = h;
+                // Menggunakan resolusi alami asli gambar
+                const w = img.naturalWidth || img.width || 800;
+                const h = img.naturalHeight || img.height || 600;
+                canvas.width = w; 
+                canvas.height = h;
 
                 ctx.drawImage(img, 0, 0, w, h);
                 if (step <= 1) return;
@@ -762,9 +780,10 @@
 
             renderPixelated(img, canvas, pixelSize) {
                 const ctx = canvas.getContext('2d');
-                const w = img.naturalWidth || 640;
-                const h = img.naturalHeight || 480;
-                canvas.width = w; canvas.height = h;
+                const w = img.naturalWidth || img.width || 800;
+                const h = img.naturalHeight || img.height || 600;
+                canvas.width = w; 
+                canvas.height = h;
 
                 if (pixelSize <= 1) { ctx.drawImage(img, 0, 0, w, h); return; }
                 const smallW = Math.max(1, Math.floor(w / pixelSize));
@@ -1040,17 +1059,26 @@
                 document.getElementById('player-res-score').innerText = score;
             }
 
-            /* ================= CREATOR LOGIC (AUTO-RESIZE BACKGROUND) ================= */
+            /* ================= CREATOR LOGIC (PRESERVE RASIO) ================= */
 
             setFocalPoint(e) {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const pctX = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-                const pctY = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+                const imgEl = document.getElementById('creator-img-preview');
+                const rect = imgEl.getBoundingClientRect();
+                
+                // Hitung koordinat persis di atas permukaan gambar (bukan padding kotak luar)
+                const pctX = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
+                const pctY = Math.max(0, Math.min(100, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
+                
                 this.creatorFocalX = pctX;
                 this.creatorFocalY = pctY;
+
+                const containerRect = e.currentTarget.getBoundingClientRect();
+                const markerX = e.clientX - containerRect.left;
+                const markerY = e.clientY - containerRect.top;
+
                 const m = document.getElementById('focal-marker');
-                m.style.left = `${pctX}%`;
-                m.style.top = `${pctY}%`;
+                m.style.left = `${markerX}px`;
+                m.style.top = `${markerY}px`;
             }
 
             handleFileUpload(e) {
@@ -1063,10 +1091,9 @@
                 reader.onload = (ev) => {
                     const img = new Image();
                     img.onload = () => {
-                        // BACKGROUND IMAGE RESIZING & COMPRESSION
-                        const maxDim = 1200; // Maksimal dimensi (px)
-                        let w = img.width;
-                        let h = img.height;
+                        const maxDim = 1200;
+                        let w = img.naturalWidth || img.width;
+                        let h = img.naturalHeight || img.height;
 
                         if (w > maxDim || h > maxDim) {
                             if (w > h) {
@@ -1084,10 +1111,17 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
 
-                        // Simpan hasil kompresi ke format JPEG (0.82 Quality)
-                        this.customImgData = canvas.toDataURL('image/jpeg', 0.82);
-                        document.getElementById('creator-img-preview').src = this.customImgData;
-                        this.showToast('✅ Gambar berhasil disesuaikan & dioptimalkan!');
+                        this.customImgData = canvas.toDataURL('image/jpeg', 0.85);
+                        const preview = document.getElementById('creator-img-preview');
+                        preview.src = this.customImgData;
+                        preview.onload = () => {
+                            const marker = document.getElementById('focal-marker');
+                            marker.style.left = '50%';
+                            marker.style.top = '50%';
+                            this.creatorFocalX = 50;
+                            this.creatorFocalY = 50;
+                        };
+                        this.showToast('✅ Gambar berhasil disesuaikan!');
                     };
                     img.src = ev.target.result;
                 };
