@@ -698,6 +698,9 @@
                     state: { status: 'lobby' }
                 });
 
+                // EKSKLUSIF: JIKA HOST KELUAR / DISCONNECT, SEGERA TANDAI ROOM CLOSED DI DATABASE
+                roomRef.child('state/status').onDisconnect().set('closed');
+
                 document.getElementById('role-badge').innerText = '📺 HOST ROOM';
                 document.getElementById('host-pin-display').innerText = this.pin;
 
@@ -1088,8 +1091,12 @@
                     arrayList.sort((a, b) => b.score - a.score);
                     const rankedList = arrayList.map((p, idx) => ({ ...p, rank: idx + 1 }));
 
+                    const isLastQuestion = this.currentIndex >= this.questions.length - 1;
+                    const nextRoomStatus = isLastQuestion ? 'finished' : 'question_ended';
+
+                    // PENTING: UPDATE STATUS SOAL TERAKHIR MENJADI 'finished'
                     db.ref(`rooms/${this.pin}/state`).set({
-                        status: 'question_ended',
+                        status: nextRoomStatus,
                         leaderboard: rankedList
                     });
 
@@ -1128,7 +1135,6 @@
                         });
                     }
 
-                    const isLastQuestion = this.currentIndex >= this.questions.length - 1;
                     const finishedCard = document.getElementById('game-finished-card');
                     const btnNext = document.getElementById('btn-next-or-restart');
 
@@ -1177,14 +1183,16 @@
                         roomRef.once('value').then(snap => {
                             const roomData = snap.val();
                             const now = Date.now();
-                            const maxAgeMs = 6 * 60 * 60 * 1000; // Expired jika > 6 jam
+                            const maxAgeMs = 6 * 60 * 60 * 1000;
+                            const status = (roomData && roomData.state) ? roomData.state.status : null;
 
-                            // PENGECEKAN KETAT: ROOM ADA, STATUS TIDAK CLOSED, DAN TIDAK KADALUWARSA
+                            // PENGECEKAN KETAT: DILARANG MEMULIHKAN JIKA STATUS CLOSED ATAU FINISHED
                             if (
                                 snap.exists() && 
                                 roomData && 
-                                roomData.state && 
-                                roomData.state.status !== 'closed' && 
+                                status && 
+                                status !== 'closed' && 
+                                status !== 'finished' && 
                                 (now - (roomData.created || now)) < maxAgeMs &&
                                 snap.child('players/' + session.playerKey).exists()
                             ) {
@@ -1200,13 +1208,22 @@
                                 this.showToast('🔄 Sesi Bermain Dipulihkan!');
                                 this.listenToPlayerRoomEvents(roomRef);
                             } else {
-                                // PERSIAPAN PEMBERSIHAN JIKA KADALUWARSA ATAU TUTUP
+                                // PEMBERSIHAN OTOMATIS SAAT GAMEOVER ATAU CLOSED
                                 localStorage.removeItem('gpgp_player_session');
-                                this.showToast('ℹ️ Sesi room sebelumnya telah berakhir.');
+                                this.showScreen('welcome');
+                                if (status === 'closed' || status === 'finished') {
+                                    this.showToast('ℹ️ Room game sebelumnya telah berakhir.');
+                                }
                             }
-                        }).catch(() => localStorage.removeItem('gpgp_player_session'));
+                        }).catch(() => {
+                            localStorage.removeItem('gpgp_player_session');
+                            this.showScreen('welcome');
+                        });
                     }
-                } catch(e) { localStorage.removeItem('gpgp_player_session'); }
+                } catch(e) { 
+                    localStorage.removeItem('gpgp_player_session');
+                    this.showScreen('welcome');
+                }
             }
 
             leavePlayerRoom() {
@@ -1232,8 +1249,9 @@
                 const roomRef = db.ref('rooms/' + pin);
                 roomRef.once('value').then(snap => {
                     const roomData = snap.val();
-                    if (!snap.exists() || (roomData && roomData.state && roomData.state.status === 'closed')) {
-                        this.showToast('❌ PIN Room tidak ditemukan atau telah ditutup!');
+                    const status = (roomData && roomData.state) ? roomData.state.status : null;
+                    if (!snap.exists() || status === 'closed' || status === 'finished') {
+                        this.showToast('❌ PIN Room tidak ditemukan atau permainan telah selesai!');
                         return;
                     }
 
@@ -1264,11 +1282,19 @@
                 roomRef.child('state').on('value', (stateSnap) => {
                     const st = stateSnap.val();
                     
-                    // JIKA ROOM DITUTUP HOST ATAU DATA DIHAPUS, OTOMATIS RESET PEMAIN
-                    if (!st || st.status === 'closed') {
+                    // JIKA ROOM DITUTUP HOST ATAU FINISHED, KELUARKAN PEMAIN DENGAN ANGGUN
+                    if (!st || st.status === 'closed' || st.status === 'finished') {
                         localStorage.removeItem('gpgp_player_session');
-                        this.showToast('❌ Room telah ditutup oleh Host!');
-                        setTimeout(() => location.reload(), 1500);
+                        roomRef.child('state').off();
+                        if (st && st.status === 'finished') {
+                            this.showToast('🎉 Seluruh sesi game telah selesai!');
+                        } else {
+                            this.showToast('❌ Room telah ditutup oleh Host!');
+                        }
+                        setTimeout(() => {
+                            this.showScreen('welcome');
+                            location.reload();
+                        }, 1800);
                         return;
                     }
 
