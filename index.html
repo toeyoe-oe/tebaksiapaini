@@ -255,6 +255,11 @@
                     <span id="player-res-score" class="text-3xl font-black text-emerald-400">0</span>
                 </div>
                 <p id="player-thankyou-subtext" class="text-xs text-indigo-300 font-semibold pt-2">Terima kasih telah berpartisipasi! 🎉</p>
+
+                <!-- TOMBOL KEMBALI KE LOBBY / MENU UTAMA (BARU) -->
+                <button id="btn-player-back-lobby" onclick="app.leavePlayerRoom()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-2xl border border-slate-700 transition active:scale-95 flex items-center justify-center gap-2 mt-2">
+                    <span>🏠 Kembali ke Menu Utama</span>
+                </button>
             </div>
 
         </section>
@@ -698,7 +703,6 @@
                     state: { status: 'lobby' }
                 });
 
-                // EKSKLUSIF: JIKA HOST KELUAR / DISCONNECT, SEGERA TANDAI ROOM CLOSED DI DATABASE
                 roomRef.child('state/status').onDisconnect().set('closed');
 
                 document.getElementById('role-badge').innerText = '📺 HOST ROOM';
@@ -1094,7 +1098,6 @@
                     const isLastQuestion = this.currentIndex >= this.questions.length - 1;
                     const nextRoomStatus = isLastQuestion ? 'finished' : 'question_ended';
 
-                    // PENTING: UPDATE STATUS SOAL TERAKHIR MENJADI 'finished'
                     db.ref(`rooms/${this.pin}/state`).set({
                         status: nextRoomStatus,
                         leaderboard: rankedList
@@ -1186,7 +1189,6 @@
                             const maxAgeMs = 6 * 60 * 60 * 1000;
                             const status = (roomData && roomData.state) ? roomData.state.status : null;
 
-                            // PENGECEKAN KETAT: DILARANG MEMULIHKAN JIKA STATUS CLOSED ATAU FINISHED
                             if (
                                 snap.exists() && 
                                 roomData && 
@@ -1208,7 +1210,6 @@
                                 this.showToast('🔄 Sesi Bermain Dipulihkan!');
                                 this.listenToPlayerRoomEvents(roomRef);
                             } else {
-                                // PEMBERSIHAN OTOMATIS SAAT GAMEOVER ATAU CLOSED
                                 localStorage.removeItem('gpgp_player_session');
                                 this.showScreen('welcome');
                                 if (status === 'closed' || status === 'finished') {
@@ -1282,19 +1283,26 @@
                 roomRef.child('state').on('value', (stateSnap) => {
                     const st = stateSnap.val();
                     
-                    // JIKA ROOM DITUTUP HOST ATAU FINISHED, KELUARKAN PEMAIN DENGAN ANGGUN
-                    if (!st || st.status === 'closed' || st.status === 'finished') {
+                    if (!st || st.status === 'closed') {
                         localStorage.removeItem('gpgp_player_session');
                         roomRef.child('state').off();
-                        if (st && st.status === 'finished') {
-                            this.showToast('🎉 Seluruh sesi game telah selesai!');
-                        } else {
-                            this.showToast('❌ Room telah ditutup oleh Host!');
-                        }
+                        this.showToast('❌ Room telah ditutup oleh Host!');
                         setTimeout(() => {
                             this.showScreen('welcome');
                             location.reload();
                         }, 1800);
+                        return;
+                    }
+
+                    if (st.status === 'finished') {
+                        localStorage.removeItem('gpgp_player_session');
+                        this.hasAnswered = false;
+                        const leaderboard = st.leaderboard || [];
+                        const myData = leaderboard.find(p => p.key === this.playerKey);
+                        if (myData) {
+                            this.showPlayerFinalRank(myData.rank, myData.score, leaderboard.length, myData.streak, myData.lastGained, true);
+                        }
+                        this.showToast('🎉 Seluruh sesi game telah selesai!');
                         return;
                     }
 
@@ -1315,7 +1323,7 @@
                         const leaderboard = st.leaderboard || [];
                         const myData = leaderboard.find(p => p.key === this.playerKey);
                         if (myData) {
-                            this.showPlayerFinalRank(myData.rank, myData.score, leaderboard.length, myData.streak, myData.lastGained);
+                            this.showPlayerFinalRank(myData.rank, myData.score, leaderboard.length, myData.streak, myData.lastGained, false);
                         }
                     }
                 });
@@ -1351,11 +1359,12 @@
                 });
             }
 
-            showPlayerFinalRank(rank, score, totalPlayers, streak = 0, lastGained = 0) {
+            showPlayerFinalRank(rank, score, totalPlayers, streak = 0, lastGained = 0, isGameFinished = false) {
                 this.setPlayerState('result');
                 const icon = document.getElementById('player-res-icon');
                 const title = document.getElementById('player-res-title');
                 const streakBadge = document.getElementById('player-streak-badge');
+                const subtext = document.getElementById('player-thankyou-subtext');
 
                 if (streak > 1) {
                     streakBadge.classList.remove('hidden');
@@ -1387,6 +1396,12 @@
                     icon.innerText = '👏';
                     title.innerText = `PERINGKAT ${rank} dari ${totalPlayers}`;
                     title.className = 'text-xl font-black text-indigo-300';
+                }
+
+                if (isGameFinished) {
+                    subtext.innerText = '🎉 Game telah berakhir! Terima kasih telah bermain.';
+                } else {
+                    subtext.innerText = 'Menunggu Host melanjutkan ke soal berikutnya...';
                 }
 
                 document.getElementById('player-res-score').innerText = score;
