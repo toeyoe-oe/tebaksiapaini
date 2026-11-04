@@ -192,7 +192,10 @@
         <section id="screen-player-view" class="hidden w-full max-w-md space-y-6 text-center">
             
             <!-- Player Waiting -->
-            <div id="player-state-waiting" class="glass-panel p-8 rounded-3xl space-y-5 border border-slate-800">
+            <div id="player-state-waiting" class="glass-panel p-8 rounded-3xl space-y-5 border border-slate-800 relative">
+                <button onclick="app.leavePlayerRoom()" class="absolute top-4 right-4 text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-xl">
+                    Keluar Room 🚪
+                </button>
                 <div class="w-16 h-16 mx-auto bg-indigo-500/20 border border-indigo-500/40 rounded-full flex items-center justify-center text-indigo-400 text-2xl animate-bounce">📱</div>
                 <div>
                     <h3 class="text-2xl font-black text-white" id="player-disp-name">Pemain</h3>
@@ -241,6 +244,12 @@
             <div id="player-state-result" class="hidden glass-panel p-8 rounded-3xl space-y-4 border border-slate-800">
                 <div id="player-res-icon" class="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl"></div>
                 <h3 id="player-res-title" class="text-2xl font-black"></h3>
+                
+                <!-- STREAK BADGE PEMAIN -->
+                <div id="player-streak-badge" class="hidden inline-flex items-center gap-1.5 px-4 py-1.5 bg-amber-500/20 border border-amber-500/40 rounded-full text-amber-300 font-extrabold text-xs">
+                    <span>🔥 Combo Streak 2x! (+100 Bonus)</span>
+                </div>
+
                 <div class="glass-card p-4 rounded-2xl">
                     <span class="text-xs text-slate-400 block font-semibold">Total Poin Kamu</span>
                     <span id="player-res-score" class="text-3xl font-black text-emerald-400">0</span>
@@ -314,6 +323,37 @@
                     <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider">Jawaban Benar Soal Ini:</span>
                 </div>
                 <span id="host-correct-answer-text" class="text-sm font-black text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/40">---</span>
+            </div>
+
+            <!-- BAR CHART DISTRIBUSI JAWABAN PEMAIN -->
+            <div class="glass-panel p-4 rounded-3xl border border-slate-800 max-w-xl mx-auto space-y-3">
+                <h4 class="text-xs font-extrabold text-slate-300 uppercase tracking-wider text-center">📊 Distribusi Pilihan Jawaban Pemain</h4>
+                <div class="grid grid-cols-4 gap-2 text-center text-xs font-bold pt-1">
+                    <div class="space-y-1">
+                        <div class="h-28 bg-slate-900 rounded-xl relative flex items-end justify-center p-1 border border-slate-800 overflow-hidden">
+                            <div id="chart-bar-0" class="w-full bg-kahootRed rounded-lg transition-all duration-700 h-0 flex items-center justify-center text-[10px] text-white font-extrabold">0</div>
+                        </div>
+                        <span class="text-kahootRed block text-[11px] font-black">▲ MERAH</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-28 bg-slate-900 rounded-xl relative flex items-end justify-center p-1 border border-slate-800 overflow-hidden">
+                            <div id="chart-bar-1" class="w-full bg-kahootBlue rounded-lg transition-all duration-700 h-0 flex items-center justify-center text-[10px] text-white font-extrabold">0</div>
+                        </div>
+                        <span class="text-kahootBlue block text-[11px] font-black">◆ BIRU</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-28 bg-slate-900 rounded-xl relative flex items-end justify-center p-1 border border-slate-800 overflow-hidden">
+                            <div id="chart-bar-2" class="w-full bg-kahootYellow rounded-lg transition-all duration-700 h-0 flex items-center justify-center text-[10px] text-white font-extrabold">0</div>
+                        </div>
+                        <span class="text-kahootYellow block text-[11px] font-black">● KUNING</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-28 bg-slate-900 rounded-xl relative flex items-end justify-center p-1 border border-slate-800 overflow-hidden">
+                            <div id="chart-bar-3" class="w-full bg-kahootGreen rounded-lg transition-all duration-700 h-0 flex items-center justify-center text-[10px] text-white font-extrabold">0</div>
+                        </div>
+                        <span class="text-kahootGreen block text-[11px] font-black">■ HIJAU</span>
+                    </div>
+                </div>
             </div>
 
             <div class="grid grid-cols-3 gap-3 md:gap-5 items-end pt-2 pb-2 max-w-2xl mx-auto px-2">
@@ -481,6 +521,7 @@
             correct() { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.2), i * 80)); }
             wrong() { this.playTone(180, 'sawtooth', 0.25); setTimeout(() => this.playTone(130, 'sawtooth', 0.3), 120); }
             click() { this.playTone(800, 'sine', 0.05); }
+            tick() { this.playTone(1200, 'sine', 0.06, 0.15); }
         }
 
         class FirebaseKahootEngine {
@@ -515,6 +556,7 @@
             init() {
                 if (typeof lucide !== 'undefined') lucide.createIcons();
                 document.body.addEventListener('click', () => this.sound.init(), { once: true });
+                this.checkSavedPlayerSession();
             }
 
             shuffleArray(array) {
@@ -862,6 +904,12 @@
                     this.timeLeft--;
                     document.getElementById('host-timer-bar').style.width = `${(this.timeLeft / 30) * 100}%`;
                     document.getElementById('host-timer-text').innerText = `${this.timeLeft}s`;
+                    
+                    // EFEK SUARA TENSION TICK PADA 5 DETIK TERAKHIR
+                    if (this.timeLeft <= 5 && this.timeLeft > 0) {
+                        this.sound.tick();
+                    }
+
                     if (this.timeLeft <= 0) this.hostEndQuestion();
                 }, 1000);
             }
@@ -875,36 +923,75 @@
 
                 db.ref(`rooms/${this.pin}/answers`).once('value', (snap) => {
                     const answers = snap.val() || {};
-                    Object.keys(answers).forEach(pKey => {
+                    const totalAnswers = Object.keys(answers).length;
+
+                    // LAKUKAN KUALIFIKASI POIN, STEP BONUS, DAN STREAK COMBO
+                    Object.keys(this.players).forEach(pKey => {
                         const ans = answers[pKey];
-                        if (ans.optionIndex === this.currentCorrectIndex) {
-                            const gained = 100 + (ans.step * 30) + (ans.timeLeft * 2);
-                            const currentScore = (this.players[pKey] && this.players[pKey].score) || 0;
-                            db.ref(`rooms/${this.pin}/players/${pKey}/score`).set(currentScore + gained);
+                        const currentScore = (this.players[pKey] && this.players[pKey].score) || 0;
+                        let currentStreak = (this.players[pKey] && this.players[pKey].streak) || 0;
+
+                        if (ans && ans.optionIndex === this.currentCorrectIndex) {
+                            currentStreak += 1;
+                            const streakBonus = currentStreak > 1 ? (currentStreak - 1) * 100 : 0;
+                            const stepBonus = (ans.step || 1) * 35; // Step 5 (+175 Pts)
+                            const timeBonus = (ans.timeLeft || 0) * 3;
+                            const gained = 100 + stepBonus + timeBonus + streakBonus;
+
+                            db.ref(`rooms/${this.pin}/players/${pKey}`).update({
+                                score: currentScore + gained,
+                                streak: currentStreak,
+                                lastGained: gained
+                            });
+                        } else {
+                            // Reset Streak jika salah atau tidak menjawab
+                            db.ref(`rooms/${this.pin}/players/${pKey}`).update({
+                                streak: 0,
+                                lastGained: 0
+                            });
                         }
                     });
 
                     setTimeout(() => {
-                        this.renderLeaderboard();
+                        this.renderLeaderboard(answers);
                         this.showScreen('host-leaderboard');
                     }, 2000);
                 });
             }
 
-            renderLeaderboard() {
-                // TAMPILKAN JAWABAN BENAR UNTUK SOAL SANYANG BARU SAJA SELESAI
+            renderLeaderboard(answersObj = {}) {
                 const currentQ = this.questions[this.currentIndex];
                 if (currentQ) {
                     const correctAnswerText = currentQ.options[0];
                     document.getElementById('host-correct-answer-text').innerText = correctAnswerText;
                 }
 
+                // RENDERING BAR CHART DISTRIBUSI JAWABAN PEMAIN
+                const chartCounts = [0, 0, 0, 0];
+                let totalAnsCount = 0;
+                Object.keys(answersObj).forEach(k => {
+                    const idx = answersObj[k].optionIndex;
+                    if (idx >= 0 && idx <= 3) {
+                        chartCounts[idx]++;
+                        totalAnsCount++;
+                    }
+                });
+
+                chartCounts.forEach((cnt, idx) => {
+                    const barEl = document.getElementById(`chart-bar-${idx}`);
+                    const pct = totalAnsCount > 0 ? Math.round((cnt / totalAnsCount) * 100) : 0;
+                    barEl.style.height = `${Math.max(12, pct)}%`;
+                    barEl.innerText = `${cnt} (${pct}%)`;
+                });
+
                 db.ref(`rooms/${this.pin}/players`).once('value', (snap) => {
                     const playersData = snap.val() || {};
                     const arrayList = Object.keys(playersData).map(k => ({
                         key: k,
                         name: playersData[k].name,
-                        score: playersData[k].score || 0
+                        score: playersData[k].score || 0,
+                        streak: playersData[k].streak || 0,
+                        lastGained: playersData[k].lastGained || 0
                     }));
 
                     arrayList.sort((a, b) => b.score - a.score);
@@ -936,12 +1023,13 @@
                         runnerUpContainer.innerHTML = `<div class="text-center py-4 text-xs text-slate-500">Tidak ada pemain di peringkat luar podium.</div>`;
                     } else {
                         runners.forEach(p => {
+                            const streakTag = p.streak > 1 ? `<span class="text-[10px] text-amber-400 font-extrabold ml-2">🔥 ${p.streak}x Combo</span>` : '';
                             const card = document.createElement('div');
                             card.className = "p-3 glass-card rounded-2xl flex items-center justify-between border border-slate-700/60";
                             card.innerHTML = `
                                 <div class="flex items-center gap-3">
                                     <span class="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-bold flex items-center justify-center text-xs">${p.rank}</span>
-                                    <span class="font-extrabold text-white text-xs">${p.name}</span>
+                                    <span class="font-extrabold text-white text-xs">${p.name} ${streakTag}</span>
                                 </div>
                                 <span class="font-black text-emerald-400 text-xs">${p.score} Pts</span>
                             `;
@@ -949,7 +1037,6 @@
                         });
                     }
 
-                    // LOGIKA TOMBOL & KARTU FINISH (APABILA SEMUA SOAL SELESAI)
                     const isLastQuestion = this.currentIndex >= this.questions.length - 1;
                     const finishedCard = document.getElementById('game-finished-card');
                     const btnNext = document.getElementById('btn-next-or-restart');
@@ -986,7 +1073,41 @@
                 }
             }
 
-            /* ================= PLAYER LOGIC ================= */
+            /* ================= PLAYER LOGIC & SESSION PERSISTENCE ================= */
+
+            checkSavedPlayerSession() {
+                const saved = localStorage.getItem('gpgp_player_session');
+                if (!saved) return;
+
+                try {
+                    const session = JSON.parse(saved);
+                    if (session && session.pin && session.playerKey) {
+                        const roomRef = db.ref('rooms/' + session.pin);
+                        roomRef.once('value').then(snap => {
+                            if (snap.exists() && snap.child('players/' + session.playerKey).exists()) {
+                                this.pin = session.pin;
+                                this.playerKey = session.playerKey;
+                                this.playerName = session.playerName;
+                                this.role = 'player';
+
+                                document.getElementById('role-badge').innerText = `📱 Player: ${this.playerName}`;
+                                document.getElementById('player-disp-name').innerText = this.playerName;
+                                this.showScreen('player-view');
+                                this.setPlayerState('waiting');
+                                this.showToast('🔄 Sesi Bermain Dipulihkan Secara Otomatis!');
+                                this.listenToPlayerRoomEvents(roomRef);
+                            } else {
+                                localStorage.removeItem('gpgp_player_session');
+                            }
+                        });
+                    }
+                } catch(e) { localStorage.removeItem('gpgp_player_session'); }
+            }
+
+            leavePlayerRoom() {
+                localStorage.removeItem('gpgp_player_session');
+                location.reload();
+            }
 
             joinRoomAsPlayer() {
                 const pin = document.getElementById('pin-input').value.trim();
@@ -1009,7 +1130,14 @@
 
                     const pRef = roomRef.child('players').push();
                     this.playerKey = pRef.key;
-                    pRef.set({ name: name, score: 0 });
+                    pRef.set({ name: name, score: 0, streak: 0 });
+
+                    // SIMPAN SESI KE LOCAL STORAGE
+                    localStorage.setItem('gpgp_player_session', JSON.stringify({
+                        pin: pin,
+                        playerKey: this.playerKey,
+                        playerName: name
+                    }));
 
                     document.getElementById('role-badge').innerText = `📱 Player: ${name}`;
                     document.getElementById('player-disp-name').innerText = name;
@@ -1017,34 +1145,38 @@
                     this.setPlayerState('waiting');
                     this.showToast('✅ Berhasil Terhubung ke Room Cloud!');
 
-                    roomRef.child('state').on('value', (stateSnap) => {
-                        const st = stateSnap.val();
-                        if (!st) return;
-
-                        if (st.status === 'question_active') {
-                            this.currentStep = st.step || 5;
-
-                            if (this.currentQuestionIndex !== st.questionIndex) {
-                                this.currentQuestionIndex = st.questionIndex;
-                                this.hasAnswered = false;
-                            }
-
-                            if (!this.hasAnswered) {
-                                this.setPlayerState('active');
-                                this.renderPlayerOptions(st.options);
-                            }
-                        } else if (st.status === 'question_ended') {
-                            this.hasAnswered = false;
-                            const leaderboard = st.leaderboard || [];
-                            const myData = leaderboard.find(p => p.key === this.playerKey);
-                            if (myData) {
-                                this.showPlayerFinalRank(myData.rank, myData.score, leaderboard.length);
-                            }
-                        }
-                    });
+                    this.listenToPlayerRoomEvents(roomRef);
                 }).catch(err => {
                     console.error('Firebase Join Error:', err);
                     this.showToast('⚠️ Gagal terhubung ke server Firebase.');
+                });
+            }
+
+            listenToPlayerRoomEvents(roomRef) {
+                roomRef.child('state').on('value', (stateSnap) => {
+                    const st = stateSnap.val();
+                    if (!st) return;
+
+                    if (st.status === 'question_active') {
+                        this.currentStep = st.step || 5;
+
+                        if (this.currentQuestionIndex !== st.questionIndex) {
+                            this.currentQuestionIndex = st.questionIndex;
+                            this.hasAnswered = false;
+                        }
+
+                        if (!this.hasAnswered) {
+                            this.setPlayerState('active');
+                            this.renderPlayerOptions(st.options);
+                        }
+                    } else if (st.status === 'question_ended') {
+                        this.hasAnswered = false;
+                        const leaderboard = st.leaderboard || [];
+                        const myData = leaderboard.find(p => p.key === this.playerKey);
+                        if (myData) {
+                            this.showPlayerFinalRank(myData.rank, myData.score, leaderboard.length, myData.streak, myData.lastGained);
+                        }
+                    }
                 });
             }
 
@@ -1078,10 +1210,19 @@
                 });
             }
 
-            showPlayerFinalRank(rank, score, totalPlayers) {
+            showPlayerFinalRank(rank, score, totalPlayers, streak = 0, lastGained = 0) {
                 this.setPlayerState('result');
                 const icon = document.getElementById('player-res-icon');
                 const title = document.getElementById('player-res-title');
+                const streakBadge = document.getElementById('player-streak-badge');
+
+                // TAMPILKAN BADGE COMBO STREAK
+                if (streak > 1) {
+                    streakBadge.classList.remove('hidden');
+                    streakBadge.innerHTML = `<span>🔥 Combo Streak ${streak}x! (+${(streak - 1) * 100} Bonus)</span>`;
+                } else {
+                    streakBadge.classList.add('hidden');
+                }
 
                 if (rank === 1) {
                     this.sound.correct();
