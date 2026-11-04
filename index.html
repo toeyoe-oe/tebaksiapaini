@@ -256,7 +256,7 @@
                 </div>
                 <p id="player-thankyou-subtext" class="text-xs text-indigo-300 font-semibold pt-2">Terima kasih telah berpartisipasi! 🎉</p>
 
-                <!-- TOMBOL KEMBALI KE LOBBY / MENU UTAMA (BARU) -->
+                <!-- TOMBOL KEMBALI KE LOBBY / MENU UTAMA -->
                 <button id="btn-player-back-lobby" onclick="app.leavePlayerRoom()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-2xl border border-slate-700 transition active:scale-95 flex items-center justify-center gap-2 mt-2">
                     <span>🏠 Kembali ke Menu Utama</span>
                 </button>
@@ -283,21 +283,22 @@
                 </div>
             </div>
 
-            <!-- Host Viewport (Rasio Aspek Terjaga Utuh) -->
-            <div class="relative w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center shadow-2xl bg-slate-950 p-2">
+            <!-- Host Viewport Super Besar untuk Proyektor (Tinggi 520px-650px) -->
+            <div class="relative w-full h-[520px] md:h-[650px] rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center shadow-2xl bg-slate-950 p-3">
                 <div class="w-full h-full relative overflow-hidden flex items-center justify-center">
                     <img id="host-game-image" src="" alt="Subjek" class="zoom-target max-w-full max-h-full object-contain hidden rounded-2xl" />
                     <canvas id="host-game-canvas" class="max-w-full max-h-full object-contain hidden rounded-2xl"></canvas>
                 </div>
                 <div class="absolute inset-0 lens-overlay pointer-events-none"></div>
 
-                <div class="absolute top-4 left-4 glass-card px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2 z-10">
+                <div class="absolute top-4 left-4 glass-card px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold text-emerald-400 flex items-center gap-2 z-10 shadow-lg">
                     <span id="host-badge-icon">🧩</span>
                     <span id="host-level-text">Reveal: 15% Terbuka</span>
                 </div>
             </div>
 
-            <div id="host-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            <!-- Container Opsi Jawaban di Layar Host Dihilangkan -->
+            <div id="host-options-grid" class="hidden"></div>
 
             <div class="flex gap-3">
                 <button onclick="app.hostManualStepDown()" class="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-2xl border border-slate-700">
@@ -850,7 +851,6 @@
                 img.src = q.imageUrl;
                 if (img.complete) this.applyHostVisualEffect();
 
-                this.renderHostOptions(shuffledOptions);
                 this.showScreen('host-game');
                 this.startHostTimer();
                 this.sound.startBGM();
@@ -958,25 +958,6 @@
                     this.applyHostVisualEffect();
                     db.ref(`rooms/${this.pin}/state/step`).set(this.currentStep);
                 }
-            }
-
-            renderHostOptions(optionsList) {
-                const container = document.getElementById('host-options-grid');
-                container.innerHTML = '';
-                const colors = [
-                    { bg: 'bg-kahootRed', shape: '▲' },
-                    { bg: 'bg-kahootBlue', shape: '◆' },
-                    { bg: 'bg-kahootYellow', shape: '●' },
-                    { bg: 'bg-kahootGreen', shape: '■' }
-                ];
-
-                optionsList.forEach((opt, idx) => {
-                    const style = colors[idx] || colors[0];
-                    const card = document.createElement('div');
-                    card.className = `${style.bg} p-4 rounded-2xl text-white flex items-center gap-3 shadow-lg`;
-                    card.innerHTML = `<span class="text-2xl font-black">${style.shape}</span><span class="text-sm font-extrabold flex-1">${opt}</span>`;
-                    container.appendChild(card);
-                });
             }
 
             updateHostAnsweredCount(answersObj) {
