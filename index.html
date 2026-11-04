@@ -178,7 +178,7 @@
                 </div>
 
                 <div class="pt-4 border-t border-slate-800 flex gap-3">
-                    <button onclick="location.reload()" class="py-3.5 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl">
+                    <button onclick="app.hostCloseRoom()" class="py-3.5 px-5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl">
                         Tutup Room
                     </button>
                     <button id="btn-start-game" onclick="app.hostStartGame()" class="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-black text-base rounded-xl shadow-xl transition active:scale-95">
@@ -325,7 +325,7 @@
                 <span id="host-correct-answer-text" class="text-sm font-black text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/40">---</span>
             </div>
 
-            <!-- BAR CHART DISTRIBUSI JAWABAN PEMAIN (TEKS JAWABAN AKTIF) -->
+            <!-- BAR CHART DISTRIBUSI JAWABAN PEMAIN -->
             <div class="glass-panel p-4 rounded-3xl border border-slate-800 max-w-xl mx-auto space-y-3">
                 <h4 class="text-xs font-extrabold text-slate-300 uppercase tracking-wider text-center">📊 Distribusi Pilihan Jawaban Pemain</h4>
                 <div class="grid grid-cols-4 gap-2 text-center text-xs font-bold pt-1">
@@ -412,7 +412,7 @@
                 <p class="text-xs text-slate-300 leading-relaxed">
                     Terima kasih banyak atas partisipasinya seluruh anggota & rekan-rekan GP GPIB Mangngamaseang! Sampai jumpa di game seru berikutnya. ✨
                 </p>
-                <button onclick="app.showScreen('host-lobby')" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-extrabold text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+                <button onclick="app.hostCloseRoom()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-extrabold text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
                     <span>✅ KONFIRMASI & SELESAIKAN GAME</span>
                 </button>
             </div>
@@ -535,7 +535,6 @@
                 } catch (e) {}
             }
 
-            // BACKGROUND MUSIC (BGM) SYNTHESIZER ENGINE
             startBGM(tempo = 128) {
                 if (this.bgmPlaying || this.muted) return;
                 this.init();
@@ -554,7 +553,6 @@
                         const note = notes[this.bgmStep % notes.length];
                         const bass = bassNotes[Math.floor(this.bgmStep / 4) % bassNotes.length];
                         
-                        // Melodic Arpeggio Sound
                         const osc = this.ctx.createOscillator();
                         const gain = this.ctx.createGain();
                         osc.type = 'sine';
@@ -564,7 +562,6 @@
                         osc.connect(gain); gain.connect(this.ctx.destination);
                         osc.start(); osc.stop(this.ctx.currentTime + 0.18);
                         
-                        // Bass Pulse Beat
                         if (this.bgmStep % 2 === 0) {
                             const bOsc = this.ctx.createOscillator();
                             const bGain = this.ctx.createGain();
@@ -718,6 +715,16 @@
                 this.showToast(`✅ Room Cloud Siap! PIN: ${this.pin}`);
             }
 
+            hostCloseRoom() {
+                if (this.pin) {
+                    db.ref(`rooms/${this.pin}/state`).set({ status: 'closed' });
+                    db.ref(`rooms/${this.pin}`).off();
+                }
+                this.sound.stopBGM();
+                localStorage.removeItem('gpgp_player_session');
+                location.reload();
+            }
+
             switchQuestionSet(setType) {
                 this.activeQuestionSet = setType;
                 const btnHost = document.getElementById('tab-mode-host');
@@ -824,7 +831,7 @@
 
                 const correctAnswerText = q.options[0];
                 const shuffledOptions = this.shuffleArray(q.options);
-                this.currentShuffledOptions = shuffledOptions; // Simpan opsi yang diacak
+                this.currentShuffledOptions = shuffledOptions;
                 this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
 
                 this.currentStep = 5;
@@ -839,7 +846,7 @@
                 this.renderHostOptions(shuffledOptions);
                 this.showScreen('host-game');
                 this.startHostTimer();
-                this.sound.startBGM(); // Putar Background Music Game
+                this.sound.startBGM();
 
                 db.ref(`rooms/${this.pin}/state`).set({
                     status: 'question_active',
@@ -996,7 +1003,7 @@
 
             hostEndQuestion() {
                 this.stopHostTimer();
-                this.sound.stopBGM(); // Hentikan BGM Musik saat soal selesai
+                this.sound.stopBGM();
                 this.currentStep = 1;
                 this.applyHostVisualEffect();
 
@@ -1042,7 +1049,6 @@
                     document.getElementById('host-correct-answer-text').innerText = correctAnswerText;
                 }
 
-                // RENDRING BAR CHART DISTRIBUSI DENGAN NAMA OPSI SOAL AKTIF
                 const chartCounts = [0, 0, 0, 0];
                 let totalAnsCount = 0;
                 Object.keys(answersObj).forEach(k => {
@@ -1062,7 +1068,6 @@
                     barEl.style.height = `${Math.max(12, pct)}%`;
                     barEl.innerText = `${cnt} (${pct}%)`;
 
-                    // Tampilkan Teks Opsi Jawaban Sebenarnya pada Grafik
                     if (labelEl && this.currentShuffledOptions && this.currentShuffledOptions[idx]) {
                         const optText = this.currentShuffledOptions[idx];
                         labelEl.innerText = `${shapes[idx]} ${optText}`;
@@ -1170,7 +1175,19 @@
                     if (session && session.pin && session.playerKey) {
                         const roomRef = db.ref('rooms/' + session.pin);
                         roomRef.once('value').then(snap => {
-                            if (snap.exists() && snap.child('players/' + session.playerKey).exists()) {
+                            const roomData = snap.val();
+                            const now = Date.now();
+                            const maxAgeMs = 6 * 60 * 60 * 1000; // Expired jika > 6 jam
+
+                            // PENGECEKAN KETAT: ROOM ADA, STATUS TIDAK CLOSED, DAN TIDAK KADALUWARSA
+                            if (
+                                snap.exists() && 
+                                roomData && 
+                                roomData.state && 
+                                roomData.state.status !== 'closed' && 
+                                (now - (roomData.created || now)) < maxAgeMs &&
+                                snap.child('players/' + session.playerKey).exists()
+                            ) {
                                 this.pin = session.pin;
                                 this.playerKey = session.playerKey;
                                 this.playerName = session.playerName;
@@ -1180,17 +1197,22 @@
                                 document.getElementById('player-disp-name').innerText = this.playerName;
                                 this.showScreen('player-view');
                                 this.setPlayerState('waiting');
-                                this.showToast('🔄 Sesi Bermain Dipulihkan Secara Otomatis!');
+                                this.showToast('🔄 Sesi Bermain Dipulihkan!');
                                 this.listenToPlayerRoomEvents(roomRef);
                             } else {
+                                // PERSIAPAN PEMBERSIHAN JIKA KADALUWARSA ATAU TUTUP
                                 localStorage.removeItem('gpgp_player_session');
+                                this.showToast('ℹ️ Sesi room sebelumnya telah berakhir.');
                             }
-                        });
+                        }).catch(() => localStorage.removeItem('gpgp_player_session'));
                     }
                 } catch(e) { localStorage.removeItem('gpgp_player_session'); }
             }
 
             leavePlayerRoom() {
+                if (this.pin && this.playerKey) {
+                    db.ref(`rooms/${this.pin}/players/${this.playerKey}`).remove();
+                }
                 localStorage.removeItem('gpgp_player_session');
                 location.reload();
             }
@@ -1209,8 +1231,9 @@
 
                 const roomRef = db.ref('rooms/' + pin);
                 roomRef.once('value').then(snap => {
-                    if (!snap.exists()) {
-                        this.showToast('❌ PIN Room tidak ditemukan! Periksa kembali PIN dari Host.');
+                    const roomData = snap.val();
+                    if (!snap.exists() || (roomData && roomData.state && roomData.state.status === 'closed')) {
+                        this.showToast('❌ PIN Room tidak ditemukan atau telah ditutup!');
                         return;
                     }
 
@@ -1240,7 +1263,14 @@
             listenToPlayerRoomEvents(roomRef) {
                 roomRef.child('state').on('value', (stateSnap) => {
                     const st = stateSnap.val();
-                    if (!st) return;
+                    
+                    // JIKA ROOM DITUTUP HOST ATAU DATA DIHAPUS, OTOMATIS RESET PEMAIN
+                    if (!st || st.status === 'closed') {
+                        localStorage.removeItem('gpgp_player_session');
+                        this.showToast('❌ Room telah ditutup oleh Host!');
+                        setTimeout(() => location.reload(), 1500);
+                        return;
+                    }
 
                     if (st.status === 'question_active') {
                         this.currentStep = st.step || 5;
