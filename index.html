@@ -233,8 +233,8 @@
             <!-- Player Submitted -->
             <div id="player-state-submitted" class="hidden glass-panel p-8 rounded-3xl space-y-4 border border-slate-800">
                 <div class="w-16 h-16 mx-auto bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center text-emerald-400 text-3xl">✔</div>
-                <h3 class="text-2xl font-black text-white">Jawaban Terkirim!</h3>
-                <p class="text-xs text-slate-400">Menunggu Host menyelesaikan soal ini...</p>
+                <h3 class="text-2xl font-black text-white">Jawaban Terkunci!</h3>
+                <p class="text-xs text-slate-400">Jawaban kamu sudah tersimpan. Menunggu semua pemain selesai atau waktu habis...</p>
             </div>
 
             <!-- Player Result -->
@@ -484,6 +484,10 @@
                 this.creatorFocalY = 50;
                 this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
 
+                // STATUS LOCK UNTUK PLAYER
+                this.hasAnswered = false;
+                this.currentQuestionIndex = -1;
+
                 this.setupDefaultQuestions();
             }
 
@@ -492,7 +496,6 @@
                 document.body.addEventListener('click', () => this.sound.init(), { once: true });
             }
 
-            // ALGORITMA PENGACAKAN MURNI (FISHER-YATES SHUFFLE)
             shuffleArray(array) {
                 let arr = [...array];
                 for (let i = arr.length - 1; i > 0; i--) {
@@ -679,7 +682,6 @@
                 db.ref(`rooms/${this.pin}/answers`).remove();
                 this.updateHostAnsweredCount(null);
 
-                // PENGACAKAN JAWABAN MURNI DENGAN FISHER-YATES
                 const correctAnswerText = q.options[0];
                 const shuffledOptions = this.shuffleArray(q.options);
                 this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
@@ -687,7 +689,6 @@
                 this.currentStep = 5;
                 const img = document.getElementById('host-game-image');
                 
-                // TUNGGU HINGGA GAMBAR SELESAI DIMUAT (Mencegah Fallback 640x480)
                 img.onload = () => {
                     this.applyHostVisualEffect();
                 };
@@ -698,8 +699,10 @@
                 this.showScreen('host-game');
                 this.startHostTimer();
 
+                // Kirim Indeks Soal ke Firebase
                 db.ref(`rooms/${this.pin}/state`).set({
                     status: 'question_active',
+                    questionIndex: this.currentIndex,
                     options: shuffledOptions,
                     correctIndex: this.currentCorrectIndex,
                     step: 5
@@ -739,7 +742,6 @@
 
             renderImageReveal(img, canvas, step, focalX = 50, focalY = 50) {
                 const ctx = canvas.getContext('2d');
-                // Menggunakan resolusi alami asli gambar
                 const w = img.naturalWidth || img.width || 800;
                 const h = img.naturalHeight || img.height || 600;
                 canvas.width = w; 
@@ -826,6 +828,12 @@
                 const count = answersObj ? Object.keys(answersObj).length : 0;
                 const total = Object.keys(this.players).length;
                 document.getElementById('host-answered-count').innerText = `${count} / ${total}`;
+
+                // CEK OTOMATIS: JIKA SEMUA PLAYER SUDAH MENJAWAB, LANGSUNG SELESAIKAN SOAL!
+                if (total > 0 && count >= total && this.timer) {
+                    this.showToast('⚡ Semua pemain telah menjawab! Menyelesaikan soal...');
+                    setTimeout(() => this.hostEndQuestion(), 1000);
+                }
             }
 
             startHostTimer() {
@@ -983,9 +991,20 @@
 
                         if (st.status === 'question_active') {
                             this.currentStep = st.step || 5;
-                            this.setPlayerState('active');
-                            this.renderPlayerOptions(st.options);
+
+                            // DETEKSI APABILA BERPINDAH KE SOAL BARU
+                            if (this.currentQuestionIndex !== st.questionIndex) {
+                                this.currentQuestionIndex = st.questionIndex;
+                                this.hasAnswered = false; // Reset kuncian untuk soal baru!
+                            }
+
+                            // HANYA BUKA TAMPILAN JIKA PLAYER BELUM MENJAWAB SOAL INI
+                            if (!this.hasAnswered) {
+                                this.setPlayerState('active');
+                                this.renderPlayerOptions(st.options);
+                            }
                         } else if (st.status === 'question_ended') {
+                            this.hasAnswered = false;
                             const leaderboard = st.leaderboard || [];
                             const myData = leaderboard.find(p => p.key === this.playerKey);
                             if (myData) {
@@ -1016,7 +1035,10 @@
             }
 
             playerSubmitAnswer(optIdx) {
+                if (this.hasAnswered) return; // Cegah double-submit
+
                 this.sound.click();
+                this.hasAnswered = true; // Kunci permanen status player
                 this.setPlayerState('submitted');
 
                 db.ref(`rooms/${this.pin}/answers/${this.playerKey}`).set({
@@ -1059,13 +1081,12 @@
                 document.getElementById('player-res-score').innerText = score;
             }
 
-            /* ================= CREATOR LOGIC (PRESERVE RASIO) ================= */
+            /* ================= CREATOR LOGIC ================= */
 
             setFocalPoint(e) {
                 const imgEl = document.getElementById('creator-img-preview');
                 const rect = imgEl.getBoundingClientRect();
                 
-                // Hitung koordinat persis di atas permukaan gambar (bukan padding kotak luar)
                 const pctX = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
                 const pctY = Math.max(0, Math.min(100, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
                 
