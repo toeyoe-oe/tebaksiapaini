@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tebak Siapa Dia? - GP GPIB Mangngamaseang</title>
+    <title>Tebak Siapa Ini? - GP GPIB Mangngamaseang</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Canvas Confetti CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- PeerJS CDN (Real-Time WebRTC Cross-Device) -->
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <!-- Firebase SDK (Realtime Cloud Database) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -23,9 +25,7 @@
                         kahootYellow: '#ffa602',
                         kahootGreen: '#26890c',
                     },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
                 }
             }
         }
@@ -38,7 +38,6 @@
         .glass-card { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .lens-overlay { background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 20px 20px; }
         canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
-        
         @keyframes crownGlow {
             0%, 100% { filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.8)); transform: translateY(0); }
             50% { filter: drop-shadow(0 0 25px rgba(251, 191, 36, 1)); transform: translateY(-4px); }
@@ -56,7 +55,7 @@
                     <i data-lucide="sparkles" class="w-6 h-6 text-white">✨</i>
                 </div>
                 <div>
-                    <h1 class="font-black text-xl tracking-wider text-white">TEBAK SIAPA DIA?</h1>
+                    <h1 class="font-black text-xl tracking-wider text-white">TEBAK SIAPA?</h1>
                     <p class="text-xs text-emerald-400 font-semibold tracking-widest uppercase">Gerakan Pemuda GPIB Mangngamaseang</p>
                 </div>
             </div>
@@ -79,7 +78,7 @@
         <section id="screen-welcome" class="w-full max-w-2xl space-y-8 animate-fadeIn">
             <div class="text-center space-y-3 max-w-xl mx-auto pt-2">
                 <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Games Seru After Ibadah
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Powered by Firebase Cloud
                 </div>
                 <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
                     Seberapa Tajam <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Mata Kamu?</span>
@@ -90,7 +89,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
                 <!-- CARD PEMAIN -->
                 <div class="bg-white text-slate-900 p-6 rounded-3xl shadow-2xl space-y-4 text-center border-2 border-transparent hover:border-emerald-500 transition">
                     <div class="w-12 h-12 mx-auto bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">📱</div>
@@ -114,8 +112,8 @@
                     <div class="space-y-4">
                         <div class="w-12 h-12 mx-auto bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center text-xl font-bold border border-indigo-500/30">📺</div>
                         <div>
-                            <h3 class="text-lg font-black text-white uppercase">HOST (ADMIN)</h3>
-                            <p class="text-xs text-slate-400 mt-1">Buat room baru & kontrol permainan</p>
+                            <h3 class="text-lg font-black text-white uppercase">HOST (ADMIN / PROYEKTOR)</h3>
+                            <p class="text-xs text-slate-400 mt-1">Buat Room game baru & kontrol Layar Proyektor</p>
                         </div>
                     </div>
 
@@ -126,7 +124,6 @@
                         </button>
                     </div>
                 </div>
-
             </div>
         </section>
 
@@ -144,7 +141,7 @@
                     </div>
                 </div>
 
-                <!-- SELECTOR MODE PERTANDINGAN (SOAL RESMI VS SOAL TRIAL) -->
+                <!-- SELECTOR MODE PERTANDINGAN -->
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-300 uppercase tracking-wider block">Pilih Mode Sesi yang Dimainkan:</label>
                     <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800">
@@ -174,7 +171,6 @@
                         </div>
                     </div>
 
-                    <!-- DAFTAR SOAL DALAM MODE AKTIF -->
                     <div class="pt-2">
                         <span id="label-active-set" class="text-[11px] font-semibold text-slate-400 block mb-1.5">Daftar Soal yang Akan Dimainkan:</span>
                         <div id="host-question-preview-list" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
@@ -298,9 +294,8 @@
             </div>
         </section>
 
-        <!-- ==================== SCREEN 5: HOST LEADERBOARD (PREMIUM PODIUM) ==================== -->
+        <!-- ==================== SCREEN 5: HOST LEADERBOARD ==================== -->
         <section id="screen-host-leaderboard" class="hidden w-full max-w-3xl space-y-8 animate-fadeIn">
-            
             <div class="text-center space-y-2">
                 <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-widest">
                     🏆 Pemenang Turnamen 🏆
@@ -311,14 +306,11 @@
                 <p class="text-xs md:text-sm text-slate-400">Selamat kepada para pemenang dengan penglihatan ter-tajam!</p>
             </div>
 
-            <!-- 3D PODIUM DECK (JUARA 1, 2, 3) -->
             <div class="grid grid-cols-3 gap-3 md:gap-5 items-end pt-4 pb-2 max-w-2xl mx-auto px-2">
-                
-                <!-- JUARA 2 (PERAK / SILVER - KIRI) -->
+                <!-- JUARA 2 -->
                 <div id="podium-2-col" class="flex flex-col items-center">
                     <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-slate-800 border-2 border-slate-300 flex items-center justify-center text-2xl shadow-lg mb-2 relative">
-                        <span class="absolute -top-2 -right-1 bg-slate-300 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full shadow">2nd</span>
-                        🥈
+                        <span class="absolute -top-2 -right-1 bg-slate-300 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full shadow">2nd</span>🥈
                     </div>
                     <div id="podium-2-name" class="font-black text-xs md:text-sm text-slate-200 truncate max-w-[90px] md:max-w-[120px] mb-0.5">---</div>
                     <div id="podium-2-score" class="font-black text-xs text-indigo-400 mb-2">0 Pts</div>
@@ -328,13 +320,12 @@
                     </div>
                 </div>
 
-                <!-- JUARA 1 (EMAS / GOLD - TENGAH) -->
+                <!-- JUARA 1 -->
                 <div id="podium-1-col" class="flex flex-col items-center">
                     <div class="relative mb-2">
                         <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-amber-400 text-2xl crown-animated">👑</div>
                         <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-amber-950/80 border-4 border-amber-400 flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(245,158,11,0.6)] relative">
-                            <span class="absolute -top-2 -right-1 bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">1st</span>
-                            🥇
+                            <span class="absolute -top-2 -right-1 bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">1st</span>🥇
                         </div>
                     </div>
                     <div id="podium-1-name" class="font-black text-sm md:text-base text-amber-300 truncate max-w-[110px] md:max-w-[140px] mb-0.5">---</div>
@@ -345,11 +336,10 @@
                     </div>
                 </div>
 
-                <!-- JUARA 3 (PERUNGGU / BRONZE - KANAN) -->
+                <!-- JUARA 3 -->
                 <div id="podium-3-col" class="flex flex-col items-center">
                     <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-amber-950/50 border-2 border-amber-600 flex items-center justify-center text-2xl shadow-lg mb-2 relative">
-                        <span class="absolute -top-2 -right-1 bg-amber-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow">3rd</span>
-                        🥉
+                        <span class="absolute -top-2 -right-1 bg-amber-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow">3rd</span>🥉
                     </div>
                     <div id="podium-3-name" class="font-black text-xs md:text-sm text-amber-200/90 truncate max-w-[90px] md:max-w-[120px] mb-0.5">---</div>
                     <div id="podium-3-score" class="font-black text-xs text-amber-500 mb-2">0 Pts</div>
@@ -358,26 +348,21 @@
                         <span class="text-[10px] font-black text-amber-400/80 uppercase tracking-wider">PERUNGGU</span>
                     </div>
                 </div>
-
             </div>
 
-            <!-- RUNNER-UP LIST -->
             <div class="glass-panel p-5 rounded-3xl space-y-3 border border-slate-800 max-w-xl mx-auto">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Peringkat Lainnya</h3>
                 <div id="leaderboard-runnerup-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
             </div>
 
-            <!-- ACTION BUTTONS -->
             <div class="flex gap-3 max-w-xl mx-auto pt-2">
                 <button onclick="app.triggerWinnerConfetti()" class="py-3.5 px-5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs rounded-2xl border border-amber-500/40 flex items-center justify-center gap-2">
                     <i data-lucide="sparkles" class="w-4 h-4">✨</i> Sebar Konfeti
                 </button>
-                
                 <button id="btn-next-or-restart" onclick="app.hostNextQuestion()" class="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-extrabold text-sm rounded-2xl shadow-xl flex items-center justify-center gap-2">
                     <span>Lanjut Soal Berikutnya ➔</span>
                 </button>
             </div>
-
         </section>
 
         <!-- ==================== SCREEN 6: CREATOR ==================== -->
@@ -441,6 +426,26 @@
     </div>
 
     <script>
+        // =========================================================================
+        // PASTE / GANTI KONFIGURASI FIREBASE ANDA DI SINI
+        // =========================================================================
+        const firebaseConfig = {
+          apiKey: "AIzaSyBQU4QGyV7Cix7ktw2VF8Z4p3YWYKnhtHc",
+          authDomain: "games-gp-gpib.firebaseapp.com",
+          databaseURL: "https://games-gp-gpib-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "games-gp-gpib",
+          storageBucket: "games-gp-gpib.firebasestorage.app",
+          messagingSenderId: "922937184578",
+          appId: "1:922937184578:web:c9065456244ac9eb2078db",
+          measurementId: "G-SRXRS20R58"
+        };
+
+        // Inisialisasi Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
         class SoundEngine {
             constructor() { this.ctx = null; this.muted = false; }
             init() { if (!this.ctx) { const AudioCtx = window.AudioContext || window.webkitAudioContext; if (AudioCtx) this.ctx = new AudioCtx(); } }
@@ -460,21 +465,18 @@
             click() { this.playTone(800, 'sine', 0.05); }
         }
 
-        class PeerKahootEngine {
+        class FirebaseKahootEngine {
             constructor() {
                 this.sound = new SoundEngine();
                 this.role = 'player';
                 this.pin = '';
                 this.playerName = '';
-                this.peer = null;
-                this.playerConnections = [];
-                this.hostConn = null;
-                this.players = [];
+                this.playerKey = '';
+                this.players = {};
                 
-                // PEMISAHAN BANK SOAL: HOST VS TRIAL
                 this.trialQuestions = [];
                 this.hostQuestions = [];
-                this.activeQuestionSet = 'host'; // Default 'host' atau 'trial'
+                this.activeQuestionSet = 'host';
 
                 this.questions = [];
                 this.currentIndex = 0;
@@ -485,19 +487,6 @@
                 this.creatorFocalY = 50;
                 this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
 
-                // Google STUN Server Config
-                this.peerConfig = {
-                    config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' },
-                            { urls: 'stun:stun2.l.google.com:19302' },
-                            { urls: 'stun:stun3.l.google.com:19302' },
-                            { urls: 'stun:stun4.l.google.com:19302' }
-                        ]
-                    }
-                };
-
                 this.setupDefaultQuestions();
             }
 
@@ -506,7 +495,6 @@
                 document.body.addEventListener('click', () => this.sound.init(), { once: true });
             }
 
-            // SOAL TRIAL TERPISAH (KHUSUS PEMANASAN / UJI COBA)
             setupDefaultQuestions() {
                 this.trialQuestions = [
                     {
@@ -523,7 +511,6 @@
                     }
                 ];
 
-                // Load host questions dari local storage jika ada
                 const savedHostQ = localStorage.getItem('gpgp_host_questions');
                 if (savedHostQ) {
                     try { this.hostQuestions = JSON.parse(savedHostQ); } catch(e) { this.hostQuestions = []; }
@@ -551,53 +538,40 @@
                 if (icon) icon.innerText = this.sound.muted ? '🔇' : '🔊';
             }
 
-            /* ================= HOST WEBRTC ROOM & BANK SOAL ================= */
+            /* ================= HOST LOGIC ================= */
 
             createHostRoom() {
                 this.role = 'host';
                 this.pin = Math.floor(100000 + Math.random() * 900000).toString();
-                this.players = [];
-                this.playerConnections = [];
+                this.players = {};
 
-                this.showToast('📡 Membuka Room & Registrasi PIN...');
-                
-                const peerId = `gpgp-room-${this.pin}`;
-                if (this.peer) this.peer.destroy();
-                this.peer = new Peer(peerId, this.peerConfig);
+                const roomRef = db.ref('rooms/' + this.pin);
+                roomRef.set({
+                    created: Date.now(),
+                    state: { status: 'lobby' }
+                });
 
-                this.peer.on('open', (id) => {
-                    document.getElementById('role-badge').innerText = '📺 HOST ROOM';
-                    document.getElementById('host-pin-display').innerText = this.pin;
+                document.getElementById('role-badge').innerText = '📺 HOST ROOM';
+                document.getElementById('host-pin-display').innerText = this.pin;
+
+                // Dengarkan pemain baru yang masuk
+                roomRef.child('players').on('value', (snapshot) => {
+                    this.players = snapshot.val() || {};
                     this.renderHostPlayerList();
-                    this.switchQuestionSet(this.activeQuestionSet); // Inisialisasi daftar soal
-                    this.showScreen('host-lobby');
-                    this.showToast(`✅ Room Siap! PIN: ${this.pin}`);
                 });
 
-                this.peer.on('connection', (conn) => {
-                    conn.on('open', () => {
-                        this.playerConnections.push(conn);
-                    });
-
-                    conn.on('data', (data) => {
-                        this.handleHostReceivedData(conn, data);
-                    });
-
-                    conn.on('close', () => {
-                        this.players = this.players.filter(p => p.connId !== conn.peer);
-                        this.renderHostPlayerList();
-                    });
+                // Dengarkan jawaban yang masuk
+                roomRef.child('answers').on('value', (snapshot) => {
+                    this.updateHostAnsweredCount(snapshot.val());
                 });
 
-                this.peer.on('error', (err) => {
-                    console.error('Host Peer Error:', err);
-                    this.showToast('⚠️ Gagal terhubung ke server signaling. Coba buat room lagi.');
-                });
+                this.switchQuestionSet(this.activeQuestionSet);
+                this.showScreen('host-lobby');
+                this.showToast(`✅ Room Cloud Siap! PIN: ${this.pin}`);
             }
 
             switchQuestionSet(setType) {
                 this.activeQuestionSet = setType;
-                
                 const btnHost = document.getElementById('tab-mode-host');
                 const btnTrial = document.getElementById('tab-mode-trial');
                 const labelActive = document.getElementById('label-active-set');
@@ -619,7 +593,6 @@
 
                 document.getElementById('badge-host-count').innerText = this.hostQuestions.length;
                 document.getElementById('badge-trial-count').innerText = this.trialQuestions.length;
-
                 this.renderHostQuestionPreviewList();
             }
 
@@ -659,41 +632,17 @@
                 this.switchQuestionSet('host');
             }
 
-            handleHostReceivedData(conn, data) {
-                if (data.action === 'JOIN') {
-                    if (!this.players.find(p => p.connId === conn.peer)) {
-                        this.players.push({ connId: conn.peer, name: data.name, score: 0, currentAns: -1 });
-                        this.renderHostPlayerList();
-                        this.showToast(`📱 ${data.name} bergabung!`);
-                        conn.send({ action: 'JOIN_CONFIRM', success: true });
-                    }
-                } else if (data.action === 'SUBMIT_ANSWER') {
-                    const p = this.players.find(item => item.connId === conn.peer);
-                    if (p) {
-                        p.currentAns = data.optionIndex;
-                        if (data.optionIndex === 0) {
-                            p.score += 100 + data.step * 30 + data.timeLeft * 2;
-                        }
-                    }
-                    this.updateHostAnsweredCount();
-                }
-            }
-
-            broadcastToPlayers(packet) {
-                this.playerConnections.forEach(conn => {
-                    if (conn && conn.open) conn.send(packet);
-                });
-            }
-
             renderHostPlayerList() {
-                document.getElementById('host-player-count').innerText = this.players.length;
+                const playerKeys = Object.keys(this.players);
+                document.getElementById('host-player-count').innerText = playerKeys.length;
                 const list = document.getElementById('host-player-list');
                 list.innerHTML = '';
 
-                if (this.players.length === 0) {
+                if (playerKeys.length === 0) {
                     list.innerHTML = `<div class="col-span-full text-center py-6 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">Menunggu pemain memasukkan PIN dari HP mereka...</div>`;
                 } else {
-                    this.players.forEach(p => {
+                    playerKeys.forEach(k => {
+                        const p = this.players[k];
                         const item = document.createElement('div');
                         item.className = "p-3 bg-indigo-600/20 border border-indigo-500/40 rounded-xl text-center text-xs font-bold text-white shadow flex items-center justify-center gap-2";
                         item.innerHTML = `<span>👤</span> <span>${p.name}</span>`;
@@ -704,11 +653,7 @@
 
             hostStartGame() {
                 if (this.questions.length === 0) {
-                    if (this.activeQuestionSet === 'host') {
-                        this.showToast('Belum ada soal buatan Host! Tambahkan soal atau pilih Mode Trial.');
-                    } else {
-                        this.showToast('Soal Trial Kosong!');
-                    }
+                    this.showToast('Tambahkan soal buatan Host terlebih dahulu!');
                     return;
                 }
                 this.currentIndex = 0;
@@ -726,8 +671,9 @@
                 const modeLabel = this.activeQuestionSet === 'trial' ? ' [TRIAL]' : '';
                 document.getElementById('host-progress-text').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}${modeLabel}`;
 
-                this.players.forEach(p => p.currentAns = -1);
-                this.updateHostAnsweredCount();
+                // Reset jawaban di database
+                db.ref(`rooms/${this.pin}/answers`).remove();
+                this.updateHostAnsweredCount(null);
 
                 this.currentStep = 5;
                 const img = document.getElementById('host-game-image');
@@ -739,7 +685,12 @@
                 this.showScreen('host-game');
                 this.startHostTimer();
 
-                this.broadcastToPlayers({ action: 'QUESTION_START', options: q.options });
+                // Broadcast ke Firebase bahwa soal dimulai
+                db.ref(`rooms/${this.pin}/state`).set({
+                    status: 'question_active',
+                    options: q.options,
+                    step: 5
+                });
             }
 
             applyHostVisualEffect() {
@@ -780,13 +731,10 @@
                 canvas.width = w; canvas.height = h;
 
                 ctx.drawImage(img, 0, 0, w, h);
-
                 if (step <= 1) return;
 
-                const cols = 8;
-                const rows = 8;
-                const tileW = w / cols;
-                const tileH = h / rows;
+                const cols = 8; const rows = 8;
+                const tileW = w / cols; const tileH = h / rows;
                 const totalTiles = cols * rows;
 
                 const revealRatios = { 5: 0.15, 4: 0.35, 3: 0.58, 2: 0.80, 1: 1.0 };
@@ -803,7 +751,6 @@
                 }
 
                 tiles.sort((a, b) => a.dist - b.dist);
-
                 const hiddenTiles = tiles.slice(revealCount);
 
                 ctx.fillStyle = '#0f172a';
@@ -836,6 +783,7 @@
                 if (this.currentStep > 1) {
                     this.currentStep--;
                     this.applyHostVisualEffect();
+                    db.ref(`rooms/${this.pin}/state/step`).set(this.currentStep);
                 }
             }
 
@@ -858,9 +806,10 @@
                 });
             }
 
-            updateHostAnsweredCount() {
-                const count = this.players.filter(p => p.currentAns !== -1).length;
-                document.getElementById('host-answered-count').innerText = `${count} / ${this.players.length}`;
+            updateHostAnsweredCount(answersObj) {
+                const count = answersObj ? Object.keys(answersObj).length : 0;
+                const total = Object.keys(this.players).length;
+                document.getElementById('host-answered-count').innerText = `${count} / ${total}`;
             }
 
             startHostTimer() {
@@ -881,61 +830,88 @@
                 this.currentStep = 1;
                 this.applyHostVisualEffect();
 
-                setTimeout(() => {
-                    this.renderLeaderboard();
-                    this.showScreen('host-leaderboard');
-                }, 2000);
+                // Hitung skor dari jawaban di Firebase
+                db.ref(`rooms/${this.pin}/answers`).once('value', (snap) => {
+                    const answers = snap.val() || {};
+                    Object.keys(answers).forEach(pKey => {
+                        const ans = answers[pKey];
+                        if (ans.optionIndex === 0) { // Jawaban benar di opsi index 0
+                            const gained = 100 + (ans.step * 30) + (ans.timeLeft * 2);
+                            const currentScore = (this.players[pKey] && this.players[pKey].score) || 0;
+                            db.ref(`rooms/${this.pin}/players/${pKey}/score`).set(currentScore + gained);
+                        }
+                    });
+
+                    setTimeout(() => {
+                        this.renderLeaderboard();
+                        this.showScreen('host-leaderboard');
+                    }, 2000);
+                });
             }
 
             renderLeaderboard() {
-                const sorted = [...this.players].sort((a, b) => b.score - a.score);
-                const rankedList = sorted.map((p, idx) => ({ name: p.name, score: p.score, rank: idx + 1 }));
+                db.ref(`rooms/${this.pin}/players`).once('value', (snap) => {
+                    const playersData = snap.val() || {};
+                    const arrayList = Object.keys(playersData).map(k => ({
+                        key: k,
+                        name: playersData[k].name,
+                        score: playersData[k].score || 0
+                    }));
 
-                const p1 = rankedList[0] || { name: '---', score: 0 };
-                const p2 = rankedList[1] || { name: '---', score: 0 };
-                const p3 = rankedList[2] || { name: '---', score: 0 };
+                    arrayList.sort((a, b) => b.score - a.score);
+                    const rankedList = arrayList.map((p, idx) => ({ ...p, rank: idx + 1 }));
 
-                document.getElementById('podium-1-name').innerText = p1.name;
-                document.getElementById('podium-1-score').innerText = `${p1.score} Pts`;
-
-                document.getElementById('podium-2-name').innerText = p2.name;
-                document.getElementById('podium-2-score').innerText = `${p2.score} Pts`;
-
-                document.getElementById('podium-3-name').innerText = p3.name;
-                document.getElementById('podium-3-score').innerText = `${p3.score} Pts`;
-
-                const runnerUpContainer = document.getElementById('leaderboard-runnerup-list');
-                runnerUpContainer.innerHTML = '';
-
-                const runners = rankedList.slice(3);
-                if (runners.length === 0) {
-                    runnerUpContainer.innerHTML = `<div class="text-center py-4 text-xs text-slate-500">Tidak ada pemain di peringkat luar podium.</div>`;
-                } else {
-                    runners.forEach(p => {
-                        const card = document.createElement('div');
-                        card.className = "p-3 glass-card rounded-2xl flex items-center justify-between border border-slate-700/60";
-                        card.innerHTML = `
-                            <div class="flex items-center gap-3">
-                                <span class="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-bold flex items-center justify-center text-xs">${p.rank}</span>
-                                <span class="font-extrabold text-white text-xs">${p.name}</span>
-                            </div>
-                            <span class="font-black text-emerald-400 text-xs">${p.score} Pts</span>
-                        `;
-                        runnerUpContainer.appendChild(card);
+                    // Broadcast klasemen ke seluruh HP Pemain via Firebase
+                    db.ref(`rooms/${this.pin}/state`).set({
+                        status: 'question_ended',
+                        leaderboard: rankedList
                     });
-                }
 
-                const btnNext = document.getElementById('btn-next-or-restart');
-                if (this.currentIndex >= this.questions.length - 1) {
-                    btnNext.innerHTML = `<span>Kembali ke Lobby Room ➔</span>`;
-                    btnNext.onclick = () => this.showScreen('host-lobby');
-                } else {
-                    btnNext.innerHTML = `<span>Lanjut Soal Berikutnya ➔</span>`;
-                    btnNext.onclick = () => this.hostNextQuestion();
-                }
+                    const p1 = rankedList[0] || { name: '---', score: 0 };
+                    const p2 = rankedList[1] || { name: '---', score: 0 };
+                    const p3 = rankedList[2] || { name: '---', score: 0 };
 
-                this.broadcastToPlayers({ action: 'FINAL_LEADERBOARD', players: rankedList });
-                this.triggerWinnerConfetti();
+                    document.getElementById('podium-1-name').innerText = p1.name;
+                    document.getElementById('podium-1-score').innerText = `${p1.score} Pts`;
+
+                    document.getElementById('podium-2-name').innerText = p2.name;
+                    document.getElementById('podium-2-score').innerText = `${p2.score} Pts`;
+
+                    document.getElementById('podium-3-name').innerText = p3.name;
+                    document.getElementById('podium-3-score').innerText = `${p3.score} Pts`;
+
+                    const runnerUpContainer = document.getElementById('leaderboard-runnerup-list');
+                    runnerUpContainer.innerHTML = '';
+
+                    const runners = rankedList.slice(3);
+                    if (runners.length === 0) {
+                        runnerUpContainer.innerHTML = `<div class="text-center py-4 text-xs text-slate-500">Tidak ada pemain di peringkat luar podium.</div>`;
+                    } else {
+                        runners.forEach(p => {
+                            const card = document.createElement('div');
+                            card.className = "p-3 glass-card rounded-2xl flex items-center justify-between border border-slate-700/60";
+                            card.innerHTML = `
+                                <div class="flex items-center gap-3">
+                                    <span class="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-bold flex items-center justify-center text-xs">${p.rank}</span>
+                                    <span class="font-extrabold text-white text-xs">${p.name}</span>
+                                </div>
+                                <span class="font-black text-emerald-400 text-xs">${p.score} Pts</span>
+                            `;
+                            runnerUpContainer.appendChild(card);
+                        });
+                    }
+
+                    const btnNext = document.getElementById('btn-next-or-restart');
+                    if (this.currentIndex >= this.questions.length - 1) {
+                        btnNext.innerHTML = `<span>Kembali ke Lobby Room ➔</span>`;
+                        btnNext.onclick = () => this.showScreen('host-lobby');
+                    } else {
+                        btnNext.innerHTML = `<span>Lanjut Soal Berikutnya ➔</span>`;
+                        btnNext.onclick = () => this.hostNextQuestion();
+                    }
+
+                    this.triggerWinnerConfetti();
+                });
             }
 
             triggerWinnerConfetti() {
@@ -956,9 +932,9 @@
                 }
             }
 
-            /* ================= PLAYER WEBRTC LOGIC (WITH AUTO-RETRY JITTER) ================= */
+            /* ================= PLAYER LOGIC (FIREBASE LISTENERS) ================= */
 
-            joinRoomAsPlayer(retryCount = 0) {
+            joinRoomAsPlayer() {
                 const pin = document.getElementById('pin-input').value.trim();
                 const name = document.getElementById('player-nickname').value.trim();
 
@@ -968,74 +944,47 @@
                 this.playerName = name;
                 this.role = 'player';
 
-                if (retryCount === 0) {
-                    this.showToast('🔍 Mencari Room Host...');
-                } else {
-                    this.showToast(`🔄 Antrean sibuk, mencoba ulang (${retryCount}/4)...`);
-                }
+                this.showToast('🔍 Menghubungkan ke Room Cloud...');
 
-                if (this.peer && !this.peer.destroyed) this.peer.destroy();
-                this.peer = new Peer(this.peerConfig);
-
-                this.peer.on('open', () => {
-                    const hostPeerId = `gpgp-room-${pin}`;
-                    this.hostConn = this.peer.connect(hostPeerId, { reliable: true });
-
-                    const connectTimeout = setTimeout(() => {
-                        if (!this.hostConn || !this.hostConn.open) {
-                            this.handleJoinRetry(retryCount);
-                        }
-                    }, 5000);
-
-                    this.hostConn.on('open', () => {
-                        clearTimeout(connectTimeout);
-                        this.hostConn.send({ action: 'JOIN', name: name });
-                        document.getElementById('role-badge').innerText = `📱 Player: ${name}`;
-                        document.getElementById('player-disp-name').innerText = name;
-                        this.showScreen('player-view');
-                        this.setPlayerState('waiting');
-                        this.showToast('✅ Berhasil Terhubung ke Host!');
-                    });
-
-                    this.hostConn.on('data', (data) => {
-                        this.handlePlayerReceivedData(data);
-                    });
-
-                    this.hostConn.on('error', () => {
-                        clearTimeout(connectTimeout);
-                        this.handleJoinRetry(retryCount);
-                    });
-                });
-
-                this.peer.on('error', (err) => {
-                    console.warn('Peer Join Failed:', err);
-                    this.handleJoinRetry(retryCount);
-                });
-            }
-
-            handleJoinRetry(retryCount) {
-                const maxRetries = 4;
-                if (retryCount < maxRetries) {
-                    const randomJitter = Math.floor(Math.random() * 1400) + 600;
-                    setTimeout(() => {
-                        this.joinRoomAsPlayer(retryCount + 1);
-                    }, randomJitter);
-                } else {
-                    this.showToast('❌ PIN Room tidak ditemukan atau Host sedang sibuk. Coba tekan tombol lagi.');
-                }
-            }
-
-            handlePlayerReceivedData(data) {
-                if (data.action === 'QUESTION_START') {
-                    this.setPlayerState('active');
-                    this.renderPlayerOptions(data.options);
-                    this.showToast('🚀 Soal Dimulai! Pilih Jawaban di HP');
-                } else if (data.action === 'FINAL_LEADERBOARD') {
-                    const myData = data.players.find(p => p.name === this.playerName);
-                    if (myData) {
-                        this.showPlayerFinalRank(myData.rank, myData.score, data.players.length);
+                const roomRef = db.ref('rooms/' + pin);
+                roomRef.once('value').then(snap => {
+                    if (!snap.exists()) {
+                        this.showToast('❌ PIN Room tidak ditemukan! Periksa kembali PIN dari Host.');
+                        return;
                     }
-                }
+
+                    // Registrasi player baru ke Firebase
+                    const pRef = roomRef.child('players').push();
+                    this.playerKey = pRef.key;
+                    pRef.set({ name: name, score: 0 });
+
+                    document.getElementById('role-badge').innerText = `📱 Player: ${name}`;
+                    document.getElementById('player-disp-name').innerText = name;
+                    this.showScreen('player-view');
+                    this.setPlayerState('waiting');
+                    this.showToast('✅ Berhasil Terhubung ke Room Cloud!');
+
+                    // Dengarkan status game dari Host secara real-time
+                    roomRef.child('state').on('value', (stateSnap) => {
+                        const st = stateSnap.val();
+                        if (!st) return;
+
+                        if (st.status === 'question_active') {
+                            this.currentStep = st.step || 5;
+                            this.setPlayerState('active');
+                            this.renderPlayerOptions(st.options);
+                        } else if (st.status === 'question_ended') {
+                            const leaderboard = st.leaderboard || [];
+                            const myData = leaderboard.find(p => p.key === this.playerKey);
+                            if (myData) {
+                                this.showPlayerFinalRank(myData.rank, myData.score, leaderboard.length);
+                            }
+                        }
+                    });
+                }).catch(err => {
+                    console.error('Firebase Join Error:', err);
+                    this.showToast('⚠️ Gagal terhubung ke server Firebase.');
+                });
             }
 
             setPlayerState(state) {
@@ -1057,14 +1006,13 @@
             playerSubmitAnswer(optIdx) {
                 this.sound.click();
                 this.setPlayerState('submitted');
-                if (this.hostConn && this.hostConn.open) {
-                    this.hostConn.send({
-                        action: 'SUBMIT_ANSWER',
-                        optionIndex: optIdx,
-                        step: this.currentStep,
-                        timeLeft: this.timeLeft
-                    });
-                }
+
+                // Kirim jawaban ke Firebase Realtime Database
+                db.ref(`rooms/${this.pin}/answers/${this.playerKey}`).set({
+                    optionIndex: optIdx,
+                    step: this.currentStep,
+                    timeLeft: this.timeLeft
+                });
             }
 
             showPlayerFinalRank(rank, score, totalPlayers) {
@@ -1150,7 +1098,7 @@
         }
 
         let app;
-        window.onload = () => { app = new PeerKahootEngine(); app.init(); };
+        window.onload = () => { app = new FirebaseKahootEngine(); app.init(); };
     </script>
 </body>
 </html>
