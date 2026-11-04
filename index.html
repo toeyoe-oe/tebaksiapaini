@@ -426,9 +426,6 @@
     </div>
 
     <script>
-        // =========================================================================
-        // PASTE / GANTI KONFIGURASI FIREBASE ANDA DI SINI
-        // =========================================================================
         const firebaseConfig = {
           apiKey: "AIzaSyBQU4QGyV7Cix7ktw2VF8Z4p3YWYKnhtHc",
           authDomain: "games-gp-gpib.firebaseapp.com",
@@ -440,7 +437,6 @@
           measurementId: "G-SRXRS20R58"
         };
 
-        // Inisialisasi Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -481,6 +477,7 @@
                 this.questions = [];
                 this.currentIndex = 0;
                 this.currentStep = 5;
+                this.currentCorrectIndex = 0; // Indeks acak jawaban benar
                 this.timer = null;
                 this.timeLeft = 30;
                 this.creatorFocalX = 50;
@@ -554,13 +551,11 @@
                 document.getElementById('role-badge').innerText = '📺 HOST ROOM';
                 document.getElementById('host-pin-display').innerText = this.pin;
 
-                // Dengarkan pemain baru yang masuk
                 roomRef.child('players').on('value', (snapshot) => {
                     this.players = snapshot.val() || {};
                     this.renderHostPlayerList();
                 });
 
-                // Dengarkan jawaban yang masuk
                 roomRef.child('answers').on('value', (snapshot) => {
                     this.updateHostAnsweredCount(snapshot.val());
                 });
@@ -671,9 +666,13 @@
                 const modeLabel = this.activeQuestionSet === 'trial' ? ' [TRIAL]' : '';
                 document.getElementById('host-progress-text').innerText = `Soal ${this.currentIndex + 1} / ${this.questions.length}${modeLabel}`;
 
-                // Reset jawaban di database
                 db.ref(`rooms/${this.pin}/answers`).remove();
                 this.updateHostAnsweredCount(null);
+
+                // PENGAJAKAN OPSI JAWABAN (agar jawaban benar tidak selalu Merah)
+                const correctAnswerText = q.options[0];
+                const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+                this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
 
                 this.currentStep = 5;
                 const img = document.getElementById('host-game-image');
@@ -681,14 +680,13 @@
                 img.onload = () => this.applyHostVisualEffect();
 
                 this.applyHostVisualEffect();
-                this.renderHostOptions(q);
+                this.renderHostOptions(shuffledOptions);
                 this.showScreen('host-game');
                 this.startHostTimer();
 
-                // Broadcast ke Firebase bahwa soal dimulai
                 db.ref(`rooms/${this.pin}/state`).set({
                     status: 'question_active',
-                    options: q.options,
+                    options: shuffledOptions,
                     step: 5
                 });
             }
@@ -787,7 +785,7 @@
                 }
             }
 
-            renderHostOptions(q) {
+            renderHostOptions(optionsList) {
                 const container = document.getElementById('host-options-grid');
                 container.innerHTML = '';
                 const colors = [
@@ -797,7 +795,7 @@
                     { bg: 'bg-kahootGreen', shape: '■' }
                 ];
 
-                q.options.forEach((opt, idx) => {
+                optionsList.forEach((opt, idx) => {
                     const style = colors[idx] || colors[0];
                     const card = document.createElement('div');
                     card.className = `${style.bg} p-4 rounded-2xl text-white flex items-center gap-3 shadow-lg`;
@@ -830,12 +828,12 @@
                 this.currentStep = 1;
                 this.applyHostVisualEffect();
 
-                // Hitung skor dari jawaban di Firebase
                 db.ref(`rooms/${this.pin}/answers`).once('value', (snap) => {
                     const answers = snap.val() || {};
                     Object.keys(answers).forEach(pKey => {
                         const ans = answers[pKey];
-                        if (ans.optionIndex === 0) { // Jawaban benar di opsi index 0
+                        // CEK TERHADAP INDEKS ACAK JAWABAN BENAR
+                        if (ans.optionIndex === this.currentCorrectIndex) {
                             const gained = 100 + (ans.step * 30) + (ans.timeLeft * 2);
                             const currentScore = (this.players[pKey] && this.players[pKey].score) || 0;
                             db.ref(`rooms/${this.pin}/players/${pKey}/score`).set(currentScore + gained);
@@ -861,7 +859,6 @@
                     arrayList.sort((a, b) => b.score - a.score);
                     const rankedList = arrayList.map((p, idx) => ({ ...p, rank: idx + 1 }));
 
-                    // Broadcast klasemen ke seluruh HP Pemain via Firebase
                     db.ref(`rooms/${this.pin}/state`).set({
                         status: 'question_ended',
                         leaderboard: rankedList
@@ -932,7 +929,7 @@
                 }
             }
 
-            /* ================= PLAYER LOGIC (FIREBASE LISTENERS) ================= */
+            /* ================= PLAYER LOGIC ================= */
 
             joinRoomAsPlayer() {
                 const pin = document.getElementById('pin-input').value.trim();
@@ -953,7 +950,6 @@
                         return;
                     }
 
-                    // Registrasi player baru ke Firebase
                     const pRef = roomRef.child('players').push();
                     this.playerKey = pRef.key;
                     pRef.set({ name: name, score: 0 });
@@ -964,7 +960,6 @@
                     this.setPlayerState('waiting');
                     this.showToast('✅ Berhasil Terhubung ke Room Cloud!');
 
-                    // Dengarkan status game dari Host secara real-time
                     roomRef.child('state').on('value', (stateSnap) => {
                         const st = stateSnap.val();
                         if (!st) return;
@@ -1007,7 +1002,6 @@
                 this.sound.click();
                 this.setPlayerState('submitted');
 
-                // Kirim jawaban ke Firebase Realtime Database
                 db.ref(`rooms/${this.pin}/answers/${this.playerKey}`).set({
                     optionIndex: optIdx,
                     step: this.currentStep,
