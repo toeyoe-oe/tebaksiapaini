@@ -214,21 +214,21 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 h-72 md:h-80">
-                    <button onclick="app.playerSubmitAnswer(0)" class="bg-kahootRed hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1">
+                    <button onclick="app.playerSubmitAnswer(0)" class="bg-kahootRed hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1 p-2">
                         <span class="text-4xl">▲</span>
-                        <span id="p-opt-0" class="text-xs font-extrabold uppercase">MERAH</span>
+                        <span id="p-opt-0" class="text-xs font-extrabold uppercase line-clamp-2">MERAH</span>
                     </button>
-                    <button onclick="app.playerSubmitAnswer(1)" class="bg-kahootBlue hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1">
+                    <button onclick="app.playerSubmitAnswer(1)" class="bg-kahootBlue hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1 p-2">
                         <span class="text-4xl">◆</span>
-                        <span id="p-opt-1" class="text-xs font-extrabold uppercase">BIRU</span>
+                        <span id="p-opt-1" class="text-xs font-extrabold uppercase line-clamp-2">BIRU</span>
                     </button>
-                    <button onclick="app.playerSubmitAnswer(2)" class="bg-kahootYellow hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1">
+                    <button onclick="app.playerSubmitAnswer(2)" class="bg-kahootYellow hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1 p-2">
                         <span class="text-4xl">●</span>
-                        <span id="p-opt-2" class="text-xs font-extrabold uppercase">KUNING</span>
+                        <span id="p-opt-2" class="text-xs font-extrabold uppercase line-clamp-2">KUNING</span>
                     </button>
-                    <button onclick="app.playerSubmitAnswer(3)" class="bg-kahootGreen hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1">
+                    <button onclick="app.playerSubmitAnswer(3)" class="bg-kahootGreen hover:opacity-90 text-white font-black rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center gap-1 p-2">
                         <span class="text-4xl">■</span>
-                        <span id="p-opt-3" class="text-xs font-extrabold uppercase">HIJAU</span>
+                        <span id="p-opt-3" class="text-xs font-extrabold uppercase line-clamp-2">HIJAU</span>
                     </button>
                 </div>
             </div>
@@ -325,7 +325,7 @@
                 <span id="host-correct-answer-text" class="text-sm font-black text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/40">---</span>
             </div>
 
-            <!-- BAR CHART DISTRIBUSI JAWABAN PEMAIN -->
+            <!-- BAR CHART DISTRIBUSI JAWABAN PEMAIN (TEKS JAWABAN AKTIF) -->
             <div class="glass-panel p-4 rounded-3xl border border-slate-800 max-w-xl mx-auto space-y-3">
                 <h4 class="text-xs font-extrabold text-slate-300 uppercase tracking-wider text-center">📊 Distribusi Pilihan Jawaban Pemain</h4>
                 <div class="grid grid-cols-4 gap-2 text-center text-xs font-bold pt-1">
@@ -333,25 +333,25 @@
                         <div class="h-28 bg-slate-900 rounded-xl relative flex items-end justify-center p-1 border border-slate-800 overflow-hidden">
                             <div id="chart-bar-0" class="w-full bg-kahootRed rounded-lg transition-all duration-700 h-0 flex items-center justify-center text-[10px] text-white font-extrabold">0</div>
                         </div>
-                        <span class="text-kahootRed block text-[11px] font-black">▲ MERAH</span>
+                        <span id="chart-label-0" class="text-kahootRed block text-[11px] font-black truncate px-1" title="▲ MERAH">▲ MERAH</span>
                     </div>
                     <div class="space-y-1">
                         <div class="h-28 bg-slate-900 rounded-xl relative flex items-end justify-center p-1 border border-slate-800 overflow-hidden">
                             <div id="chart-bar-1" class="w-full bg-kahootBlue rounded-lg transition-all duration-700 h-0 flex items-center justify-center text-[10px] text-white font-extrabold">0</div>
                         </div>
-                        <span class="text-kahootBlue block text-[11px] font-black">◆ BIRU</span>
+                        <span id="chart-label-1" class="text-kahootBlue block text-[11px] font-black truncate px-1" title="◆ BIRU">◆ BIRU</span>
                     </div>
                     <div class="space-y-1">
                         <div class="h-28 bg-slate-900 rounded-xl relative flex items-end justify-center p-1 border border-slate-800 overflow-hidden">
                             <div id="chart-bar-2" class="w-full bg-kahootYellow rounded-lg transition-all duration-700 h-0 flex items-center justify-center text-[10px] text-white font-extrabold">0</div>
                         </div>
-                        <span class="text-kahootYellow block text-[11px] font-black">● KUNING</span>
+                        <span id="chart-label-2" class="text-kahootYellow block text-[11px] font-black truncate px-1" title="● KUNING">● KUNING</span>
                     </div>
                     <div class="space-y-1">
                         <div class="h-28 bg-slate-900 rounded-xl relative flex items-end justify-center p-1 border border-slate-800 overflow-hidden">
                             <div id="chart-bar-3" class="w-full bg-kahootGreen rounded-lg transition-all duration-700 h-0 flex items-center justify-center text-[10px] text-white font-extrabold">0</div>
                         </div>
-                        <span class="text-kahootGreen block text-[11px] font-black">■ HIJAU</span>
+                        <span id="chart-label-3" class="text-kahootGreen block text-[11px] font-black truncate px-1" title="■ HIJAU">■ HIJAU</span>
                     </div>
                 </div>
             </div>
@@ -505,8 +505,24 @@
         const db = firebase.database();
 
         class SoundEngine {
-            constructor() { this.ctx = null; this.muted = false; }
-            init() { if (!this.ctx) { const AudioCtx = window.AudioContext || window.webkitAudioContext; if (AudioCtx) this.ctx = new AudioCtx(); } }
+            constructor() { 
+                this.ctx = null; 
+                this.muted = false;
+                this.bgmTimer = null;
+                this.bgmStep = 0;
+                this.bgmPlaying = false;
+            }
+            
+            init() { 
+                if (!this.ctx) { 
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext; 
+                    if (AudioCtx) this.ctx = new AudioCtx(); 
+                } 
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
             playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
                 if (this.muted) return; this.init(); if (!this.ctx) return;
                 try {
@@ -518,6 +534,61 @@
                     osc.start(); osc.stop(this.ctx.currentTime + duration);
                 } catch (e) {}
             }
+
+            // BACKGROUND MUSIC (BGM) SYNTHESIZER ENGINE
+            startBGM(tempo = 128) {
+                if (this.bgmPlaying || this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                this.bgmPlaying = true;
+                this.bgmStep = 0;
+                
+                const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63, 196.00]; 
+                const bassNotes = [130.81, 130.81, 164.81, 174.61]; 
+                const interval = (60 / tempo / 2) * 1000; 
+
+                this.bgmTimer = setInterval(() => {
+                    if (this.muted || !this.bgmPlaying) return;
+                    try {
+                        const note = notes[this.bgmStep % notes.length];
+                        const bass = bassNotes[Math.floor(this.bgmStep / 4) % bassNotes.length];
+                        
+                        // Melodic Arpeggio Sound
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(note, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.015, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.0005, this.ctx.currentTime + 0.18);
+                        osc.connect(gain); gain.connect(this.ctx.destination);
+                        osc.start(); osc.stop(this.ctx.currentTime + 0.18);
+                        
+                        // Bass Pulse Beat
+                        if (this.bgmStep % 2 === 0) {
+                            const bOsc = this.ctx.createOscillator();
+                            const bGain = this.ctx.createGain();
+                            bOsc.type = 'triangle';
+                            bOsc.frequency.setValueAtTime(bass, this.ctx.currentTime);
+                            bGain.gain.setValueAtTime(0.035, this.ctx.currentTime);
+                            bGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+                            bOsc.connect(bGain); bGain.connect(this.ctx.destination);
+                            bOsc.start(); bOsc.stop(this.ctx.currentTime + 0.22);
+                        }
+                        
+                        this.bgmStep++;
+                    } catch(e) {}
+                }, interval);
+            }
+
+            stopBGM() {
+                if (this.bgmTimer) {
+                    clearInterval(this.bgmTimer);
+                    this.bgmTimer = null;
+                }
+                this.bgmPlaying = false;
+            }
+
             correct() { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.2), i * 80)); }
             wrong() { this.playTone(180, 'sawtooth', 0.25); setTimeout(() => this.playTone(130, 'sawtooth', 0.3), 120); }
             click() { this.playTone(800, 'sine', 0.05); }
@@ -541,6 +612,7 @@
                 this.currentIndex = 0;
                 this.currentStep = 5;
                 this.currentCorrectIndex = 0;
+                this.currentShuffledOptions = [];
                 this.timer = null;
                 this.timeLeft = 30;
                 this.creatorFocalX = 50;
@@ -607,6 +679,11 @@
 
             toggleSound() {
                 this.sound.muted = !this.sound.muted;
+                if (this.sound.muted) {
+                    this.sound.stopBGM();
+                } else if (this.role === 'host') {
+                    this.sound.startBGM();
+                }
                 const icon = document.getElementById('sound-icon');
                 if (icon) icon.innerText = this.sound.muted ? '🔇' : '🔊';
             }
@@ -747,6 +824,7 @@
 
                 const correctAnswerText = q.options[0];
                 const shuffledOptions = this.shuffleArray(q.options);
+                this.currentShuffledOptions = shuffledOptions; // Simpan opsi yang diacak
                 this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
 
                 this.currentStep = 5;
@@ -761,6 +839,7 @@
                 this.renderHostOptions(shuffledOptions);
                 this.showScreen('host-game');
                 this.startHostTimer();
+                this.sound.startBGM(); // Putar Background Music Game
 
                 db.ref(`rooms/${this.pin}/state`).set({
                     status: 'question_active',
@@ -905,7 +984,6 @@
                     document.getElementById('host-timer-bar').style.width = `${(this.timeLeft / 30) * 100}%`;
                     document.getElementById('host-timer-text').innerText = `${this.timeLeft}s`;
                     
-                    // EFEK SUARA TENSION TICK PADA 5 DETIK TERAKHIR
                     if (this.timeLeft <= 5 && this.timeLeft > 0) {
                         this.sound.tick();
                     }
@@ -918,14 +996,13 @@
 
             hostEndQuestion() {
                 this.stopHostTimer();
+                this.sound.stopBGM(); // Hentikan BGM Musik saat soal selesai
                 this.currentStep = 1;
                 this.applyHostVisualEffect();
 
                 db.ref(`rooms/${this.pin}/answers`).once('value', (snap) => {
                     const answers = snap.val() || {};
-                    const totalAnswers = Object.keys(answers).length;
-
-                    // LAKUKAN KUALIFIKASI POIN, STEP BONUS, DAN STREAK COMBO
+                    
                     Object.keys(this.players).forEach(pKey => {
                         const ans = answers[pKey];
                         const currentScore = (this.players[pKey] && this.players[pKey].score) || 0;
@@ -934,7 +1011,7 @@
                         if (ans && ans.optionIndex === this.currentCorrectIndex) {
                             currentStreak += 1;
                             const streakBonus = currentStreak > 1 ? (currentStreak - 1) * 100 : 0;
-                            const stepBonus = (ans.step || 1) * 35; // Step 5 (+175 Pts)
+                            const stepBonus = (ans.step || 1) * 35;
                             const timeBonus = (ans.timeLeft || 0) * 3;
                             const gained = 100 + stepBonus + timeBonus + streakBonus;
 
@@ -944,7 +1021,6 @@
                                 lastGained: gained
                             });
                         } else {
-                            // Reset Streak jika salah atau tidak menjawab
                             db.ref(`rooms/${this.pin}/players/${pKey}`).update({
                                 streak: 0,
                                 lastGained: 0
@@ -966,7 +1042,7 @@
                     document.getElementById('host-correct-answer-text').innerText = correctAnswerText;
                 }
 
-                // RENDERING BAR CHART DISTRIBUSI JAWABAN PEMAIN
+                // RENDRING BAR CHART DISTRIBUSI DENGAN NAMA OPSI SOAL AKTIF
                 const chartCounts = [0, 0, 0, 0];
                 let totalAnsCount = 0;
                 Object.keys(answersObj).forEach(k => {
@@ -977,11 +1053,21 @@
                     }
                 });
 
+                const shapes = ['▲', '◆', '●', '■'];
+
                 chartCounts.forEach((cnt, idx) => {
                     const barEl = document.getElementById(`chart-bar-${idx}`);
+                    const labelEl = document.getElementById(`chart-label-${idx}`);
                     const pct = totalAnsCount > 0 ? Math.round((cnt / totalAnsCount) * 100) : 0;
                     barEl.style.height = `${Math.max(12, pct)}%`;
                     barEl.innerText = `${cnt} (${pct}%)`;
+
+                    // Tampilkan Teks Opsi Jawaban Sebenarnya pada Grafik
+                    if (labelEl && this.currentShuffledOptions && this.currentShuffledOptions[idx]) {
+                        const optText = this.currentShuffledOptions[idx];
+                        labelEl.innerText = `${shapes[idx]} ${optText}`;
+                        labelEl.title = `${shapes[idx]} ${optText}`;
+                    }
                 });
 
                 db.ref(`rooms/${this.pin}/players`).once('value', (snap) => {
@@ -1132,7 +1218,6 @@
                     this.playerKey = pRef.key;
                     pRef.set({ name: name, score: 0, streak: 0 });
 
-                    // SIMPAN SESI KE LOCAL STORAGE
                     localStorage.setItem('gpgp_player_session', JSON.stringify({
                         pin: pin,
                         playerKey: this.playerKey,
@@ -1216,7 +1301,6 @@
                 const title = document.getElementById('player-res-title');
                 const streakBadge = document.getElementById('player-streak-badge');
 
-                // TAMPILKAN BADGE COMBO STREAK
                 if (streak > 1) {
                     streakBadge.classList.remove('hidden');
                     streakBadge.innerHTML = `<span>🔥 Combo Streak ${streak}x! (+${(streak - 1) * 100} Bonus)</span>`;
