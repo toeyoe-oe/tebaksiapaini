@@ -55,7 +55,7 @@
                     <i data-lucide="sparkles" class="w-6 h-6 text-white">✨</i>
                 </div>
                 <div>
-                    <h1 class="font-black text-xl tracking-wider text-white">TEBAK SIAPA?</h1>
+                    <h1 class="font-black text-xl tracking-wider text-white">TEBAK SIAPA DIA?</h1>
                     <p class="text-xs text-emerald-400 font-semibold tracking-widest uppercase">Gerakan Pemuda GPIB Mangngamaseang</p>
                 </div>
             </div>
@@ -78,13 +78,13 @@
         <section id="screen-welcome" class="w-full max-w-2xl space-y-8 animate-fadeIn">
             <div class="text-center space-y-3 max-w-xl mx-auto pt-2">
                 <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Powered by Firebase Cloud
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5">✨</i> Games Seru After Ibadah GP
                 </div>
                 <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
-                    Seberapa Tajam <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Mata Kamu?</span>
+                    Seberapa Kenal <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Kamu dengan Rekan-Rekan Pemuda GPIB Mangngamaseang?</span>
                 </h2>
                 <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
-                    Host membuka Layar Utama Proyektor, Pemain memasukkan PIN dari HP masing-masing untuk bertanding secara langsung!
+                    Game Produksi Internal Pengurus Gerakan Pemuda GPIB Mangngamaseang, silahkan pilih mode Player / Host. Sebagai Host akan membuka room dan mengenerate PIN, Player akan memasukkan PIN dari HP masing-masing untuk bermain secara langsung!
                 </p>
             </div>
 
@@ -112,15 +112,15 @@
                     <div class="space-y-4">
                         <div class="w-12 h-12 mx-auto bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center text-xl font-bold border border-indigo-500/30">📺</div>
                         <div>
-                            <h3 class="text-lg font-black text-white uppercase">HOST (ADMIN / PROYEKTOR)</h3>
-                            <p class="text-xs text-slate-400 mt-1">Buat Room game baru & kontrol Layar Proyektor</p>
+                            <h3 class="text-lg font-black text-white uppercase">HOST (ADMIN)</h3>
+                            <p class="text-xs text-slate-400 mt-1">Buat room game baru & kontrol permainan</p>
                         </div>
                     </div>
 
                     <div class="space-y-2.5 pt-4">
                         <button id="btn-create-host" onclick="app.createHostRoom()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2">
                             <i data-lucide="plus-circle" class="w-4 h-4">➕</i>
-                            <span>Buat Sesi Game Baru</span>
+                            <span>Buat Room Game Baru</span>
                         </button>
                     </div>
                 </div>
@@ -146,7 +146,7 @@
                     <label class="text-xs font-bold text-slate-300 uppercase tracking-wider block">Pilih Mode Sesi yang Dimainkan:</label>
                     <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800">
                         <button id="tab-mode-host" onclick="app.switchQuestionSet('host')" class="py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow">
-                            <span>📋 Soal Resmi Host</span>
+                            <span>📋 Soal Host</span>
                             <span id="badge-host-count" class="px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-200 text-[10px]">0</span>
                         </button>
                         <button id="tab-mode-trial" onclick="app.switchQuestionSet('trial')" class="py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white">
@@ -319,7 +319,7 @@
                 <h2 class="text-3xl md:text-5xl font-black tracking-tight text-white">
                     LEADERBOARD <span class="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-300 to-emerald-400">JUARA</span>
                 </h2>
-                <p class="text-xs md:text-sm text-slate-400">Selamat kepada para pemenang dengan penglihatan ter-tajam!</p>
+                <p class="text-xs md:text-sm text-slate-400">Selamat kepada para pemenang dengan penglihatan tertajam!</p>
             </div>
 
             <!-- TAMPILAN JAWABAN BENAR DARI SOAL INI -->
@@ -416,7 +416,7 @@
                 <div class="w-12 h-12 mx-auto bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl border border-emerald-500/40">🎉</div>
                 <h3 class="text-xl font-black text-emerald-300 uppercase tracking-wide">Semua Soal Telah Selesai Dijawab!</h3>
                 <p class="text-xs text-slate-300 leading-relaxed">
-                    Terima kasih banyak atas partisipasinya seluruh anggota & rekan-rekan GP GPIB Mangngamaseang! Sampai jumpa di game seru berikutnya. ✨
+                    Terima kasih banyak atas partisipasinya seluruh rekan-rekan GP GPIB Mangngamaseang! Sampai jumpa di game seru berikutnya. ✨
                 </p>
                 <button onclick="app.hostCloseRoom()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 text-white font-extrabold text-sm rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
                     <span>✅ KONFIRMASI & SELESAIKAN GAME</span>
@@ -436,7 +436,7 @@
         <!-- ==================== SCREEN 6: CREATOR ==================== -->
         <section id="screen-custom-creator" class="hidden w-full max-w-2xl space-y-6">
             <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-black text-white">Tambah Soal Resmi Host Baru</h2>
+                <h2 class="text-2xl font-black text-white">Tambah Soal Host Baru</h2>
                 <button onclick="app.showScreen('host-lobby')" class="p-2 rounded-xl bg-slate-800 text-slate-300">✖</button>
             </div>
 
@@ -466,12 +466,12 @@
                 </div>
 
                 <div>
-                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">4. Jawaban Benar (Merah)</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">4. Jawaban Benar</label>
                     <input type="text" id="custom-answer" required placeholder="Contoh: Budi Santoso" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white">
                 </div>
 
                 <div>
-                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">5. 3 Pilihan Salah (Biru, Kuning, Hijau)</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">5. 3 Pilihan Salah</label>
                     <div class="grid grid-cols-3 gap-2">
                         <input type="text" id="custom-opt-1" required placeholder="Salah 1" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
                         <input type="text" id="custom-opt-2" required placeholder="Salah 2" class="bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
@@ -743,8 +743,8 @@
                 if (setType === 'host') {
                     btnHost.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigo-600 text-white shadow";
                     btnTrial.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-400 hover:text-white";
-                    labelActive.innerText = "📋 Daftar Soal RESMI Host yang Akan Dimainkan:";
-                    btnStart.innerText = "🚀 MULAI SESI GAME RESMI";
+                    labelActive.innerText = "📋 Daftar Soal Host yang Akan Dimainkan:";
+                    btnStart.innerText = "🚀 MULAI SESI GAME";
                     this.questions = [...this.hostQuestions];
                 } else {
                     btnTrial.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-emerald-600 text-white shadow";
