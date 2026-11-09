@@ -615,7 +615,7 @@
                 this.currentStep = 5;
                 this.currentCorrectIndex = 0;
                 this.currentShuffledOptions = [];
-                this.currentFeatureSpots = []; // Menyimpan urutan teracak bagian-bagian penting subjek
+                this.currentFeatureSpots = [];
                 this.timer = null;
                 this.timeLeft = 30;
                 
@@ -850,17 +850,18 @@
                 this.currentShuffledOptions = shuffledOptions;
                 this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
 
-                // MEMATAKAN 5 BAGIAN PENTING SUBJEK (Wajah/Hidung, Tangan Kanan, Tangan Kiri, Kepala, Pundak)
+                // MEMATAKAN TITIK-TITIK SPOTLIGHT PENTING DENGAN JARAK SALING JAUH (TIDAK BERSAMPINGAN/MENUMPUK)
                 const fx = q.focalX || 50;
                 const fy = q.focalY || 50;
                 const rawFeatureSpots = [
-                    { label: 'Hidung / Wajah Utama', x: fx, y: fy },
-                    { label: 'Tangan Kanan', x: Math.max(15, fx - 25), y: Math.min(85, fy + 18) },
-                    { label: 'Tangan Kiri', x: Math.min(85, fx + 25), y: Math.min(85, fy + 18) },
-                    { label: 'Kepala / Rambut', x: fx, y: Math.max(12, fy - 22) },
-                    { label: 'Pundak / Dada', x: fx, y: Math.min(88, fy + 24) }
+                    { label: 'Detail Subjek Utama', x: fx, y: fy },
+                    { label: 'Area Kiri Atas Subjek', x: Math.max(12, fx - 35), y: Math.max(12, fy - 30) },
+                    { label: 'Area Kanan Bawah Subjek', x: Math.min(88, fx + 35), y: Math.min(88, fy + 30) },
+                    { label: 'Area Kanan Atas Subjek', x: Math.min(88, fx + 35), y: Math.max(12, fy - 30) },
+                    { label: 'Area Kiri Bawah Subjek', x: Math.max(12, fx - 35), y: Math.min(88, fy + 30) }
                 ];
-                // PENGACAKAN URUTAN DARI BAGIAN PENTING SEHINGGA SETIAP GAME MEMILIKI URUTAN BAGIAN UNIK
+                
+                // URUTAN KEMUNCULAN SPOTLIGHT DIAKtifKAN SECARA ACAK
                 this.currentFeatureSpots = this.shuffleArray(rawFeatureSpots);
 
                 this.currentStep = 5;
@@ -916,7 +917,7 @@
                 }
             }
 
-            /* ================= MODE REVEAL BARU: REVEAL SPOTLIGHT BAGIAN PENTING ACAK ================= */
+            /* ================= MODE REVEAL SPESIFIK: SPOTLIGHT KECIL & TERPISAH JAUH ================= */
             renderImageReveal(img, canvas, step) {
                 const ctx = canvas.getContext('2d');
                 const w = img.naturalWidth || img.width || 800;
@@ -924,34 +925,31 @@
                 canvas.width = w; 
                 canvas.height = h;
 
-                // Tampilkan foto utuh jika step sudah paling akhir (Step 1)
+                // Jika step sudah paling akhir (Step 1), foto terbuka 100% utuh
                 if (step <= 1) {
                     ctx.drawImage(img, 0, 0, w, h);
                     document.getElementById('host-level-text').innerText = "Reveal: Foto Terbuka Utuh (100%)";
                     return;
                 }
 
-                // Gambar background foto asli terlebih dahulu
                 ctx.drawImage(img, 0, 0, w, h);
 
-                // Hitung berapa banyak bagian yang harus dibuka berdasarkan penekanan Hint oleh Host
-                // Step 5 = 1 Bagian, Step 4 = 2 Bagian, Step 3 = 3 Bagian, Step 2 = 4 Bagian
                 const activeCount = Math.min(this.currentFeatureSpots.length, 6 - step);
                 const activeSpots = this.currentFeatureSpots.slice(0, activeCount);
 
-                // Buat topeng gelap canvas untuk menutupi bagian selain spotlight yang terbuka
                 const maskCanvas = document.createElement('canvas');
                 maskCanvas.width = w;
                 maskCanvas.height = h;
                 const mCtx = maskCanvas.getContext('2d');
 
-                // Isi seluruh layar dengan warna gelap
+                // Isi seluruh canvas dengan warna gelap
                 mCtx.fillStyle = '#0f172a';
                 mCtx.fillRect(0, 0, w, h);
 
-                // Potong lubang lingkaran sorotan di titik-titik bagian penting yang aktif
                 mCtx.globalCompositeOperation = 'destination-out';
-                const spotRadius = Math.min(w, h) * 0.16; // Ukuran diameter lingkaran sorotan
+                
+                // UKURAN LINGKARAN DIPERKECIL SANGAT SPESIFIK (7.5% DARI DIMENSI TERKECIL SCREEN)
+                const spotRadius = Math.min(w, h) * 0.075;
 
                 activeSpots.forEach(spot => {
                     const cx = (spot.x / 100) * w;
@@ -961,10 +959,9 @@
                     mCtx.fill();
                 });
 
-                // Tempelkan mask gelap di atas foto
                 ctx.drawImage(maskCanvas, 0, 0);
 
-                // Gambar garis lingkar sorotan neon berkilau di sekitar bagian yang terbuka
+                // Garis lingkar sorotan neon tipis & spesifik
                 activeSpots.forEach((spot, idx) => {
                     const cx = (spot.x / 100) * w;
                     const cy = (spot.y / 100) * h;
@@ -972,10 +969,10 @@
 
                     ctx.beginPath();
                     ctx.arc(cx, cy, spotRadius, 0, Math.PI * 2);
-                    ctx.strokeStyle = isNewest ? '#10b981' : '#6366f1'; // Emerald untuk bagian terbaru, Indigo untuk bagian sebelumnya
-                    ctx.lineWidth = isNewest ? 5 : 3;
-                    ctx.shadowColor = isNewest ? 'rgba(16, 185, 129, 0.9)' : 'rgba(99, 102, 241, 0.6)';
-                    ctx.shadowBlur = 16;
+                    ctx.strokeStyle = isNewest ? '#10b981' : '#6366f1';
+                    ctx.lineWidth = isNewest ? 4 : 2;
+                    ctx.shadowColor = isNewest ? 'rgba(16, 185, 129, 0.9)' : 'rgba(99, 102, 241, 0.5)';
+                    ctx.shadowBlur = 12;
                     ctx.stroke();
                     ctx.shadowBlur = 0;
                 });
