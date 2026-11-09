@@ -84,7 +84,7 @@
                     Seberapa Kenal <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">Kamu dengan Rekan-Rekan Pemuda GPIB Mangngamaseang?</span>
                 </h2>
                 <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
-                    Game Produksi Internal Pengurus Gerakan Pemuda GPIB Mangngamaseang, silahkan pilih mode Player / Host. Sebagai Host akan membuka room dan mengenerate PIN, Player akan memasukkan PIN dari HP masing-masing untuk bermain secara langsung!
+                    Game Produksi Internal Pengurus Gerakan Pemuda GPIB Mangngamaseang. Pilih mode Player atau Host. Host membuka room & mengenerate PIN, Pemain memasukkan PIN dari HP masing-masing!
                 </p>
             </div>
 
@@ -160,7 +160,7 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-300 uppercase">Pemain Terhubung (<span id="host-player-count">0</span>)</span>
-                        <button id="btn-add-custom-q" onclick="app.showScreen('custom-creator')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl border border-emerald-500/40 flex items-center gap-1 transition">
+                        <button id="btn-add-custom-q" onclick="app.openCreatorScreen()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl border border-emerald-500/40 flex items-center gap-1 transition">
                             <i data-lucide="plus" class="w-3.5 h-3.5">➕</i> Tambah Soal Host
                         </button>
                     </div>
@@ -283,7 +283,7 @@
                 </div>
             </div>
 
-            <!-- Host Viewport Super Besar untuk Proyektor (Tinggi 520px-650px) -->
+            <!-- Host Viewport Super Besar untuk Proyektor -->
             <div class="relative w-full h-[520px] md:h-[650px] rounded-3xl overflow-hidden glass-panel border border-slate-700/80 flex items-center justify-center shadow-2xl bg-slate-950 p-3">
                 <div class="w-full h-full relative overflow-hidden flex items-center justify-center">
                     <img id="host-game-image" src="" alt="Subjek" class="zoom-target max-w-full max-h-full object-contain hidden rounded-2xl" />
@@ -293,16 +293,15 @@
 
                 <div class="absolute top-4 left-4 glass-card px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold text-emerald-400 flex items-center gap-2 z-10 shadow-lg">
                     <span id="host-badge-icon">🧩</span>
-                    <span id="host-level-text">Reveal: 15% Terbuka</span>
+                    <span id="host-level-text">Reveal: Bagian 1 Terbuka</span>
                 </div>
             </div>
 
-            <!-- Container Opsi Jawaban di Layar Host Dihilangkan -->
             <div id="host-options-grid" class="hidden"></div>
 
             <div class="flex gap-3">
                 <button onclick="app.hostManualStepDown()" class="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-2xl border border-slate-700">
-                    👁 Buka Area Lebih Luas (-15)
+                    👁 Buka Bagian Lainnya (Hint)
                 </button>
                 <button onclick="app.hostEndQuestion()" class="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm rounded-2xl shadow-lg">
                     Selesaikan Soal Ini ➔
@@ -436,7 +435,7 @@
         <!-- ==================== SCREEN 6: CREATOR ==================== -->
         <section id="screen-custom-creator" class="hidden w-full max-w-2xl space-y-6">
             <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-black text-white">Tambah Soal Host Baru</h2>
+                <h2 id="creator-title" class="text-2xl font-black text-white">Tambah Soal Host Baru</h2>
                 <button onclick="app.showScreen('host-lobby')" class="p-2 rounded-xl bg-slate-800 text-slate-300">✖</button>
             </div>
 
@@ -444,7 +443,7 @@
                 <div>
                     <label class="text-xs font-semibold text-indigo-300 uppercase block mb-1">1. Mode Efek Visual</label>
                     <select id="custom-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold">
-                        <option value="reveal">🧩 Mode Image Reveal (Buka Fokus Subjek)</option>
+                        <option value="reveal">🧩 Mode Image Reveal (Bagian-Bagian Penting Subjek)</option>
                         <option value="pixel">👾 Mode Pixelated (Foto Pecah)</option>
                         <option value="zoom">🔍 Mode Zoom In (Fokus)</option>
                     </select>
@@ -456,7 +455,7 @@
                 </div>
 
                 <div>
-                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">3. Klik Area Fokus Penting pada Foto</label>
+                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">3. Klik Area Wajah/Fokus Utama Subjek</label>
                     <div id="focal-picker-container" onclick="app.setFocalPoint(event)" class="h-60 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-700 flex items-center justify-center cursor-crosshair p-2">
                         <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" class="max-w-full max-h-full object-contain rounded-xl">
                         <div id="focal-marker" class="absolute w-8 h-8 -ml-4 -mt-4 border-2 border-emerald-400 rounded-full bg-emerald-500/30 flex items-center justify-center shadow-lg pointer-events-none transition-all duration-200" style="left: 50%; top: 50%;">
@@ -481,7 +480,7 @@
 
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="app.showScreen('host-lobby')" class="flex-1 py-3 bg-slate-800 text-slate-300 text-sm font-semibold rounded-xl">Batal</button>
-                    <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow">Simpan Soal</button>
+                    <button type="submit" id="btn-save-custom-q" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl shadow">Simpan Soal</button>
                 </div>
             </form>
         </section>
@@ -616,8 +615,12 @@
                 this.currentStep = 5;
                 this.currentCorrectIndex = 0;
                 this.currentShuffledOptions = [];
+                this.currentFeatureSpots = []; // Menyimpan urutan teracak bagian-bagian penting subjek
                 this.timer = null;
                 this.timeLeft = 30;
+                
+                // Form Creator & Edit State
+                this.editingIndex = -1;
                 this.creatorFocalX = 50;
                 this.creatorFocalY = 50;
                 this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
@@ -774,14 +777,19 @@
                         const item = document.createElement('div');
                         item.className = "p-2.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs";
                         item.innerHTML = `
-                            <div class="flex items-center gap-2.5">
-                                <img src="${q.imageUrl}" class="w-7 h-7 rounded-lg object-cover">
-                                <div>
+                            <div class="flex items-center gap-2.5 overflow-hidden">
+                                <img src="${q.imageUrl}" class="w-7 h-7 rounded-lg object-cover flex-shrink-0">
+                                <div class="truncate">
                                     <span class="font-bold text-white">${idx + 1}. ${q.name}</span>
                                     <span class="ml-1.5 px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px]">${typeTag}</span>
                                 </div>
                             </div>
-                            ${this.activeQuestionSet === 'host' ? `<button onclick="app.removeHostQuestion(${idx})" class="text-rose-400 p-1 hover:text-rose-300"><i data-lucide="trash-2" class="w-3.5 h-3.5">🗑</i></button>` : ''}
+                            ${this.activeQuestionSet === 'host' ? `
+                                <div class="flex items-center gap-1 flex-shrink-0 ml-2">
+                                    <button onclick="app.editHostQuestion(${idx})" class="text-amber-400 hover:text-amber-300 p-1" title="Edit Soal"><i data-lucide="edit-3" class="w-3.5 h-3.5">✏️</i></button>
+                                    <button onclick="app.removeHostQuestion(${idx})" class="text-rose-400 hover:text-rose-300 p-1" title="Hapus Soal"><i data-lucide="trash-2" class="w-3.5 h-3.5">🗑</i></button>
+                                </div>
+                            ` : ''}
                         `;
                         list.appendChild(item);
                     });
@@ -842,6 +850,19 @@
                 this.currentShuffledOptions = shuffledOptions;
                 this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
 
+                // MEMATAKAN 5 BAGIAN PENTING SUBJEK (Wajah/Hidung, Tangan Kanan, Tangan Kiri, Kepala, Pundak)
+                const fx = q.focalX || 50;
+                const fy = q.focalY || 50;
+                const rawFeatureSpots = [
+                    { label: 'Hidung / Wajah Utama', x: fx, y: fy },
+                    { label: 'Tangan Kanan', x: Math.max(15, fx - 25), y: Math.min(85, fy + 18) },
+                    { label: 'Tangan Kiri', x: Math.min(85, fx + 25), y: Math.min(85, fy + 18) },
+                    { label: 'Kepala / Rambut', x: fx, y: Math.max(12, fy - 22) },
+                    { label: 'Pundak / Dada', x: fx, y: Math.min(88, fy + 24) }
+                ];
+                // PENGACAKAN URUTAN DARI BAGIAN PENTING SEHINGGA SETIAP GAME MEMILIKI URUTAN BAGIAN UNIK
+                this.currentFeatureSpots = this.shuffleArray(rawFeatureSpots);
+
                 this.currentStep = 5;
                 const img = document.getElementById('host-game-image');
                 
@@ -870,7 +891,6 @@
                 const img = document.getElementById('host-game-image');
                 const canvas = document.getElementById('host-game-canvas');
                 const badgeIcon = document.getElementById('host-badge-icon');
-                const levelText = document.getElementById('host-level-text');
 
                 img.style.transform = 'none';
 
@@ -878,61 +898,92 @@
                     img.classList.add('hidden'); canvas.classList.remove('hidden');
                     const pixelMap = { 5: 36, 4: 24, 3: 14, 2: 6, 1: 1 };
                     const pxSize = pixelMap[this.currentStep] || 1;
-                    badgeIcon.innerText = '👾'; levelText.innerText = `Piksel: ${pxSize}px`;
+                    badgeIcon.innerText = '👾';
+                    document.getElementById('host-level-text').innerText = `Piksel: ${pxSize}px`;
                     this.renderPixelated(img, canvas, pxSize);
                 } else if (mode === 'reveal') {
                     img.classList.add('hidden'); canvas.classList.remove('hidden');
-                    const revealMap = { 5: '15%', 4: '35%', 3: '58%', 2: '80%', 1: '100%' };
-                    badgeIcon.innerText = '🧩'; levelText.innerText = `Reveal: ${revealMap[this.currentStep] || '100%'} Terbuka`;
-                    this.renderImageReveal(img, canvas, this.currentStep, q.focalX || 50, q.focalY || 50);
+                    badgeIcon.innerText = '🧩';
+                    this.renderImageReveal(img, canvas, this.currentStep);
                 } else {
                     canvas.classList.add('hidden'); img.classList.remove('hidden');
                     const zoomMap = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
                     const scale = zoomMap[this.currentStep] || 1;
-                    badgeIcon.innerText = '🔍'; levelText.innerText = `Zoom: ${scale}x`;
+                    badgeIcon.innerText = '🔍';
+                    document.getElementById('host-level-text').innerText = `Zoom: ${scale}x`;
                     img.style.transformOrigin = `${q.focalX || 50}% ${q.focalY || 50}%`;
                     img.style.transform = `scale(${scale})`;
                 }
             }
 
-            renderImageReveal(img, canvas, step, focalX = 50, focalY = 50) {
+            /* ================= MODE REVEAL BARU: REVEAL SPOTLIGHT BAGIAN PENTING ACAK ================= */
+            renderImageReveal(img, canvas, step) {
                 const ctx = canvas.getContext('2d');
                 const w = img.naturalWidth || img.width || 800;
                 const h = img.naturalHeight || img.height || 600;
                 canvas.width = w; 
                 canvas.height = h;
 
-                ctx.drawImage(img, 0, 0, w, h);
-                if (step <= 1) return;
-
-                const cols = 8; const rows = 8;
-                const tileW = w / cols; const tileH = h / rows;
-                const totalTiles = cols * rows;
-
-                const revealRatios = { 5: 0.15, 4: 0.35, 3: 0.58, 2: 0.80, 1: 1.0 };
-                const revealCount = Math.floor(totalTiles * (revealRatios[step] || 1.0));
-
-                const tiles = [];
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        const tileCenterX = ((c + 0.5) / cols) * 100;
-                        const tileCenterY = ((r + 0.5) / rows) * 100;
-                        const dist = Math.hypot(tileCenterX - focalX, tileCenterY - focalY);
-                        tiles.push({ r, c, x: c * tileW, y: r * tileH, dist: dist });
-                    }
+                // Tampilkan foto utuh jika step sudah paling akhir (Step 1)
+                if (step <= 1) {
+                    ctx.drawImage(img, 0, 0, w, h);
+                    document.getElementById('host-level-text').innerText = "Reveal: Foto Terbuka Utuh (100%)";
+                    return;
                 }
 
-                tiles.sort((a, b) => a.dist - b.dist);
-                const hiddenTiles = tiles.slice(revealCount);
+                // Gambar background foto asli terlebih dahulu
+                ctx.drawImage(img, 0, 0, w, h);
 
-                ctx.fillStyle = '#0f172a';
-                ctx.strokeStyle = '#1e293b';
-                ctx.lineWidth = 1;
+                // Hitung berapa banyak bagian yang harus dibuka berdasarkan penekanan Hint oleh Host
+                // Step 5 = 1 Bagian, Step 4 = 2 Bagian, Step 3 = 3 Bagian, Step 2 = 4 Bagian
+                const activeCount = Math.min(this.currentFeatureSpots.length, 6 - step);
+                const activeSpots = this.currentFeatureSpots.slice(0, activeCount);
 
-                hiddenTiles.forEach(tile => {
-                    ctx.fillRect(tile.x, tile.y, tileW, tileH);
-                    ctx.strokeRect(tile.x, tile.y, tileW, tileH);
+                // Buat topeng gelap canvas untuk menutupi bagian selain spotlight yang terbuka
+                const maskCanvas = document.createElement('canvas');
+                maskCanvas.width = w;
+                maskCanvas.height = h;
+                const mCtx = maskCanvas.getContext('2d');
+
+                // Isi seluruh layar dengan warna gelap
+                mCtx.fillStyle = '#0f172a';
+                mCtx.fillRect(0, 0, w, h);
+
+                // Potong lubang lingkaran sorotan di titik-titik bagian penting yang aktif
+                mCtx.globalCompositeOperation = 'destination-out';
+                const spotRadius = Math.min(w, h) * 0.16; // Ukuran diameter lingkaran sorotan
+
+                activeSpots.forEach(spot => {
+                    const cx = (spot.x / 100) * w;
+                    const cy = (spot.y / 100) * h;
+                    mCtx.beginPath();
+                    mCtx.arc(cx, cy, spotRadius, 0, Math.PI * 2);
+                    mCtx.fill();
                 });
+
+                // Tempelkan mask gelap di atas foto
+                ctx.drawImage(maskCanvas, 0, 0);
+
+                // Gambar garis lingkar sorotan neon berkilau di sekitar bagian yang terbuka
+                activeSpots.forEach((spot, idx) => {
+                    const cx = (spot.x / 100) * w;
+                    const cy = (spot.y / 100) * h;
+                    const isNewest = idx === activeSpots.length - 1;
+
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, spotRadius, 0, Math.PI * 2);
+                    ctx.strokeStyle = isNewest ? '#10b981' : '#6366f1'; // Emerald untuk bagian terbaru, Indigo untuk bagian sebelumnya
+                    ctx.lineWidth = isNewest ? 5 : 3;
+                    ctx.shadowColor = isNewest ? 'rgba(16, 185, 129, 0.9)' : 'rgba(99, 102, 241, 0.6)';
+                    ctx.shadowBlur = 16;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                });
+
+                const latestSpot = activeSpots[activeSpots.length - 1];
+                if (latestSpot) {
+                    document.getElementById('host-level-text').innerText = `Hint #${activeSpots.length}: Terbuka ${latestSpot.label}`;
+                }
             }
 
             renderPixelated(img, canvas, pixelSize) {
@@ -1388,7 +1439,60 @@
                 document.getElementById('player-res-score').innerText = score;
             }
 
-            /* ================= CREATOR LOGIC ================= */
+            /* ================= CREATOR & EDIT LOGIC ================= */
+
+            openCreatorScreen() {
+                this.resetCreatorForm();
+                this.showScreen('custom-creator');
+            }
+
+            resetCreatorForm() {
+                this.editingIndex = -1;
+                document.getElementById('creator-title').innerText = "Tambah Soal Host Baru";
+                document.getElementById('btn-save-custom-q').innerText = "Simpan Soal";
+                document.getElementById('custom-type').value = "reveal";
+                document.getElementById('custom-answer').value = "";
+                document.getElementById('custom-opt-1').value = "";
+                document.getElementById('custom-opt-2').value = "";
+                document.getElementById('custom-opt-3').value = "";
+                document.getElementById('custom-img-file').value = "";
+                
+                this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
+                document.getElementById('creator-img-preview').src = this.customImgData;
+                
+                this.creatorFocalX = 50;
+                this.creatorFocalY = 50;
+                const marker = document.getElementById('focal-marker');
+                marker.style.left = '50%';
+                marker.style.top = '50%';
+            }
+
+            editHostQuestion(idx) {
+                const q = this.hostQuestions[idx];
+                if (!q) return;
+
+                this.editingIndex = idx;
+                document.getElementById('creator-title').innerText = `Edit Soal Host #${idx + 1}`;
+                document.getElementById('btn-save-custom-q').innerText = "Update Soal";
+
+                document.getElementById('custom-type').value = q.type || 'reveal';
+                document.getElementById('custom-answer').value = q.options ? q.options[0] : (q.name || '');
+                document.getElementById('custom-opt-1').value = q.options ? (q.options[1] || '') : '';
+                document.getElementById('custom-opt-2').value = q.options ? (q.options[2] || '') : '';
+                document.getElementById('custom-opt-3').value = q.options ? (q.options[3] || '') : '';
+
+                this.customImgData = q.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
+                document.getElementById('creator-img-preview').src = this.customImgData;
+
+                this.creatorFocalX = q.focalX || 50;
+                this.creatorFocalY = q.focalY || 50;
+
+                const marker = document.getElementById('focal-marker');
+                marker.style.left = `${this.creatorFocalX}%`;
+                marker.style.top = `${this.creatorFocalY}%`;
+
+                this.showScreen('custom-creator');
+            }
 
             setFocalPoint(e) {
                 const imgEl = document.getElementById('creator-img-preview');
@@ -1464,18 +1568,26 @@
                 const opt2 = document.getElementById('custom-opt-2').value.trim();
                 const opt3 = document.getElementById('custom-opt-3').value.trim();
 
-                this.hostQuestions.push({
-                    id: 'q_' + Date.now(),
+                const questionData = {
+                    id: this.editingIndex >= 0 ? this.hostQuestions[this.editingIndex].id : ('q_' + Date.now()),
                     type: type,
                     name: ans,
                     focalX: this.creatorFocalX,
                     focalY: this.creatorFocalY,
                     imageUrl: this.customImgData,
                     options: [ans, opt1, opt2, opt3]
-                });
+                };
+
+                if (this.editingIndex >= 0) {
+                    this.hostQuestions[this.editingIndex] = questionData;
+                    this.showToast('✅ Soal Host Berhasil Diperbarui!');
+                } else {
+                    this.hostQuestions.push(questionData);
+                    this.showToast('✅ Soal Resmi Host Berhasil Disimpan!');
+                }
 
                 localStorage.setItem('gpgp_host_questions', JSON.stringify(this.hostQuestions));
-                this.showToast('Soal Resmi Host Berhasil Disimpan!');
+                this.resetCreatorForm();
                 this.switchQuestionSet('host');
                 this.showScreen('host-lobby');
             }
