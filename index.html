@@ -850,15 +850,17 @@
                 this.currentShuffledOptions = shuffledOptions;
                 this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
 
-                // MEMATAKAN TITIK-TITIK SPOTLIGHT PENTING DENGAN JARAK SALING JAUH (TIDAK BERSAMPINGAN/MENUMPUK)
+                // SISTEM CERDAS DETEKSI ANATOMI TUBUH MANUSIA (ANATOMICAL PROPORTION GRID)
                 const fx = q.focalX || 50;
                 const fy = q.focalY || 50;
+                
+                // Menghitung koordinat bagian spesifik tubuh berdasarkan posisi kepala/wajah
                 const rawFeatureSpots = [
-                    { label: 'Detail Subjek Utama', x: fx, y: fy },
-                    { label: 'Area Kiri Atas Subjek', x: Math.max(12, fx - 35), y: Math.max(12, fy - 30) },
-                    { label: 'Area Kanan Bawah Subjek', x: Math.min(88, fx + 35), y: Math.min(88, fy + 30) },
-                    { label: 'Area Kanan Atas Subjek', x: Math.min(88, fx + 35), y: Math.max(12, fy - 30) },
-                    { label: 'Area Kiri Bawah Subjek', x: Math.max(12, fx - 35), y: Math.min(88, fy + 30) }
+                    { label: 'Area Mata & Wajah Utama', x: fx, y: fy },
+                    { label: 'Pundak & Bentuk Leher', x: Math.max(8, fx - 16), y: Math.min(92, fy + 16) },
+                    { label: 'Detail Pakaian / Motif Baju', x: fx, y: Math.min(92, fy + 30) },
+                    { label: 'Pergelangan Tangan & Aksesori', x: Math.min(92, fx + 22), y: Math.min(92, fy + 40) },
+                    { label: 'Sepatu & Gaya Kaki', x: Math.max(8, fx - 10), y: Math.min(94, fy + 60) }
                 ];
                 
                 // URUTAN KEMUNCULAN SPOTLIGHT DIAKtifKAN SECARA ACAK
@@ -949,7 +951,7 @@
                 mCtx.globalCompositeOperation = 'destination-out';
                 
                 // UKURAN LINGKARAN DIPERKECIL SANGAT SPESIFIK (7.5% DARI DIMENSI TERKECIL SCREEN)
-                const spotRadius = Math.min(w, h) * 0.075;
+                const spotRadius = Math.min(w, h) * 0.055;
 
                 activeSpots.forEach(spot => {
                     const cx = (spot.x / 100) * w;
