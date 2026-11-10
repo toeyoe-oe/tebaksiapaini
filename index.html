@@ -442,7 +442,7 @@
             <form onsubmit="app.saveQuestion(event)" class="glass-panel p-6 rounded-3xl space-y-4 border border-slate-800">
                 <div>
                     <label class="text-xs font-semibold text-indigo-300 uppercase block mb-1">1. Mode Efek Visual</label>
-                    <select id="custom-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold">
+                    <select id="custom-type" onchange="app.handleCreatorTypeChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white font-bold">
                         <option value="reveal">🧩 Mode Image Reveal (Bagian-Bagian Penting Subjek)</option>
                         <option value="pixel">👾 Mode Pixelated (Foto Pecah)</option>
                         <option value="zoom">🔍 Mode Zoom In (Fokus)</option>
@@ -454,14 +454,23 @@
                     <input type="file" id="custom-img-file" accept="image/*" onchange="app.handleFileUpload(event)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
                 </div>
 
+                <!-- 3. LOKASI / KLIK TITIK REVEAL ATAS FOTO -->
                 <div>
-                    <label class="text-xs font-semibold text-slate-300 uppercase block mb-1">3. Klik Area Wajah/Fokus Utama Subjek</label>
-                    <div id="focal-picker-container" onclick="app.setFocalPoint(event)" class="h-60 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-700 flex items-center justify-center cursor-crosshair p-2">
-                        <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" class="max-w-full max-h-full object-contain rounded-xl">
-                        <div id="focal-marker" class="absolute w-8 h-8 -ml-4 -mt-4 border-2 border-emerald-400 rounded-full bg-emerald-500/30 flex items-center justify-center shadow-lg pointer-events-none transition-all duration-200" style="left: 50%; top: 50%;">
-                            <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                        </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label id="label-point-3" class="text-xs font-semibold text-indigo-300 uppercase block">3. Klik Urutan Titik Reveal (Maksimal 4 Titik)</label>
+                        <button type="button" onclick="app.resetCreatorSpots()" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/30">
+                            🔄 Reset Titik
+                        </button>
                     </div>
+                    <p id="desc-point-3" class="text-[11px] text-slate-400 mb-2">Klik foto untuk tambah titik (maks. 4). Klik & tahan (drag) pada titik untuk menggeser posisinya.</p>
+
+                    <div id="focal-picker-container" onclick="app.setFocalPoint(event)" class="h-64 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-700 flex items-center justify-center cursor-crosshair p-2">
+                        <img id="creator-img-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80" class="max-w-full max-h-full object-contain rounded-xl">
+                        <div id="focal-markers-wrapper" class="absolute inset-0 pointer-events-none"></div>
+                    </div>
+
+                    <!-- DAFTAR PENGATURAN INDIVIDUAL PER-TITIK SPOTLIGHT -->
+                    <div id="spots-list-container" class="mt-3 space-y-2"></div>
                 </div>
 
                 <div>
@@ -621,8 +630,7 @@
                 
                 // Form Creator & Edit State
                 this.editingIndex = -1;
-                this.creatorFocalX = 50;
-                this.creatorFocalY = 50;
+                this.creatorSpots = [];
                 this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
 
                 this.hasAnswered = false;
@@ -634,6 +642,12 @@
             init() {
                 if (typeof lucide !== 'undefined') lucide.createIcons();
                 document.body.addEventListener('click', () => this.sound.init(), { once: true });
+                window.addEventListener('resize', () => {
+                    const creatorScreen = document.getElementById('screen-custom-creator');
+                    if (creatorScreen && !creatorScreen.classList.contains('hidden')) {
+                        this.renderCreatorSpotMarkers();
+                    }
+                });
                 this.checkSavedPlayerSession();
             }
 
@@ -650,13 +664,13 @@
                 this.trialQuestions = [
                     {
                         id: 'trial_q1', type: 'reveal', name: 'Contoh Subjek Trial 1',
-                        focalX: 50, focalY: 35,
+                        spots: [{x: 50, y: 35, size: 0.10}, {x: 35, y: 55, size: 0.14}, {x: 65, y: 55, size: 0.06}],
                         imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
                         options: ['Contoh Subjek Trial 1', 'Anggota Pemuda A', 'Anggota Pemuda B', 'Seksi Acara']
                     },
                     {
                         id: 'trial_q2', type: 'pixel', name: 'Contoh Subjek Trial 2',
-                        focalX: 50, focalY: 35,
+                        spots: [{x: 50, y: 35, size: 0.10}],
                         imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=80',
                         options: ['Contoh Subjek Trial 2', 'Panitia Acara', 'Pengurus Harian', 'Seksi Musik']
                     }
@@ -850,45 +864,10 @@
                 this.currentShuffledOptions = shuffledOptions;
                 this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
 
-                // SISTEM ADAPTIF AI DETEKSI PROPORSI FOTO (PASFOTO / HALF-BODY / FULL-BODY)
-                const fx = q.focalX || 50;
-                const fy = q.focalY || 50;
-                
-                // Hitung sisa ruang dari titik fokus wajah ke batas bawah foto
-                const spaceToBottom = 100 - fy; 
-                let rawFeatureSpots = [];
-                
-                if (spaceToBottom < 58) {
-                    // 📸 KATEGORI 1: PASFOTO / CLOSE-UP (Fokus 100% pada fitur detail wajah & leher)
-                    rawFeatureSpots = [
-                        { label: 'Mata & Area Alis', x: fx, y: Math.max(8, fy - 6) },
-                        { label: 'Hidung & Area Senyum', x: fx, y: Math.min(90, fy + 8) },
-                        { label: 'Hairline / Sisi Telinga', x: Math.max(8, fx - 16), y: fy },
-                        { label: 'Area Leher & Dagu', x: fx, y: Math.min(90, fy + 22) },
-                        { label: 'Detail Kerah & Motif Baju', x: Math.min(90, fx + 18), y: Math.min(88, fy + 34) }
-                    ];
-                } else if (spaceToBottom < 72) {
-                    // 👔 KATEGORI 2: HALF-BODY (Setengah Badan / Pinggang ke Atas)
-                    rawFeatureSpots = [
-                        { label: 'Wajah Utama', x: fx, y: fy },
-                        { label: 'Garis Rambut & Kepala', x: fx, y: Math.max(6, fy - 14) },
-                        { label: 'Bentuk Pundak & Leher', x: Math.max(8, fx - 22), y: Math.min(90, fy + 12) },
-                        { label: 'Motif Pakaian / Dada', x: fx, y: Math.min(90, fy + 26) },
-                        { label: 'Lengan / Aksesori Pakaian', x: Math.min(90, fx + 24), y: Math.min(88, fy + 40) }
-                    ];
-                } else {
-                    // 🧍 KATEGORI 3: FULL-BODY (Tampak Seluruh Tubuh dari Rambut ke Kaki)
-                    rawFeatureSpots = [
-                        { label: 'Wajah & Ekspresi', x: fx, y: fy },
-                        { label: 'Garis Rambut / Aksesori Kepala', x: fx, y: Math.max(6, fy - 12) },
-                        { label: 'Pundak & Gaya Pakaian', x: Math.max(8, fx - 18), y: Math.min(90, fy + 15) },
-                        { label: 'Pinggang / Pergelangan Tangan', x: Math.min(90, fx + 20), y: Math.min(90, fy + 38) },
-                        { label: 'Sepatu & Area Kaki', x: fx, y: Math.min(92, fy + 60) }
-                    ];
-                }
-                
-                // URUTAN KEMUNCULAN SPOTLIGHT DIAKtifKAN SECARA ACAK
-                this.currentFeatureSpots = this.shuffleArray(rawFeatureSpots);
+                // MEMBACA TITIK SPOTLIGHT DENGAN UKURAN MASING-MASING
+                this.currentFeatureSpots = (q.spots && q.spots.length > 0) 
+                    ? q.spots.map((s, i) => ({ label: `Bagian #${i + 1}`, x: s.x, y: s.y, size: s.size || 0.10 }))
+                    : [{ label: 'Bagian Utama', x: q.focalX || 50, y: q.focalY || 50, size: 0.10 }];
 
                 this.currentStep = 5;
                 const img = document.getElementById('host-game-image');
@@ -932,18 +911,50 @@
                     img.classList.add('hidden'); canvas.classList.remove('hidden');
                     badgeIcon.innerText = '🧩';
                     this.renderImageReveal(img, canvas, this.currentStep);
-                } else {
-                    canvas.classList.add('hidden'); img.classList.remove('hidden');
+                } else { // zoom
+                    img.classList.add('hidden'); canvas.classList.remove('hidden');
                     const zoomMap = { 5: 10, 4: 7, 3: 4, 2: 2, 1: 1 };
                     const scale = zoomMap[this.currentStep] || 1;
                     badgeIcon.innerText = '🔍';
                     document.getElementById('host-level-text').innerText = `Zoom: ${scale}x`;
-                    img.style.transformOrigin = `${q.focalX || 50}% ${q.focalY || 50}%`;
-                    img.style.transform = `scale(${scale})`;
+                    
+                    const zoomSpot = (q.spots && q.spots[0]) ? q.spots[0] : { x: q.focalX || 50, y: q.focalY || 50 };
+                    this.renderZoomCanvas(img, canvas, scale, zoomSpot);
                 }
             }
 
-            /* ================= MODE REVEAL SPESIFIK: SPOTLIGHT KECIL & TERPISAH JAUH ================= */
+            /* ================= RENDERING KANVAS PRESISI UNTUK ZOOM MODE ================= */
+            renderZoomCanvas(img, canvas, scale, spot) {
+                const ctx = canvas.getContext('2d');
+                const w = img.naturalWidth || img.width || 800;
+                const h = img.naturalHeight || img.height || 600;
+                canvas.width = w; 
+                canvas.height = h;
+
+                if (scale <= 1) { 
+                    ctx.drawImage(img, 0, 0, w, h); 
+                    return; 
+                }
+
+                const cropW = w / scale;
+                const cropH = h / scale;
+
+                const targetX = (spot.x / 100) * w;
+                const targetY = (spot.y / 100) * h;
+
+                let srcX = targetX - cropW / 2;
+                let srcY = targetY - cropH / 2;
+
+                // Batasi area crop agar tidak meluap keluar batas fisik foto
+                srcX = Math.max(0, Math.min(w - cropW, srcX));
+                srcY = Math.max(0, Math.min(h - cropH, srcY));
+
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, srcX, srcY, cropW, cropH, 0, 0, w, h);
+            }
+
+            /* ================= MODE REVEAL SPESIFIK: SPOTLIGHT INDEPENDEN ================= */
             renderImageReveal(img, canvas, step) {
                 const ctx = canvas.getContext('2d');
                 const w = img.naturalWidth || img.width || 800;
@@ -951,7 +962,6 @@
                 canvas.width = w; 
                 canvas.height = h;
 
-                // Jika step sudah paling akhir (Step 1), foto terbuka 100% utuh
                 if (step <= 1) {
                     ctx.drawImage(img, 0, 0, w, h);
                     document.getElementById('host-level-text').innerText = "Reveal: Foto Terbuka Utuh (100%)";
@@ -968,18 +978,16 @@
                 maskCanvas.height = h;
                 const mCtx = maskCanvas.getContext('2d');
 
-                // Isi seluruh canvas dengan warna gelap
                 mCtx.fillStyle = '#0f172a';
                 mCtx.fillRect(0, 0, w, h);
 
                 mCtx.globalCompositeOperation = 'destination-out';
-                
-                // UKURAN LINGKARAN DIPERKECIL SANGAT SPESIFIK (7.5% DARI DIMENSI TERKECIL SCREEN)
-                const spotRadius = Math.min(w, h) * 0.012;
 
                 activeSpots.forEach(spot => {
                     const cx = (spot.x / 100) * w;
                     const cy = (spot.y / 100) * h;
+                    const sSize = spot.size || 0.10;
+                    const spotRadius = Math.min(w, h) * sSize;
                     mCtx.beginPath();
                     mCtx.arc(cx, cy, spotRadius, 0, Math.PI * 2);
                     mCtx.fill();
@@ -987,10 +995,12 @@
 
                 ctx.drawImage(maskCanvas, 0, 0);
 
-                // Garis lingkar sorotan neon tipis & spesifik
+                // Garis lingkar sorotan neon
                 activeSpots.forEach((spot, idx) => {
                     const cx = (spot.x / 100) * w;
                     const cy = (spot.y / 100) * h;
+                    const sSize = spot.size || 0.10;
+                    const spotRadius = Math.min(w, h) * sSize;
                     const isNewest = idx === activeSpots.length - 1;
 
                     ctx.beginPath();
@@ -1469,6 +1479,35 @@
                 this.showScreen('custom-creator');
             }
 
+            handleCreatorTypeChange() {
+                const type = document.getElementById('custom-type').value;
+                const labelP3 = document.getElementById('label-point-3');
+                const descP3 = document.getElementById('desc-point-3');
+
+                if (type === 'reveal') {
+                    if (labelP3) labelP3.innerText = "3. Klik Urutan Titik Reveal (Maksimal 4 Titik)";
+                    if (descP3) descP3.innerText = "Klik foto untuk tambah titik (maks. 4). Klik & tahan (drag) pada titik untuk menggeser posisinya.";
+                } else if (type === 'zoom') {
+                    if (labelP3) labelP3.innerText = "3. Klik Titik Pusat Zoom In (Indikator Fokus)";
+                    if (descP3) descP3.innerText = "Klik atau geser titik pada gambar untuk menentukan lokasi awal foto di-zoom.";
+                    if (this.creatorSpots.length > 1) {
+                        this.creatorSpots = [this.creatorSpots[0]];
+                    }
+                } else { // pixel
+                    if (labelP3) labelP3.innerText = "3. Klik Area Fokus Utama Gambar";
+                    if (descP3) descP3.innerText = "Klik atau geser titik pada gambar untuk menentukan area fokus utama.";
+                    if (this.creatorSpots.length > 1) {
+                        this.creatorSpots = [this.creatorSpots[0]];
+                    }
+                }
+                this.renderCreatorSpotMarkers();
+            }
+
+            resetCreatorSpots() {
+                this.creatorSpots = [];
+                this.renderCreatorSpotMarkers();
+            }
+
             resetCreatorForm() {
                 this.editingIndex = -1;
                 document.getElementById('creator-title').innerText = "Tambah Soal Host Baru";
@@ -1483,11 +1522,8 @@
                 this.customImgData = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
                 document.getElementById('creator-img-preview').src = this.customImgData;
                 
-                this.creatorFocalX = 50;
-                this.creatorFocalY = 50;
-                const marker = document.getElementById('focal-marker');
-                marker.style.left = '50%';
-                marker.style.top = '50%';
+                this.handleCreatorTypeChange();
+                this.resetCreatorSpots();
             }
 
             editHostQuestion(idx) {
@@ -1507,33 +1543,215 @@
                 this.customImgData = q.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80';
                 document.getElementById('creator-img-preview').src = this.customImgData;
 
-                this.creatorFocalX = q.focalX || 50;
-                this.creatorFocalY = q.focalY || 50;
-
-                const marker = document.getElementById('focal-marker');
-                marker.style.left = `${this.creatorFocalX}%`;
-                marker.style.top = `${this.creatorFocalY}%`;
+                this.creatorSpots = q.spots ? [...q.spots] : [{ x: q.focalX || 50, y: q.focalY || 50, size: q.spotSize || 0.10 }];
+                
+                this.handleCreatorTypeChange();
+                setTimeout(() => this.renderCreatorSpotMarkers(), 100);
 
                 this.showScreen('custom-creator');
             }
 
-            setFocalPoint(e) {
-                const imgEl = document.getElementById('creator-img-preview');
+            // MENGHITUNG KOTAK FISIK GABAR SECARA PRESISI (MENGABAIKAN LETTERBOX/PILLARBOX)
+            getActualImageRect(imgEl) {
                 const rect = imgEl.getBoundingClientRect();
+                const naturalWidth = imgEl.naturalWidth || rect.width;
+                const naturalHeight = imgEl.naturalHeight || rect.height;
                 
-                const pctX = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
-                const pctY = Math.max(0, Math.min(100, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
+                if (!naturalWidth || !naturalHeight) return rect;
+
+                const naturalRatio = naturalWidth / naturalHeight;
+                const elementRatio = rect.width / rect.height;
+
+                let renderedWidth, renderedHeight, offsetX, offsetY;
+
+                if (elementRatio > naturalRatio) {
+                    renderedHeight = rect.height;
+                    renderedWidth = rect.height * naturalRatio;
+                    offsetX = rect.left + (rect.width - renderedWidth) / 2;
+                    offsetY = rect.top;
+                } else {
+                    renderedWidth = rect.width;
+                    renderedHeight = rect.width / naturalRatio;
+                    offsetX = rect.left;
+                    offsetY = rect.top + (rect.height - renderedHeight) / 2;
+                }
+
+                return {
+                    left: offsetX,
+                    top: offsetY,
+                    width: renderedWidth,
+                    height: renderedHeight
+                };
+            }
+
+            setFocalPoint(e) {
+                const type = document.getElementById('custom-type').value;
+                const imgEl = document.getElementById('creator-img-preview');
+                if (!imgEl) return;
+
+                const imgRect = this.getActualImageRect(imgEl);
+                if (imgRect.width === 0 || imgRect.height === 0) return;
+
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 
-                this.creatorFocalX = pctX;
-                this.creatorFocalY = pctY;
+                const pctX = Math.max(0, Math.min(100, Math.round(((clientX - imgRect.left) / imgRect.width) * 100)));
+                const pctY = Math.max(0, Math.min(100, Math.round(((clientY - imgRect.top) / imgRect.height) * 100)));
+                
+                const defaultSize = 0.10; // Standar 10%
 
-                const containerRect = e.currentTarget.getBoundingClientRect();
-                const markerX = e.clientX - containerRect.left;
-                const markerY = e.clientY - containerRect.top;
+                if (type === 'zoom' || type === 'pixel') {
+                    this.creatorSpots = [{ x: pctX, y: pctY, size: defaultSize }];
+                } else {
+                    if (this.creatorSpots.length >= 4) {
+                        this.showToast('⚠️ Maksimal 4 titik reveal! Klik & Tahan titik jika ingin menggeser posisi.');
+                        return;
+                    }
+                    this.creatorSpots.push({ x: pctX, y: pctY, size: defaultSize });
+                }
 
-                const m = document.getElementById('focal-marker');
-                m.style.left = `${markerX}px`;
-                m.style.top = `${markerY}px`;
+                this.renderCreatorSpotMarkers();
+                this.sound.click();
+            }
+
+            /* ================= LOGIKA DRAG & DROP (KLIK & TAHAN UNTUK MENGGESER TITIK) ================= */
+            startDraggingSpot(evt, idx) {
+                let isDragging = true;
+                const imgEl = document.getElementById('creator-img-preview');
+                if (!imgEl) return;
+
+                const moveHandler = (e) => {
+                    if (!isDragging) return;
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                    const imgRect = this.getActualImageRect(imgEl);
+                    if (imgRect.width === 0 || imgRect.height === 0) return;
+
+                    const pctX = Math.max(0, Math.min(100, Math.round(((clientX - imgRect.left) / imgRect.width) * 100)));
+                    const pctY = Math.max(0, Math.min(100, Math.round(((clientY - imgRect.top) / imgRect.height) * 100)));
+
+                    if (this.creatorSpots[idx]) {
+                        this.creatorSpots[idx].x = pctX;
+                        this.creatorSpots[idx].y = pctY;
+                        this.renderCreatorSpotMarkers();
+                    }
+                };
+
+                const upHandler = () => {
+                    isDragging = false;
+                    window.removeEventListener('mousemove', moveHandler);
+                    window.removeEventListener('mouseup', upHandler);
+                    window.removeEventListener('touchmove', moveHandler);
+                    window.removeEventListener('touchend', upHandler);
+                };
+
+                window.addEventListener('mousemove', moveHandler);
+                window.addEventListener('mouseup', upHandler);
+                window.addEventListener('touchmove', moveHandler, { passive: false });
+                window.addEventListener('touchend', upHandler);
+            }
+
+            updateSpotSize(idx, newSize) {
+                if (this.creatorSpots[idx]) {
+                    this.creatorSpots[idx].size = parseFloat(newSize);
+                    this.renderCreatorSpotMarkers();
+                    this.showToast(`Ukuran Titik #${idx + 1} diubah ke ${Math.round(newSize * 100)}%`);
+                }
+            }
+
+            removeSpot(idx) {
+                this.creatorSpots.splice(idx, 1);
+                this.renderCreatorSpotMarkers();
+            }
+
+            renderCreatorSpotMarkers() {
+                const wrapper = document.getElementById('focal-markers-wrapper');
+                const listWrapper = document.getElementById('spots-list-container');
+                const imgEl = document.getElementById('creator-img-preview');
+                const containerEl = document.getElementById('focal-picker-container');
+                if (!wrapper || !imgEl || !containerEl) return;
+
+                wrapper.innerHTML = '';
+                if (listWrapper) listWrapper.innerHTML = '';
+                
+                const type = document.getElementById('custom-type') ? document.getElementById('custom-type').value : 'reveal';
+                const imgRect = this.getActualImageRect(imgEl);
+                const containerRect = containerEl.getBoundingClientRect();
+                const minDim = Math.min(imgRect.width, imgRect.height);
+
+                this.creatorSpots.forEach((spot, idx) => {
+                    const posX = (imgRect.left - containerRect.left) + (spot.x / 100) * imgRect.width;
+                    const posY = (imgRect.top - containerRect.top) + (spot.y / 100) * imgRect.height;
+                    const sSize = spot.size || 0.10;
+
+                    const marker = document.createElement('div');
+                    
+                    if (type === 'zoom') {
+                        marker.className = "absolute w-9 h-9 -ml-4.5 -mt-4.5 rounded-full bg-indigo-500/40 border-2 border-indigo-400 flex items-center justify-center text-white shadow-xl animate-pulse pointer-events-auto cursor-grab active:cursor-grabbing";
+                        marker.style.left = `${posX}px`;
+                        marker.style.top = `${posY}px`;
+                        marker.innerHTML = `<span class="text-xs">🔍</span>`;
+                    } else if (type === 'pixel') {
+                        marker.className = "absolute w-8 h-8 -ml-4 -mt-4 rounded-full bg-emerald-500/40 border-2 border-emerald-400 flex items-center justify-center text-white shadow-xl pointer-events-auto cursor-grab active:cursor-grabbing";
+                        marker.style.left = `${posX}px`;
+                        marker.style.top = `${posY}px`;
+                        marker.innerHTML = `<span class="text-xs">👾</span>`;
+                    } else { // reveal
+                        const spotRadiusPx = minDim * sSize;
+                        const diameterPx = Math.max(28, spotRadiusPx * 2);
+
+                        marker.className = "absolute rounded-full bg-indigo-600/35 border-2 border-indigo-400 flex items-center justify-center font-black text-white shadow-lg pointer-events-auto cursor-grab active:cursor-grabbing transition-all duration-75 select-none";
+                        marker.style.width = `${diameterPx}px`;
+                        marker.style.height = `${diameterPx}px`;
+                        marker.style.left = `${posX - diameterPx / 2}px`;
+                        marker.style.top = `${posY - diameterPx / 2}px`;
+
+                        marker.innerHTML = `
+                            <span class="w-6 h-6 rounded-full bg-indigo-600 border border-white flex items-center justify-center text-xs font-black shadow pointer-events-none">
+                                ${idx + 1}
+                            </span>
+                        `;
+                    }
+
+                    // EVENT LISTENERS UNTUK DRAG & DROP (MOUSE & TOUCH)
+                    marker.addEventListener('mousedown', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        this.startDraggingSpot(e, idx);
+                    });
+
+                    marker.addEventListener('touchstart', (e) => {
+                        e.stopPropagation();
+                        this.startDraggingSpot(e, idx);
+                    }, { passive: false });
+
+                    wrapper.appendChild(marker);
+
+                    // PANEL KONTROL PER-TITIK UNTUK EFEK REVEAL
+                    if (type === 'reveal' && listWrapper) {
+                        const item = document.createElement('div');
+                        item.className = "flex items-center justify-between p-2.5 bg-slate-900/90 border border-slate-800 rounded-xl text-xs gap-2";
+                        
+                        const currentSize = spot.size || 0.10;
+                        item.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-indigo-600 text-white font-black text-[11px] flex items-center justify-center">${idx + 1}</span>
+                                <span class="font-bold text-slate-300">Titik #${idx + 1} (${spot.x}%, ${spot.y}%)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select onchange="app.updateSpotSize(${idx}, this.value)" class="bg-slate-950 border border-slate-700 text-white text-[11px] font-bold rounded-lg px-2 py-1 cursor-pointer">
+                                    <option value="0.06" ${currentSize === 0.06 ? 'selected' : ''}>Kecil (6%)</option>
+                                    <option value="0.10" ${currentSize === 0.10 ? 'selected' : ''}>Sedang (10%)</option>
+                                    <option value="0.14" ${currentSize === 0.14 ? 'selected' : ''}>Besar (14%)</option>
+                                    <option value="0.18" ${currentSize === 0.18 ? 'selected' : ''}>Sangat Besar (18%)</option>
+                                </select>
+                                <button type="button" onclick="app.removeSpot(${idx})" class="text-rose-400 hover:text-rose-300 px-2 py-1 rounded bg-rose-500/10 border border-rose-500/30 font-bold" title="Hapus Titik Ini">🗑️</button>
+                            </div>
+                        `;
+                        listWrapper.appendChild(item);
+                    }
+                });
             }
 
             handleFileUpload(e) {
@@ -1570,11 +1788,7 @@
                         const preview = document.getElementById('creator-img-preview');
                         preview.src = this.customImgData;
                         preview.onload = () => {
-                            const marker = document.getElementById('focal-marker');
-                            marker.style.left = '50%';
-                            marker.style.top = '50%';
-                            this.creatorFocalX = 50;
-                            this.creatorFocalY = 50;
+                            this.resetCreatorSpots();
                         };
                         this.showToast('✅ Gambar berhasil disesuaikan!');
                     };
@@ -1591,12 +1805,13 @@
                 const opt2 = document.getElementById('custom-opt-2').value.trim();
                 const opt3 = document.getElementById('custom-opt-3').value.trim();
 
+                const finalSpots = this.creatorSpots.length > 0 ? this.creatorSpots : [{ x: 50, y: 50, size: 0.10 }];
+
                 const questionData = {
                     id: this.editingIndex >= 0 ? this.hostQuestions[this.editingIndex].id : ('q_' + Date.now()),
                     type: type,
                     name: ans,
-                    focalX: this.creatorFocalX,
-                    focalY: this.creatorFocalY,
+                    spots: finalSpots,
                     imageUrl: this.customImgData,
                     options: [ans, opt1, opt2, opt3]
                 };
