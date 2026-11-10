@@ -850,18 +850,42 @@
                 this.currentShuffledOptions = shuffledOptions;
                 this.currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
 
-                // SISTEM CERDAS DETEKSI ANATOMI TUBUH MANUSIA (ANATOMICAL PROPORTION GRID)
+                // SISTEM ADAPTIF AI DETEKSI PROPORSI FOTO (PASFOTO / HALF-BODY / FULL-BODY)
                 const fx = q.focalX || 50;
                 const fy = q.focalY || 50;
                 
-                // Menghitung koordinat bagian spesifik tubuh berdasarkan posisi kepala/wajah
-                const rawFeatureSpots = [
-                    { label: 'Area Mata & Wajah Utama', x: fx, y: fy },
-                    { label: 'Pundak & Bentuk Leher', x: Math.max(8, fx - 16), y: Math.min(92, fy + 16) },
-                    { label: 'Detail Pakaian / Motif Baju', x: fx, y: Math.min(92, fy + 30) },
-                    { label: 'Pergelangan Tangan & Aksesori', x: Math.min(92, fx + 22), y: Math.min(92, fy + 40) },
-                    { label: 'Sepatu & Gaya Kaki', x: Math.max(8, fx - 10), y: Math.min(94, fy + 60) }
-                ];
+                // Hitung sisa ruang dari titik fokus wajah ke batas bawah foto
+                const spaceToBottom = 100 - fy; 
+                let rawFeatureSpots = [];
+                
+                if (spaceToBottom < 58) {
+                    // 📸 KATEGORI 1: PASFOTO / CLOSE-UP (Fokus 100% pada fitur detail wajah & leher)
+                    rawFeatureSpots = [
+                        { label: 'Mata & Area Alis', x: fx, y: Math.max(8, fy - 6) },
+                        { label: 'Hidung & Area Senyum', x: fx, y: Math.min(90, fy + 8) },
+                        { label: 'Hairline / Sisi Telinga', x: Math.max(8, fx - 16), y: fy },
+                        { label: 'Area Leher & Dagu', x: fx, y: Math.min(90, fy + 22) },
+                        { label: 'Detail Kerah & Motif Baju', x: Math.min(90, fx + 18), y: Math.min(88, fy + 34) }
+                    ];
+                } else if (spaceToBottom < 72) {
+                    // 👔 KATEGORI 2: HALF-BODY (Setengah Badan / Pinggang ke Atas)
+                    rawFeatureSpots = [
+                        { label: 'Wajah Utama', x: fx, y: fy },
+                        { label: 'Garis Rambut & Kepala', x: fx, y: Math.max(6, fy - 14) },
+                        { label: 'Bentuk Pundak & Leher', x: Math.max(8, fx - 22), y: Math.min(90, fy + 12) },
+                        { label: 'Motif Pakaian / Dada', x: fx, y: Math.min(90, fy + 26) },
+                        { label: 'Lengan / Aksesori Pakaian', x: Math.min(90, fx + 24), y: Math.min(88, fy + 40) }
+                    ];
+                } else {
+                    // 🧍 KATEGORI 3: FULL-BODY (Tampak Seluruh Tubuh dari Rambut ke Kaki)
+                    rawFeatureSpots = [
+                        { label: 'Wajah & Ekspresi', x: fx, y: fy },
+                        { label: 'Garis Rambut / Aksesori Kepala', x: fx, y: Math.max(6, fy - 12) },
+                        { label: 'Pundak & Gaya Pakaian', x: Math.max(8, fx - 18), y: Math.min(90, fy + 15) },
+                        { label: 'Pinggang / Pergelangan Tangan', x: Math.min(90, fx + 20), y: Math.min(90, fy + 38) },
+                        { label: 'Sepatu & Area Kaki', x: fx, y: Math.min(92, fy + 60) }
+                    ];
+                }
                 
                 // URUTAN KEMUNCULAN SPOTLIGHT DIAKtifKAN SECARA ACAK
                 this.currentFeatureSpots = this.shuffleArray(rawFeatureSpots);
